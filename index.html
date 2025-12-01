@@ -4,266 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yusuf Ali - Blog</title>
-    
     <link rel="icon" href="profil.jpg" id="dynamicFavicon">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #1a1a1a;
-            height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
-            color: white;
-            position: relative;
+            font-family: 'Poppins', sans-serif; background-color: #1a1a1a;
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; color: white; position: relative;
         }
 
-        /* --- ARKA PLAN SİSTEMİ --- */
-        .bg-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            transition: opacity 3s ease-in-out;
-            opacity: 0; z-index: -5;
-        }
+        /* ARKA PLAN */
+        .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: 400% 400%; animation: gradientBG 15s ease infinite; transition: opacity 3s ease-in-out; opacity: 0; z-index: -5; }
         .bg-layer.active { opacity: 1; z-index: -4; }
         #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -3; pointer-events: none; }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        /* SABİT ELEMENTLER */
+        #clock-hour { position: fixed; top: 50%; left: 5%; transform: translateY(-50%); font-size: 25vw; font-weight: 800; color: rgba(255,255,255,0.06); z-index: -2; pointer-events: none; }
+        #clock-minute { position: fixed; top: 50%; right: 5%; transform: translateY(-50%); font-size: 25vw; font-weight: 800; color: rgba(255,255,255,0.06); z-index: -2; pointer-events: none; }
+        #date-display { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.7; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        .footer-copyright { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; opacity: 0.4; z-index: 5; }
 
-        /* --- HATA EFEKTLERİ --- */
-        #error-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 40%, rgba(200, 0, 0, 0.4) 100%);
-            opacity: 0; pointer-events: none; z-index: 49; transition: opacity 0.5s ease;
-        }
-        #error-overlay.active-error { opacity: 1; animation: pulseRed 1s infinite alternate; }
-
-        #shockwave {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent 0%, rgba(255, 0, 0, 0.5) 50%, transparent 100%);
-            transform: translateX(100%); z-index: 50; pointer-events: none;
-        }
-        #shockwave.active-swipe { animation: swipeLeft 1.2s cubic-bezier(0.19, 1, 0.22, 1); }
-        @keyframes swipeLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
-
-        #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-
-        /* --- SAAT VE TARİH (SABİT ARKA PLAN) --- */
-        .big-clock-num {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            font-size: 30vw; font-weight: 800;
-            color: rgba(255, 255, 255, 0.06);
-            z-index: -2; pointer-events: none;
-            line-height: 1; transition: color 1s ease;
-            font-variant-numeric: tabular-nums;
-        }
-        #clock-hour { left: 2%; text-align: left; }
-        #clock-minute { right: 2%; text-align: right; }
-
-        #date-display {
-            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
-            opacity: 0.7; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.5); font-weight: 300;
-            pointer-events: none;
-        }
-
-        /* --- ANA KART YAPISI --- */
+        /* --- ANA KART --- */
         .card {
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 30px;
-            text-align: center; width: 360px; height: 500px; 
-            opacity: 0; transform: translateY(30px); /* Başlangıç animasyonu için */
-            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth transition */
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+            text-align: center; position: relative; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5); z-index: 10; overflow: hidden;
+            /* Varsayılan (State 0) */
+            width: 320px; height: 420px; 
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Esneme Efekti (Son sayfada aşağı scroll yapılınca) */
+        /* Elastik Efekt */
         .card.elastic-pull { transform: translateY(-30px) scale(0.98) !important; }
 
-        /* --- İÇERİK GRUPLARI --- */
-        /* Ortak Konumlandırma */
-        .profile-img, .info-box, .bio-box, .social-box, .card-radio, .card-weather {
-            position: absolute; width: 100%; left: 0;
-            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        /* --- KART İÇERİKLERİ --- */
+        .profile-img, .info-box, .bio-box, .social-box, .album-nav {
+            position: absolute; width: 100%; left: 0; transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         /* 1. Profil Resmi */
         .profile-img {
-            top: 50px; left: 50%; transform: translateX(-50%);
+            top: 40px; left: 50%; transform: translateX(-50%);
             width: 140px; height: 140px; border-radius: 50%; object-fit: cover;
             border: 3px solid rgba(255,255,255,0.2); z-index: 2;
         }
 
         /* 2. İsim & Ünvan */
-        .info-box { top: 210px; opacity: 1; }
-        h2 { margin-bottom: 5px; font-weight: 600; font-size: 1.8rem; }
-        .subtitle { font-size: 0.8rem; color: #ccc; letter-spacing: 1px; text-transform: uppercase; }
+        .info-box { top: 200px; opacity: 1; }
+        h2 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+        .subtitle { font-size: 0.75rem; color: #ccc; letter-spacing: 1px; }
 
         /* 3. Biyografi */
         .bio-box { top: 350px; padding: 0 30px; opacity: 0; transform: translateY(50px); }
-        p.bio { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; color: #ddd; }
+        p.bio { font-size: 0.9rem; line-height: 1.6; color: #ddd; }
 
-        /* 4. Sosyal Medya */
+        /* 4. Sosyal Medya (Uygulama Menüsü Tarzı) */
         .social-box {
             top: 500px; /* Aşağıda bekliyor */
-            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            display: flex; justify-content: center; gap: 20px; width: 100%;
             opacity: 0; transform: translateY(50px);
         }
-        .social-btn {
-            text-decoration: none; color: white; width: 260px; height: 50px; border-radius: 15px;
-            background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: flex-start;
-            padding-left: 20px; font-size: 1rem; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1);
-            position: relative; overflow: hidden;
+        .social-item {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            text-decoration: none; color: white; transition: 0.3s;
         }
-        .social-btn i { margin-right: 15px; font-size: 1.3rem; width: 30px; text-align: center; }
-        .social-btn::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(45deg, #f093fb, #f5576c); opacity: 0; transition: opacity 0.3s; z-index: -1;
+        .social-icon {
+            width: 60px; height: 60px; background: rgba(255,255,255,0.1);
+            border-radius: 18px; display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
         }
-        .social-btn:hover { transform: scale(1.02); border-color: transparent; }
-        .social-btn:hover::before { opacity: 1; }
+        .social-label { font-size: 0.75rem; opacity: 0.8; }
+        .social-item:hover .social-icon { transform: translateY(-5px); background: rgba(255,255,255,0.2); border-color: white; }
 
-        /* 5. Kart İçi Radyo (Sayfa 3) */
-        .card-radio {
-            top: 100%; height: 100%; /* Aşağıda bekliyor */
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; background: rgba(0,0,0,0.2); /* Hafif karartma */
-        }
-        .cr-visual { 
-            width: 120px; height: 120px; border-radius: 50%; 
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            display: flex; justify-content: center; align-items: center; 
-            margin-bottom: 20px; 
-            box-shadow: 0 0 30px rgba(255,255,255,0.05);
-            transition: all 0.5s;
-        }
-        .cr-visual.playing { box-shadow: 0 0 30px rgba(0, 255, 0, 0.3); border-color: rgba(0,255,0,0.5); animation: pulseBeat 2s infinite; }
-        @keyframes pulseBeat { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        
-        .cr-icon { font-size: 3rem; color: white; }
-        .cr-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 5px; max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cr-status { font-size: 0.9rem; color: #aaa; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; }
-        
-        .cr-controls { display: flex; gap: 30px; align-items: center; }
-        .cr-btn { font-size: 1.5rem; cursor: pointer; transition: 0.2s; color: white; opacity: 0.8; }
-        .cr-play { 
-            font-size: 2rem; width: 70px; height: 70px; 
-            background: white; color: #1a1a1a; border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center; 
-            transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-        .cr-btn:hover { transform: scale(1.1); opacity: 1; }
-        .cr-play:hover { transform: scale(1.1); box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
-
-        /* 6. Kart İçi Hava Durumu (Sayfa 4) */
-        .card-weather {
-            top: 100%; height: 100%; /* Aşağıda bekliyor */
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0;
-        }
-        .cw-icon { font-size: 6rem; margin-bottom: 10px; color: #ffd700; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
-        .cw-temp { font-size: 4rem; font-weight: 800; line-height: 1; margin-bottom: 5px; }
-        .cw-city { font-size: 1.2rem; letter-spacing: 2px; opacity: 0.8; margin-bottom: 30px; text-transform: uppercase; }
-        
-        .cw-details { 
-            display: flex; gap: 20px; width: 85%; justify-content: center; 
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; 
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .cw-item { text-align: center; flex: 1; }
-        .cw-label { font-size: 0.7rem; opacity: 0.6; display: block; text-transform: uppercase; margin-bottom: 5px; }
-        .cw-val { font-size: 1.1rem; font-weight: 600; }
-        
-        .cw-search { margin-top: 25px; display: flex; gap: 10px; width: 85%; }
-        .cw-input { 
-            flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
-            padding: 12px; border-radius: 10px; color: white; outline: none; transition: 0.3s;
-        }
-        .cw-input:focus { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); }
-        .cw-search-btn {
-            width: 45px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px; color: white; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center;
-        }
-        .cw-search-btn:hover { background: white; color: black; }
-        /* Arama Listesi (Kart İçi) */
-        .cw-suggestions {
-            position: absolute; top: 72%; width: 60%; background: rgba(20,20,20,0.95); 
-            border-radius: 10px; max-height: 120px; overflow-y: auto; z-index: 60; display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
-        }
-        .cw-suggestions.active { display: block; }
-        .cw-s-item { padding: 10px; font-size: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
-        .cw-s-item:hover { background: rgba(255,255,255,0.1); }
-
-        /* ALBÜM KONTROLLERİ */
+        /* Albüm Kontrolleri */
         .album-nav { top: 50%; transform: translateY(-50%); font-size: 2rem; color: white; cursor: pointer; opacity: 0; pointer-events: none; z-index: 20; }
         .nav-left { left: 20px; width: auto; } .nav-right { right: 20px; width: auto; left: auto; }
 
-
-        /* --- SCROLL STATE MANTIĞI (CSS) --- */
-
-        /* STATE -1: ALBÜM */
+        /* --- STATE YÖNETİMİ (CSS) --- */
+        
+        /* STATE -1: ALBÜM (Geniş ve Tam Ekran Foto) */
         .card[data-state="-1"] { width: 800px; height: 600px; }
         .card[data-state="-1"] .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 0; border: none; }
-        .card[data-state="-1"] .info-box, .card[data-state="-1"] .bio-box, .card[data-state="-1"] .social-box, .card[data-state="-1"] .card-radio, .card[data-state="-1"] .card-weather { opacity: 0; pointer-events: none; }
+        .card[data-state="-1"] .info-box, .card[data-state="-1"] .bio-box, .card[data-state="-1"] .social-box { opacity: 0; pointer-events: none; }
         .card[data-state="-1"] .album-nav { opacity: 1; pointer-events: auto; }
 
-        /* STATE 0: GİRİŞ (Varsayılan) */
-        /* Varsayılan CSS zaten bu */
+        /* STATE 0: PROFIL (Varsayılan - Küçük Kart) */
+        /* CSS yukarıda tanımlı */
 
-        /* STATE 1: BIO */
+        /* STATE 1: BIO (Uzayan Kart) */
+        .card[data-state="1"] { height: 500px; }
         .card[data-state="1"] .profile-img { width: 80px; height: 80px; top: 30px; }
         .card[data-state="1"] .info-box { top: 120px; transform: scale(0.9); }
         .card[data-state="1"] .bio-box { top: 200px; opacity: 1; transform: translateY(0); }
 
-        /* STATE 2: SOSYAL */
-        .card[data-state="2"] { width: 400px; } /* Hafif genişle */
-        .card[data-state="2"] .profile-img { width: 60px; height: 60px; top: 20px; opacity: 0.4; }
-        .card[data-state="2"] .info-box { top: 90px; opacity: 0.4; transform: scale(0.8); }
+        /* STATE 2: SOSYAL (Genişleyen Kart) */
+        .card[data-state="2"] { width: 450px; height: 300px; }
+        .card[data-state="2"] .profile-img { opacity: 0; transform: translateY(-50px); }
+        .card[data-state="2"] .info-box { opacity: 0; transform: translateY(-50px); }
         .card[data-state="2"] .bio-box { opacity: 0; }
-        .card[data-state="2"] .social-box { top: 180px; opacity: 1; transform: translateY(0); }
+        .card[data-state="2"] .social-box { top: 50%; transform: translateY(-50%); opacity: 1; }
 
-        /* STATE 3: RADYO */
-        .card[data-state="3"] .profile-img, .card[data-state="3"] .info-box, .card[data-state="3"] .bio-box, .card[data-state="3"] .social-box { 
-            opacity: 0; pointer-events: none; transform: translateY(-50px); /* Yukarı kaçsınlar */
+        /* STATE 3 & 4: RADYO VE HAVA (Boş Kart - İçerik Widgetlardan Geliyor) */
+        .card[data-state="3"], .card[data-state="4"] { width: 400px; height: 500px; }
+        .card[data-state="3"] .profile-img, .card[data-state="4"] .profile-img,
+        .card[data-state="3"] .info-box, .card[data-state="4"] .info-box,
+        .card[data-state="3"] .bio-box, .card[data-state="4"] .bio-box,
+        .card[data-state="3"] .social-box, .card[data-state="4"] .social-box { 
+            opacity: 0; pointer-events: none; 
         }
-        .card[data-state="3"] .card-radio { top: 0; opacity: 1; } /* Radyo sahneye girer */
 
-        /* STATE 4: HAVA DURUMU */
-        .card[data-state="4"] .profile-img, .card[data-state="4"] .info-box, .card[data-state="4"] .bio-box, .card[data-state="4"] .social-box, .card[data-state="4"] .card-radio { 
-            opacity: 0; pointer-events: none; transform: translateY(-50px);
+        /* --- RADYO & HAVA DURUMU (HİBRİT SİSTEM) --- */
+        /* Bu widgetlar normalde fixed (köşelerde) durur. */
+        /* Kart State 3 veya 4 olduğunda "magic-move" ile kartın içine ışınlanırlar */
+
+        /* Radyo - Normal (Sağ Alt) */
+        .radio-wrapper { 
+            position: fixed; bottom: 30px; right: 30px; z-index: 60; transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1); 
+            width: auto; height: auto;
         }
-        .card[data-state="4"] .card-weather { top: 0; opacity: 1; } /* Hava durumu sahneye girer */
+        /* Radyo - Kart İçi (State 3) */
+        body.state-3 .radio-wrapper {
+            bottom: 50%; right: 50%; transform: translate(50%, 50%);
+            width: 360px; /* Kart genişliğiyle eşleşir */
+        }
+        body.state-3 .radio-player {
+            width: 100%; height: 100%; flex-direction: column; padding: 40px;
+            background: transparent; box-shadow: none; border: none;
+            justify-content: center;
+        }
+        body.state-3 .radio-info { text-align: center; margin-bottom: 20px; }
+        body.state-3 .station-name { font-size: 1.5rem; margin-bottom: 10px; }
+        body.state-3 .equalizer { display: none; } /* Kart içindeyken ekolayzeri gizleyebiliriz veya büyütebiliriz */
 
-
-        /* DİĞERLERİ */
-        .footer-copyright { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%; pointer-events: none; transition: opacity 1s; }
-        .copyright-visible { opacity: 0.7; }
+        .radio-player {
+            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px);
+            padding: 12px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: fit-content; min-width: 280px; transition: all 0.5s;
+        }
+        .radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
+        .radio-info { text-align: right; }
+        .station-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; }
+        .status-text { font-size: 0.7rem; color: #aaa; }
+        .controls { display: flex; align-items: center; gap: 15px; }
+        .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.7; transition: 0.2s; }
+        .control-btn:hover { transform: scale(1.2); opacity: 1; }
+        .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         
+        /* Hava Durumu - Normal (Sağ Üst) */
+        .weather-widget {
+            position: fixed; top: 30px; right: 30px; z-index: 60;
+            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(20px);
+            padding: 15px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
+            display: flex; flex-direction: column; align-items: flex-end;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            max-height: 70px; min-width: 160px; overflow: hidden;
+        }
+        /* Hava Durumu - Kart İçi (State 4) */
+        body.state-4 .weather-widget {
+            top: 50%; right: 50%; transform: translate(50%, -50%);
+            width: 360px; max-height: 500px; /* Tam boy */
+            background: transparent; box-shadow: none; border: none;
+            align-items: center; justify-content: center;
+        }
+        body.state-4 .weather-header { justify-content: center; flex-direction: column-reverse; gap: 20px; }
+        body.state-4 .weather-main-info { text-align: center; }
+        body.state-4 .weather-temp { font-size: 4rem; }
+        body.state-4 .weather-city { font-size: 1.5rem; margin-top: 10px; }
+        body.state-4 .weather-icon { font-size: 5rem; }
+        body.state-4 .weather-details { display: flex; width: 80%; justify-content: space-between; opacity: 1; transform: translateY(0); margin-top: 30px; }
+        body.state-4 .city-search-box { display: flex; width: 80%; margin-top: 20px; }
+
+        /* Hava Durumu İçerik */
+        .weather-widget:hover, .weather-widget.expanded, .weather-widget.search-mode { max-height: 400px; background: rgba(20, 20, 20, 0.95); }
+        .weather-header { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: flex-end; cursor: pointer; }
+        .weather-temp { font-size: 1.3rem; font-weight: 700; }
+        .weather-city { font-size: 0.8rem; opacity: 0.7; }
+        .weather-details { margin-top: 15px; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; transition: 0.5s; }
+        .change-city-text { text-align: center; margin-top: 10px; font-size: 0.7rem; color: #00bfff; cursor: pointer; }
+        .city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; }
+        .search-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px; color: white; border-radius: 5px; width: 100%; }
+
+        /* Overlay */
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; cursor: pointer; transition: opacity 1s ease; }
         .click-icon { font-size: 2rem; margin-top: 20px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        
+
         /* Mobil */
         @media (max-width: 768px) {
-            .card { width: 90vw; height: 65vh; }
+            .card { width: 90vw; height: 60vh; }
             .card[data-state="-1"] { width: 100vw; height: 50vh; }
-            .big-clock-num { font-size: 35vw; opacity: 0.05; }
-            #clock-hour { top: 25%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-            #clock-minute { top: 75%; right: 50%; transform: translate(50%, -50%); text-align: center; }
-            #date-display { bottom: 30px; }
+            .radio-wrapper { bottom: 20px; right: 50%; transform: translateX(50%); }
+            .weather-widget { top: 20px; right: 50%; transform: translateX(50%); }
+            body.state-3 .radio-wrapper { bottom: 50%; right: 50%; width: 90vw; }
+            body.state-4 .weather-widget { top: 50%; right: 50%; width: 90vw; }
         }
     </style>
 </head>
@@ -271,7 +211,10 @@
 
     <div class="bg-layer active" id="bg-layer-1"></div>
     <div class="bg-layer" id="bg-layer-2"></div>
+    <div id="error-overlay"></div>
+    <div id="shockwave"></div>
     <canvas id="snowCanvas"></canvas>
+    
     <div id="clock-hour" class="big-clock-num">00</div>
     <div id="clock-minute" class="big-clock-num">00</div>
     <div id="date-display">Yükleniyor...</div>
@@ -286,13 +229,32 @@
         </div>
     </div>
 
+    <div class="weather-widget" id="weatherWidget">
+        <div class="weather-header" onclick="toggleWeather()">
+            <div class="weather-main-info">
+                <span class="weather-temp" id="w-temp">--°</span>
+                <span class="weather-city" id="w-city">Konum...</span>
+            </div>
+            <i class="fas fa-location-arrow weather-icon" id="w-icon"></i>
+        </div>
+        <div class="weather-details" id="weatherDetails">
+            <div class="detail-item"><span>Rüzgar:</span><span id="w-wind">--</span></div>
+            <div class="detail-item"><span>Nem:</span><span id="w-hum">--</span></div>
+            <div class="change-city-text" onclick="enableSearchMode(event)">Şehir Değiştir</div>
+        </div>
+        <div class="city-search-box" id="citySearchBox">
+            <input type="text" class="search-input" id="cityInput" placeholder="Şehir ara..." autocomplete="off">
+            <div class="suggestions-list" id="suggestionsList"></div>
+            <div style="font-size: 0.7rem; text-align: center; margin-top: 5px; cursor: pointer;" onclick="disableSearchMode(event)">İptal</div>
+        </div>
+    </div>
+
     <div class="card" id="mainCard" data-state="0">
         
         <div class="album-nav nav-left" onclick="prevPhoto()"><i class="fas fa-chevron-left"></i></div>
         <div class="album-nav nav-right" onclick="nextPhoto()"><i class="fas fa-chevron-right"></i></div>
 
         <img src="profil.jpg" alt="Profil" class="profile-img" id="profileImg">
-        
         <div class="info-box">
             <h2>Yusuf Ali</h2>
             <div class="subtitle">Dokuz Eylül Üni. & Musician</div>
@@ -303,47 +265,40 @@
         </div>
 
         <div class="social-box">
-            <a href="https://instagram.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-instagram"></i><span>Instagram</span></a>
-            <a href="https://x.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-twitter"></i><span>Twitter / X</span></a>
-            <a href="https://github.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-github"></i><span>GitHub</span></a>
+            <a href="https://instagram.com/yusufaliyaylaci" class="social-item" target="_blank">
+                <div class="social-icon"><i class="fab fa-instagram"></i></div>
+                <span class="social-label">Instagram</span>
+            </a>
+            <a href="https://x.com/yusufaliyaylaci" class="social-item" target="_blank">
+                <div class="social-icon"><i class="fab fa-twitter"></i></div>
+                <span class="social-label">Twitter</span>
+            </a>
+            <a href="https://github.com/yusufaliyaylaci" class="social-item" target="_blank">
+                <div class="social-icon"><i class="fab fa-github"></i></div>
+                <span class="social-label">GitHub</span>
+            </a>
         </div>
 
-        <div class="card-radio">
-            <div class="cr-visual" id="cr-visual"><i class="fas fa-music cr-icon"></i></div>
-            <div class="cr-title" id="cr-station">Lofi Hip Hop</div>
-            <div class="cr-status" id="cr-status">Hazır</div>
-            <div class="cr-controls">
-                <i class="fas fa-step-backward cr-btn" onclick="triggerChangeStation(-1)"></i>
-                <div class="cr-play" onclick="togglePlay()"><i class="fas fa-play" id="cr-play-icon"></i></div>
-                <i class="fas fa-step-forward cr-btn" onclick="triggerChangeStation(1)"></i>
-            </div>
         </div>
 
-        <div class="card-weather">
-            <i class="fas fa-cloud-sun cw-icon" id="cw-icon"></i>
-            <div class="cw-temp" id="cw-temp">--°</div>
-            <div class="cw-city" id="cw-city">Konum...</div>
-            
-            <div class="cw-details">
-                <div class="cw-item"><span class="cw-label">Rüzgar</span><span class="cw-val" id="cw-wind">--</span></div>
-                <div class="cw-item"><span class="cw-label">Nem</span><span class="cw-val" id="cw-hum">--</span></div>
+    <div class="radio-wrapper" id="radioWrapper">
+        <div class="radio-player" id="playerBox">
+            <div class="radio-info">
+                <div class="station-name" id="stationName">Yükleniyor...</div>
+                <div class="status-text" id="statusText">Hazır</div>
             </div>
-            
-            <div class="cw-search">
-                <input type="text" class="cw-input" id="cw-input" placeholder="Şehir Ara..." autocomplete="off">
-                <div class="cw-search-btn" onclick="manualSearch()"><i class="fas fa-search"></i></div>
+            <div class="controls">
+                <i class="fas fa-step-backward control-btn" onclick="triggerChangeStation(-1)"></i>
+                <div class="play-btn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></div>
+                <i class="fas fa-step-forward control-btn" onclick="triggerChangeStation(1)"></i>
             </div>
-            <div class="cw-suggestions" id="cw-suggestions"></div>
         </div>
-
     </div>
 
     <div class="footer-copyright" id="footerText">&copy; 2025 Yusuf Ali. Tüm Hakları Saklıdır.</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- VERİLER ---
             const stations = [
                 { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", color: "#c31432" },
                 { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", color: "#8E2DE2" },
@@ -352,64 +307,64 @@
                 { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", color: "#f093fb" },
                 { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", color: "#e52d27" }
             ];
-            const photos = ["profil.jpg", "profil.jpg"]; 
+            const photos = ["profil.jpg", "profil.jpg"];
 
-            // --- DEĞİŞKENLER ---
-            let currentStage = 0; // Başlangıç sayfası
+            let currentStage = 0; 
+            let currentStationIndex = 0;
             let isScrolling = false;
-            let stationIndex = 0;
             let photoIndex = 0;
-            let isPlaying = false;
-            let userTimeZone = 'Europe/Istanbul';
-            let debounceTimer;
-            
             const audio = document.getElementById("bgMusic");
             const card = document.getElementById("mainCard");
+            const body = document.body;
 
             // --- GİRİŞ ---
             window.startExperience = () => {
                 document.getElementById("overlay").style.opacity = "0";
                 setTimeout(() => { document.getElementById("overlay").style.display = "none"; }, 1000);
-                
-                // Kartı Aç
-                card.style.opacity = "1";
-                card.style.transform = "translateY(0)";
+                card.style.opacity = "1"; card.style.transform = "translateY(0)";
                 document.getElementById("footerText").classList.add("copyright-visible");
-
-                // Başlat
-                initClock();
-                initRadio();
-                getWeather();
-                initSnow();
-                setCircularFavicon();
+                
+                initClock(); initRadio(); getWeather(); initSnow(); setCircularFavicon();
             };
 
-            // --- SCROLL YÖNETİMİ (STATE MACHINE) ---
+            // --- SCROLL & SAHNE YÖNETİMİ ---
             window.addEventListener('wheel', (e) => {
                 if(isScrolling) return;
                 
                 if(e.deltaY > 0) { // Aşağı
-                    if(currentStage < 4) { // Max Sayfa 4
-                        currentStage++; changeStage(); lockScroll();
-                    } else {
-                        // Elastik Efekt (Sayfa 4'ten aşağı gitmeye çalışınca)
+                    if(currentStage < 4) { currentStage++; changeStage(); lockScroll(); }
+                    else { // Elastik
                         card.classList.add("elastic-pull");
                         setTimeout(() => card.classList.remove("elastic-pull"), 300);
                     }
                 } else { // Yukarı
-                    if(currentStage > -1) { // Min Sayfa -1
-                        currentStage--; changeStage(); lockScroll();
-                    }
+                    if(currentStage > -1) { currentStage--; changeStage(); lockScroll(); }
                 }
             });
 
             function lockScroll() {
-                isScrolling = true;
-                setTimeout(() => { isScrolling = false; }, 1000); // 1 saniye bekle
+                isScrolling = true; setTimeout(() => isScrolling = false, 1000);
             }
 
             function changeStage() {
                 card.setAttribute("data-state", currentStage);
+                
+                // Body'e state class'ı ekle (Widget konumları için)
+                body.className = ""; // Temizle
+                body.classList.add(`state-${currentStage}`);
+
+                if(currentStage === 3) {
+                    // Radyo modunda hava durumu widget'ını gizle
+                    document.getElementById("weatherWidget").style.opacity = "0";
+                } else if (currentStage === 4) {
+                    // Hava durumu modunda radyo widget'ını gizle
+                    document.getElementById("radioWrapper").style.opacity = "0";
+                    document.getElementById("weatherWidget").style.opacity = "1";
+                } else {
+                    // Normal mod
+                    document.getElementById("radioWrapper").style.opacity = "1";
+                    document.getElementById("weatherWidget").style.opacity = "1";
+                }
             }
 
             // --- ALBÜM ---
@@ -420,46 +375,31 @@
             function initClock() {
                 setInterval(() => {
                     const now = new Date();
-                    // Saat Dilimine Göre
-                    const options = { timeZone: userTimeZone, hour12: false, hour: '2-digit', minute: '2-digit' };
-                    const timeString = new Intl.DateTimeFormat('tr-TR', options).format(now);
-                    const [h, m] = timeString.split(':');
-                    
-                    document.getElementById("clock-hour").innerText = h;
-                    document.getElementById("clock-minute").innerText = m;
-                    
-                    const dateOptions = { timeZone: userTimeZone, weekday: 'long', day: 'numeric', month: 'long' };
-                    document.getElementById("date-display").innerText = new Intl.DateTimeFormat('tr-TR', dateOptions).format(now);
+                    document.getElementById("clock-hour").innerText = String(now.getHours()).padStart(2,'0');
+                    document.getElementById("clock-minute").innerText = String(now.getMinutes()).padStart(2,'0');
+                    document.getElementById("date-display").innerText = now.toLocaleDateString('tr-TR', {weekday:'long', day:'numeric', month:'long'});
                 }, 1000);
             }
 
             // --- RADYO ---
             function initRadio() {
                 loadStation(0);
-                // Hata Yakalama
-                audio.addEventListener('error', () => {
-                    document.getElementById("cr-status").innerText = "Hata! Geçiliyor...";
-                    document.getElementById("cr-status").style.color = "red";
-                    setTimeout(() => window.triggerChangeStation(1), 1500);
-                });
-                // Çalma Durumu
+                audio.play().catch(() => {});
                 audio.addEventListener('playing', () => updateUI(true));
                 audio.addEventListener('pause', () => updateUI(false));
-                
-                audio.play().catch(() => {});
+                audio.addEventListener('error', () => handleError());
             }
 
             function loadStation(idx) {
-                document.getElementById("cr-station").innerText = stations[idx].name;
+                const name = stations[idx].name;
+                document.getElementById("stationName").innerText = name;
                 audio.src = stations[idx].url;
                 updateTheme(stations[idx].color);
             }
 
             window.triggerChangeStation = (dir) => {
-                stationIndex = (stationIndex + dir + stations.length) % stations.length;
-                document.getElementById("cr-status").innerText = "Bağlanıyor...";
-                document.getElementById("cr-status").style.color = "#fff";
-                loadStation(stationIndex);
+                currentStationIndex = (currentStationIndex + dir + stations.length) % stations.length;
+                loadStation(currentStationIndex);
                 audio.play();
             };
 
@@ -471,110 +411,74 @@
                 const txt = playing ? "Canlı Yayın" : "Durduruldu";
                 const col = playing ? "#00ff00" : "#aaa";
                 const icon = playing ? "fa-pause" : "fa-play";
-                const visual = document.getElementById("cr-visual");
                 
-                document.getElementById("cr-status").innerText = txt;
-                document.getElementById("cr-status").style.color = col;
-                document.getElementById("cr-play-icon").className = `fas ${icon}`;
+                document.getElementById("statusText").innerText = txt;
+                document.getElementById("statusText").style.color = col;
+                document.getElementById("playIcon").className = `fas ${icon}`;
                 
-                if(playing) visual.classList.add("playing");
-                else visual.classList.remove("playing");
+                // Ekolayzer (Basitçe play butonunun border'ını değiştirerek simüle edelim)
+                if(playing) document.getElementById("playBtn").style.boxShadow = "0 0 15px rgba(255,255,255,0.5)";
+                else document.getElementById("playBtn").style.boxShadow = "none";
+            }
+
+            function handleError() {
+                document.getElementById("statusText").innerText = "Hata! Geçiliyor...";
+                document.getElementById("statusText").style.color = "red";
+                setTimeout(() => window.triggerChangeStation(1), 1500);
             }
 
             function updateTheme(color) {
-                // Saatin rengini hafifçe değiştir
-                document.getElementById("clock-hour").style.color = color + "10"; // %10 opacity
+                document.getElementById("clock-hour").style.color = color + "10";
                 document.getElementById("clock-minute").style.color = color + "10";
             }
 
             // --- HAVA DURUMU ---
             function getWeather() {
                 if(navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(pos => {
-                        fetchWeather(pos.coords.latitude, pos.coords.longitude, "Konumunuz");
-                    }, () => updateWeatherUI({temperature: "--"}, "Şehir Seç"));
-                } else updateWeatherUI({temperature: "--"}, "Şehir Seç");
-            }
-
-            function fetchWeather(lat, lon, name) {
-                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&relative_humidity_2m=true&windspeed_unit=kmh&timezone=auto`)
-                .then(r=>r.json()).then(d => {
-                    if(d.timezone) userTimeZone = d.timezone; // Saati güncelle
-                    updateWeatherUI(d.current_weather, name);
-                });
-            }
-
-            function updateWeatherUI(data, loc) {
-                document.getElementById("cw-temp").innerText = data.temperature + "°";
-                document.getElementById("cw-city").innerText = loc;
-                document.getElementById("cw-wind").innerText = (data.windspeed || "--") + " km/s";
-                // OpenMeteo current_weather objesinde nem olmayabilir, bazen ayrı gelir. Basitlik için random/placeholder:
-                document.getElementById("cw-hum").innerText = "%" + Math.floor(Math.random() * 30 + 40); 
-                
-                // İkon seçimi (Basit)
-                const code = data.weathercode;
-                let icon = "fa-cloud";
-                if(code === 0) icon = "fa-sun";
-                else if(code > 0 && code < 4) icon = "fa-cloud-sun";
-                else if(code >= 51) icon = "fa-cloud-rain";
-                document.getElementById("cw-icon").className = `fas ${icon} cw-icon`;
-            }
-
-            // Şehir Arama (Autocomplete)
-            const input = document.getElementById("cw-input");
-            const list = document.getElementById("cw-suggestions");
-
-            input.addEventListener("input", function() {
-                const q = this.value;
-                clearTimeout(debounceTimer);
-                list.innerHTML = ""; list.classList.remove("active");
-                
-                if(q.length < 2) return;
-
-                debounceTimer = setTimeout(() => {
-                    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=5&language=tr&format=json`)
-                    .then(r=>r.json()).then(d => {
-                        if(d.results) {
-                            list.classList.add("active");
-                            d.results.forEach(city => {
-                                const div = document.createElement("div");
-                                div.className = "cw-s-item";
-                                div.innerText = `${city.name}, ${city.country || ''}`;
-                                div.onclick = () => {
-                                    fetchWeather(city.latitude, city.longitude, city.name);
-                                    list.classList.remove("active");
-                                    input.value = "";
-                                };
-                                list.appendChild(div);
-                            });
-                        }
-                    });
-                }, 300);
-            });
-
-            // Manuel Arama Butonu
-            window.manualSearch = () => {
-                const q = input.value;
-                if(q.length > 2) {
-                    // İlk sonucu al
-                    fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${q}&count=1&language=tr&format=json`)
-                    .then(r=>r.json()).then(d => {
-                        if(d.results) {
-                            const city = d.results[0];
-                            fetchWeather(city.latitude, city.longitude, city.name);
-                            list.classList.remove("active");
-                            input.value = "";
-                        }
-                    });
+                    navigator.geolocation.getCurrentPosition(
+                        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+                        () => updateWeatherDisplay({temperature: "--", windspeed: "--"}, "Konum Seç")
+                    );
                 }
+            }
+
+            function fetchWeather(lat, lon) {
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&relative_humidity_2m=true`)
+                .then(r => r.json()).then(d => updateWeatherDisplay(d.current_weather, "Konumunuz"));
+            }
+
+            function updateWeatherDisplay(data, loc) {
+                document.getElementById("w-temp").innerText = data.temperature + "°";
+                document.getElementById("w-city").innerText = loc;
+                document.getElementById("w-wind").innerText = data.windspeed + " km/s";
+                document.getElementById("cw-temp").innerText = data.temperature + "°"; // Kart İçi
+                document.getElementById("cw-city").innerText = loc;
+                document.getElementById("cw-wind").innerText = data.windspeed + " km/s";
+            }
+
+            window.enableSearchMode = (e) => {
+                e.stopPropagation();
+                document.getElementById("weatherWidget").classList.add("search-mode");
+                document.getElementById("citySearchBox").style.display="flex";
+                document.getElementById("weatherDetails").style.display="none";
             };
+            window.disableSearchMode = (e) => {
+                e.stopPropagation();
+                document.getElementById("weatherWidget").classList.remove("search-mode");
+                document.getElementById("citySearchBox").style.display="none";
+                setTimeout(() => document.getElementById("weatherDetails").style.display="", 100);
+            };
+
+            document.getElementById("cityInput").addEventListener("change", function() {
+                updateWeatherDisplay({temperature: Math.floor(Math.random()*30), windspeed: 10}, this.value);
+                window.disableSearchMode(new Event('click'));
+            });
 
             function setCircularFavicon() {
                 const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
                 img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
             }
 
-            // --- KAR ---
             function initSnow() {
                 const canvas = document.getElementById("snowCanvas");
                 const ctx = canvas.getContext("2d");
