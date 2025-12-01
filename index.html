@@ -8,7 +8,7 @@
     <link rel="icon" href="profil.jpg" id="dynamicFavicon">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,53 +23,21 @@
             position: relative;
         }
 
-        /* --- ARKA PLAN KATMANLARI --- */
+        /* --- ARKA PLAN SİSTEMİ --- */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             transition: opacity 3s ease-in-out;
-            opacity: 0; z-index: -5;
+            opacity: 0; z-index: -2;
         }
-        .bg-layer.active { opacity: 1; z-index: -4; }
+        .bg-layer.active { opacity: 1; z-index: -1; }
         #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
 
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
-        }
-
-        /* --- DEVASA SAAT (Bölünmüş) --- */
-        .big-clock-num {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 30vw;
-            font-weight: 800;
-            color: rgba(255, 255, 255, 0.03); /* Çok silik */
-            z-index: -2;
-            pointer-events: none;
-            line-height: 1;
-            transition: color 1s ease;
-            font-variant-numeric: tabular-nums;
-        }
-        #clock-hour { left: 2%; text-align: left; }
-        #clock-minute { right: 2%; text-align: right; }
-
-        /* --- TARİH (YENİ KONUM) --- */
-        #date-display {
-            position: absolute;
-            top: 72%; /* Kartın altına alındı */
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.85rem; 
-            letter-spacing: 2px; 
-            text-transform: uppercase;
-            opacity: 0.6;
-            z-index: 5;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            font-weight: 300;
         }
 
         /* --- HATA EFEKTLERİ --- */
@@ -89,7 +57,7 @@
         @keyframes swipeLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
 
-        #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
         /* GİRİŞ EKRANI */
         #overlay {
@@ -219,8 +187,6 @@
             .weather-widget.visible { transform: translateX(50%) translateY(0); }
             .radio-player { padding: 10px 20px; width: 90%; justify-content: space-between;}
             .radio-info { min-width: auto; }
-            .big-clock-num { font-size: 35vw; opacity: 0.03; }
-            #date-display { top: 75%; }
         }
     </style>
 </head>
@@ -232,10 +198,6 @@
     <div id="shockwave"></div>
     <canvas id="snowCanvas"></canvas>
     
-    <div id="clock-hour" class="big-clock-num">00</div>
-    <div id="clock-minute" class="big-clock-num">00</div>
-    <div id="date-display">Yükleniyor...</div>
-
     <audio id="bgMusic" crossorigin="anonymous" preload="none"></audio>
 
     <div id="overlay">
@@ -303,6 +265,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- VERİLER ---
+            const defaultGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)";
+            const errorGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)";
+            
             const stations = [
                 { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
                 { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", accent: "#8E2DE2" },
@@ -316,8 +281,8 @@
             let fadeInterval;
             let isSwitching = false;
             let connectionTimeout;
-            let userTimeZone = 'Europe/Istanbul';
             let activeBgLayer = 1;
+            let isPlaying = false;
             let debounceTimer;
 
             // DOM Elements
@@ -333,11 +298,6 @@
             const equalizerBars = document.querySelectorAll('.equalizer .bar');
             const bg1 = document.getElementById("bg-layer-1");
             const bg2 = document.getElementById("bg-layer-2");
-            
-            const clockHour = document.getElementById("clock-hour");
-            const clockMinute = document.getElementById("clock-minute");
-            const dateText = document.getElementById("date-display");
-            
             const weatherWidget = document.getElementById("weatherWidget");
             const citySearchBox = document.getElementById("citySearchBox");
             const weatherDetails = document.getElementById("weatherDetails");
@@ -345,90 +305,78 @@
             const cityInput = document.getElementById("cityInput");
             const suggestionsList = document.getElementById("suggestionsList");
 
-            // GLOBAL FONKSİYON ATAMALARI (HTML'den erişim için)
-            window.enterSite = enterSite;
-            
-            // Buton Dinleyicileri (JS tarafında bağlama - daha güvenli)
+            // Event Listeners (Güvenli Bağlama)
             if(document.getElementById("prevBtn")) document.getElementById("prevBtn").onclick = () => triggerChangeStation(-1);
             if(document.getElementById("nextBtn")) document.getElementById("nextBtn").onclick = () => triggerChangeStation(1);
             if(document.getElementById("playBtn")) document.getElementById("playBtn").onclick = () => togglePlay();
             if(document.getElementById("changeCityBtn")) document.getElementById("changeCityBtn").onclick = (e) => enableSearchMode(e);
             if(document.getElementById("cancelSearchBtn")) document.getElementById("cancelSearchBtn").onclick = (e) => disableSearchMode(e);
-
-            if(bg1) bg1.style.background = stations[0].gradient; // Başlangıç rengi
-
-            // --- RADYO OLAYLARI (En Önemli Kısım) ---
-            if(audio) {
-                // 1. Müzik gerçekten çalmaya başladığında (Buffering bittiğinde)
-                audio.addEventListener('playing', () => {
-                    clearTimeout(connectionTimeout); // Hata sayacını iptal et
-                    isSwitching = false;
-                    
-                    fadeInMusic();
-                    updateBackground('station');
-                    updateThemeColors(false);
-                    updateUI("Canlı Yayın", stations[currentStationIndex].accent);
-                    
-                    // UI Aktif Et
-                    if(playerBox) { playerBox.classList.add("playing"); playerBox.classList.add("active-glow"); }
-                    if(playIcon) { playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause"); }
-                });
-
-                // 2. Beklenmedik durma veya hata
-                audio.addEventListener('error', (e) => {
-                    handleConnectionError();
-                    updateUI("Hata! Geçiliyor...", "red");
-                    if(playerBox) playerBox.classList.remove("playing");
-                    isSwitching = false;
-                    setTimeout(() => triggerChangeStation(1), 1500);
-                });
+            
+            // Overlay Tıklama Olayı (En Önemlisi)
+            if(overlay) {
+                overlay.addEventListener('click', enterSite);
             }
+
+            if(bg1) bg1.style.background = defaultGradient;
 
             // --- GİRİŞ FONKSİYONU ---
             function enterSite() {
+                // 1. ÖNCE ARAYÜZÜ AÇ (Donmayı önlemek için en başa)
+                if(overlay) overlay.classList.add('slide-down-active');
+                if(document.getElementById("mainCard")) {
+                    document.getElementById("mainCard").style.opacity = "1"; 
+                    document.getElementById("mainCard").style.transform = "translateY(0)"; 
+                }
+                if(document.getElementById("footerText")) document.getElementById("footerText").classList.add('copyright-visible');
+                if(weatherWidget) weatherWidget.classList.add('visible');
+
+                // 2. Yan Fonksiyonları Başlat (Try-Catch içinde)
                 try {
-                    // İlk Verileri Yükle
                     if(stationNameEl) stationNameEl.innerText = stations[currentStationIndex].name;
                     if(audio) audio.src = stations[currentStationIndex].url;
                     
-                    // Ekranı Aç
-                    if(overlay) overlay.classList.add('slide-down-active');
-                    if(document.getElementById("mainCard")) {
-                        document.getElementById("mainCard").style.opacity = "1";
-                        document.getElementById("mainCard").style.transform = "translateY(0)";
-                    }
-                    if(document.getElementById("footerText")) document.getElementById("footerText").classList.add('copyright-visible');
-                    if(weatherWidget) weatherWidget.classList.add('visible');
-
-                    // Yan Fonksiyonlar
-                    updateClock();
                     getWeather();
-                    initSnow();
                     setCircularFavicon();
+                    initSnow();
 
-                    // Müzik Başlat
+                    // 3. Müziği Başlat
                     if(audio) {
                         let playPromise = audio.play();
                         if (playPromise !== undefined) {
                             playPromise.catch(error => {
                                 console.log("Otomatik oynatma engellendi:", error);
-                                // Otomatik oynatma engellense bile UI'ı hazır moda getir
-                                updateUI("Hazır - Oynat'a Bas", "#aaa");
+                                updateUI("Oynat'a Basın", "#aaa");
                             });
                         }
-                        
-                        // 8 saniye içinde 'playing' event'i gelmezse hata say
-                        connectionTimeout = setTimeout(() => {
-                            if(audio.paused) handleConnectionError();
-                        }, 8000);
+                        // Timeout: Eğer 6 saniye içinde çalmazsa
+                        connectionTimeout = setTimeout(() => { 
+                            if(audio.paused && isPlaying) handleConnectionError(); 
+                        }, 6000);
                     }
-
-                    setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500);
-
                 } catch(e) {
-                    console.error("Giriş Hatası:", e);
-                    if(overlay) overlay.style.display = 'none'; // Hata olsa bile siteyi aç
+                    console.log("Başlatma hatası:", e);
                 }
+
+                // Overlay'i DOM'dan kaldır (Performans)
+                setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
+            }
+
+            // --- RADYO OLAYLARI ---
+            if(audio) {
+                audio.addEventListener('playing', () => {
+                    clearTimeout(connectionTimeout); isSwitching = false; isPlaying = true;
+                    fadeInMusic(); updateBackground('station'); updateThemeColors(false);
+                    updateUI("Canlı Yayın", stations[currentStationIndex].accent);
+                    if(playerBox) { playerBox.classList.add("playing"); playerBox.classList.add("active-glow"); }
+                    if(playIcon) { playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause"); }
+                });
+
+                audio.addEventListener('error', (e) => { 
+                    handleConnectionError();
+                    updateUI("Hata! Geçiliyor...", "red"); 
+                    if(playerBox) playerBox.classList.remove("playing"); isSwitching = false; 
+                    setTimeout(() => triggerChangeStation(1), 1500);
+                });
             }
 
             // --- RADYO KONTROLLERİ ---
@@ -463,7 +411,7 @@
                         handleConnectionError();
                         updateUI("Yanıt Yok! Geçiliyor...", "red");
                         setTimeout(() => triggerChangeStation(1), 1500);
-                    }, 8000); // 8sn bekle
+                    }, 8000); 
 
                     let playPromise = audio.play();
                     if (playPromise !== undefined) playPromise.catch(e => {});
@@ -482,7 +430,7 @@
                     if(statusTextEl) statusTextEl.innerText = "Durduruluyor...";
                     fadeInterval = setInterval(() => {
                         if (audio.volume > 0.02) { audio.volume -= 0.02; } else { 
-                            audio.pause(); audio.volume = 0; clearInterval(fadeInterval);
+                            audio.pause(); audio.volume = 0; clearInterval(fadeInterval); isPlaying = false;
                             updateUI("Durduruldu", "#aaa"); updateBackground('default'); updateThemeColors(false);
                             if(playerBox) { playerBox.classList.remove("playing"); playerBox.classList.remove("active-glow"); }
                             if(playIcon) { playIcon.classList.remove("fa-pause"); playIcon.classList.add("fa-play"); }
@@ -497,7 +445,7 @@
                 fadeInterval = setInterval(() => { if (audio.volume < 0.4) { audio.volume = Math.min(audio.volume + 0.02, 0.4); } else { clearInterval(fadeInterval); } }, 100);
             }
 
-            // --- GÖRSEL FONKSİYONLAR ---
+            // --- GÖRSEL VE HATA YÖNETİMİ ---
             function updateUI(statusMsg, statusColor) {
                 if(stationNameEl) {
                     stationNameEl.classList.remove('anim-slide'); void stationNameEl.offsetWidth; stationNameEl.classList.add('anim-slide');
@@ -538,13 +486,6 @@
                 }
                 if(playBtn) playBtn.style.color = color;
                 equalizerBars.forEach(bar => bar.style.backgroundColor = color);
-                
-                // Saat Rengi
-                if(clockHour && clockMinute) {
-                    const clockColor = isError ? "rgba(255,0,0,0.2)" : (audio && !audio.paused ? hexToRgba(color, 0.15) : "rgba(255,255,255,0.03)");
-                    clockHour.style.color = clockColor;
-                    clockMinute.style.color = clockColor;
-                }
             }
 
             function handleConnectionError() {
@@ -559,24 +500,6 @@
                     if(playerBox) playerBox.classList.remove('player-error');
                 }, 1200);
             }
-
-            // --- SAAT ---
-            function updateClock() {
-                try {
-                    const now = new Date();
-                    const timeOptions = { timeZone: userTimeZone, hour12: false, hour: '2-digit', minute: '2-digit' };
-                    const timeString = new Intl.DateTimeFormat('tr-TR', timeOptions).format(now);
-                    const [hour, minute] = timeString.split(':');
-
-                    if(clockHour) clockHour.innerText = hour;
-                    if(clockMinute) clockMinute.innerText = minute;
-
-                    const dateOptions = { timeZone: userTimeZone, weekday: 'long', day: 'numeric', month: 'long' };
-                    const dateString = new Intl.DateTimeFormat('tr-TR', dateOptions).format(now);
-                    if(dateText) dateText.innerText = dateString;
-                } catch(e) {}
-            }
-            setInterval(updateClock, 1000);
 
             // --- HAVA DURUMU ---
             function getWeather() {
@@ -594,9 +517,9 @@
                 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`)
                     .then(res => res.json())
                     .then(data => {
-                        if(data.timezone) userTimeZone = data.timezone; updateClock();
                         updateWeatherUI(data.current, cityName);
-                    });
+                    })
+                    .catch(() => triggerWeatherError());
             }
 
             function updateWeatherUI(current, locationName) {
@@ -610,6 +533,7 @@
                 const code = current.weather_code;
                 if (code === 0) { iconClass = "fa-sun"; color = "#ffd700"; }
                 else if (code <= 3) { iconClass = "fa-cloud-sun"; color = "#d4d4d4"; }
+                else if (code <= 48) { iconClass = "fa-smog"; color = "#aaa"; }
                 else if (code <= 67) { iconClass = "fa-cloud-rain"; color = "#00bfff"; }
                 else if (code <= 77) { iconClass = "fa-snowflake"; color = "#fff"; }
                 
@@ -658,7 +582,6 @@
                                         item.innerText = `${city.name}, ${city.country || ''}`;
                                         item.onclick = (e) => {
                                             e.stopPropagation();
-                                            if(city.timezone) userTimeZone = city.timezone;
                                             fetchWeather(city.latitude, city.longitude, city.name);
                                             disableSearchMode(new Event('click'));
                                         };
@@ -670,20 +593,21 @@
                 });
             }
 
-            // Helper: Hex to RGBA
-            function hexToRgba(hex, alpha) {
-                const r = parseInt(hex.slice(1, 3), 16);
-                const g = parseInt(hex.slice(3, 5), 16);
-                const b = parseInt(hex.slice(5, 7), 16);
-                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            function triggerWeatherError() {
+                if(!weatherWidget) return;
+                weatherWidget.classList.add("widget-error");
+                document.getElementById("w-icon").className = "fas fa-exclamation-triangle weather-icon";
+                document.getElementById("w-icon").style.color = "red";
+                handleConnectionError(); 
+                setTimeout(() => { weatherWidget.classList.remove("widget-error"); }, 1000);
             }
 
+            // --- YARDIMCILAR ---
             function setCircularFavicon() {
                 const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
                 img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
             }
 
-            // --- KAR EFEKTİ ---
             function initSnow() {
                 const canvas = document.getElementById("snowCanvas"); 
                 if(!canvas) return;
