@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yusuf Ali - Blog</title>
     
+    <link rel="icon" href="profil.jpg" type="image/jpeg">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
@@ -35,24 +37,37 @@
             z-index: 1; pointer-events: none;
         }
 
-        /* GİRİŞ EKRANI (OVERLAY) - GÜNCELLENDİ */
+        /* GİRİŞ EKRANI (OVERLAY) - GÜNCELLENMİŞ VERSİYON */
         #overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(15, 20, 35, 0.98), rgba(36, 11, 54, 0.95));
+            position: fixed;
+            
+            /* DEĞİŞİKLİK 1: Ekranı yukarıdan %15 dışarı taşırıyoruz */
+            top: -15vh;
+            left: 0;
+            width: 100%;
+            
+            /* DEĞİŞİKLİK 2: Boyunu uzatıyoruz ki alt taraf açık kalmasın */
+            height: 115vh;
+            
+            /* İçeriği ortalarken, yukarıdaki boşluğu telafi etmek için padding veriyoruz */
+            padding-top: 15vh;
+
+            background: linear-gradient(to bottom, rgba(15, 20, 35, 0.98), rgba(36, 11, 54, 0.98));
             backdrop-filter: blur(15px);
             z-index: 100; display: flex; justify-content: center; align-items: center;
             cursor: pointer;
             
             transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.5s ease;
 
-            /* YENİLEME: Maskeyi ÜST kısma uyguladık */
-            /* En üstten başlar (transparent), %10 aşağı inince tamamen görünür (black) olur */
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
-            mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+            /* DEĞİŞİKLİK 3: Maske sadece o gizli olan üst %15'lik kısımda */
+            /* 0% (en tepe) şeffaf başlar, 15% (ekranın başladığı yer) tam siyah olur */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
         }
 
         .slide-down-active {
-            transform: translateY(100%);
+            /* Perdeyi ekran boyundan daha fazla aşağı itmeliyiz */
+            transform: translateY(115%);
             opacity: 0;
         }
 
@@ -186,11 +201,8 @@
 
             overlay.classList.add('slide-down-active');
             
-            // Kartı getir
             card.style.opacity = "1";
             card.style.transform = "translateY(0)";
-            
-            // Footer'ı belirginleştir
             footer.classList.add('copyright-visible');
 
             if (!audioInitialized) {
@@ -279,7 +291,6 @@
                 for(let i = 0; i < 4; i++) { bassSum += dataArray[i]; }
                 let bassAvg = bassSum / 4; 
 
-                // Kick vuruşu
                 if (bassAvg > 210) { 
                     kickImpulse = 2.5; 
                 }
