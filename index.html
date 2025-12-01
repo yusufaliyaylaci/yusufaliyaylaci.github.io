@@ -15,11 +15,16 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(45deg, #240b36, #1a1a2e, #0f3460, #240b36);
+            /* VARSAYILAN TEMA: Siyah - Gri tonları (Müzik kapalıyken) */
+            background: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000);
             background-size: 400% 400%;
             height: 100vh;
             display: flex; justify-content: center; align-items: center;
             overflow: hidden;
+            
+            /* Renk geçişleri için çok yumuşak bir transition ekledik */
+            transition: background 3s ease-in-out;
+            
             animation: gradientBG 15s ease infinite;
             color: white;
             position: relative;
@@ -37,7 +42,7 @@
         #overlay {
             position: fixed; top: -15vh; left: 0; width: 100%; height: 115vh;
             padding-top: 15vh;
-            background: linear-gradient(to bottom, rgba(15, 20, 35, 0.98), rgba(36, 11, 54, 0.98));
+            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.98), rgba(30, 30, 30, 0.98));
             backdrop-filter: blur(15px);
             z-index: 100; display: flex; justify-content: center; align-items: center;
             cursor: pointer;
@@ -57,24 +62,24 @@
 
         /* KART */
         .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05); /* Biraz daha şeffaf */
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 40px; border-radius: 20px; text-align: center; width: 360px;
             opacity: 0; transform: translateY(30px); 
             transition: all 1.2s ease 0.6s;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10; position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 10; position: relative;
         }
 
         .profile-img {
             width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
-            border: 3px solid rgba(255,255,255,0.5); margin-bottom: 20px; transition: transform 0.5s;
+            border: 3px solid rgba(255,255,255,0.3); margin-bottom: 20px; transition: transform 0.5s;
         }
         .profile-img:hover { transform: scale(1.1) rotate(5deg); }
 
         h2 { margin-bottom: 5px; font-weight: 600; font-size: 1.8rem; }
         .subtitle { font-size: 0.8rem; color: #ccc; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase;}
-        p.bio { font-size: 0.9rem; opacity: 0.9; margin-bottom: 25px; line-height: 1.6; color: #e0e0e0; }
+        p.bio { font-size: 0.9rem; opacity: 0.8; margin-bottom: 25px; line-height: 1.6; color: #ddd; }
 
         .social-links { display: flex; justify-content: center; gap: 15px; }
         .social-btn {
@@ -98,7 +103,7 @@
         }
 
         .radio-player {
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
             padding: 10px 20px;
             border-radius: 50px;
@@ -181,19 +186,44 @@
     </div>
 
     <script>
-        // --- GÜNCELLENMİŞ RADYO LİSTESİ ---
+        // --- RADYO LİSTESİ VE RENK PALETLERİ ---
+        // colors: [Renk1, Renk2, Renk3] şeklinde tanımlanır.
         const stations = [
-            { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
-            { name: "Radyo Fenomen", url: "https://fenomen.listenfenomen.com/fenomen/128/icecast.audio" }, // Yeni Link
-            { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio" },
-            { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio" },
-            { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone" },
-            { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC" }
+            { 
+                name: "Lofi Hip Hop", 
+                url: "https://stream.zeno.fm/0r0xa792kwzuv",
+                colors: ["#240b36", "#c31432", "#240b36"] // Pembe - Mor - Koyu
+            },
+            { 
+                name: "Radyo Fenomen", 
+                url: "https://moondigitalv2.mediatriple.net/fenomen", // GÜNCELLENMİŞ LİNK
+                colors: ["#ff512f", "#dd2476", "#ff512f"] // Enerjik Turuncu - Pembe
+            },
+            { 
+                name: "Power FM", 
+                url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio",
+                colors: ["#1cb5e0", "#000046", "#1cb5e0"] // Buz Mavisi - Lacivert
+            },
+            { 
+                name: "Joy FM", 
+                url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC",
+                colors: ["#134e5e", "#71b280", "#134e5e"] // Doğa Yeşili - Turkuaz
+            },
+            { 
+                name: "Number 1 FM", 
+                url: "https://n10101m.mediatriple.net/numberone",
+                colors: ["#8E2DE2", "#4A00E0", "#8E2DE2"] // Elektrik Moru
+            },
+            { 
+                name: "Power Türk", 
+                url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio",
+                colors: ["#e52d27", "#b31217", "#e52d27"] // Türk Bayrağı Kırmızısı
+            }
         ];
 
         let currentStationIndex = 0;
         let isPlaying = false;
-        let fadeInterval; // Fade efekti için sayaç
+        let fadeInterval;
 
         var audio = document.getElementById("bgMusic");
         var overlay = document.getElementById("overlay");
@@ -204,28 +234,39 @@
         const statusTextEl = document.getElementById("statusText");
         const playIcon = document.getElementById("playIcon");
 
-        // --- YUVARLAK FAVICON YAPICI ---
-        // Profil fotoğrafını alıp yuvarlak kesip favicon yapar
+        // --- DİNAMİK ARKA PLAN DEĞİŞTİRİCİ ---
+        function updateBackground(isDefault = false) {
+            const body = document.body;
+            
+            if (isDefault) {
+                // Müzik Durduğunda: Siyah - Gri Asil Tema
+                body.style.background = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)";
+            } else {
+                // Müzik Çalarken: Radyonun renkleri
+                const colors = stations[currentStationIndex].colors;
+                // Arka planı JS ile değiştiriyoruz, CSS transition bunu yumuşatacak
+                body.style.background = `linear-gradient(45deg, ${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`;
+            }
+            // Animasyonun bozulmaması için size'ı tekrar set ediyoruz
+            body.style.backgroundSize = "400% 400%";
+        }
+
+        // --- YUVARLAK FAVICON ---
         function setCircularFavicon() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            img.src = 'profil.jpg'; // Dosya adınla aynı olmalı
+            img.src = 'profil.jpg';
             img.onload = () => {
-                canvas.width = 64;
-                canvas.height = 64;
+                canvas.width = 64; canvas.height = 64;
                 ctx.beginPath();
                 ctx.arc(32, 32, 32, 0, 2 * Math.PI);
                 ctx.closePath();
-                ctx.clip(); // Yuvarlak kırpma
+                ctx.clip();
                 ctx.drawImage(img, 0, 0, 64, 64);
-                
-                // Oluşan yeni resmi favicon yap
-                const link = document.getElementById('dynamicFavicon');
-                link.href = canvas.toDataURL();
+                document.getElementById('dynamicFavicon').href = canvas.toDataURL();
             };
         }
-        // Sayfa açılınca çalıştır
         setCircularFavicon();
 
         function loadStation(index) {
@@ -234,33 +275,33 @@
             audio.load();
         }
 
-        // --- FADE IN & OUT FONKSİYONLARI ---
-        const targetVolume = 0.4; // Maksimum ses seviyesi (%40)
+        // --- FADE IN & OUT ---
+        const targetVolume = 0.4;
 
         function playWithFade() {
-            clearInterval(fadeInterval); // Önceki işlemi durdur
-            audio.volume = 0; // Sesi sıfırla
+            clearInterval(fadeInterval);
+            audio.volume = 0;
             let playPromise = audio.play();
 
             if (playPromise !== undefined) {
                 playPromise.then(_ => {
-                    // Müzik başladı, şimdi sesi yavaşça artır
                     playIcon.classList.remove("fa-play");
                     playIcon.classList.add("fa-pause");
                     statusTextEl.innerText = "Canlı Yayın";
                     statusTextEl.style.color = "#00ff00";
                     isPlaying = true;
+                    
+                    // Renkleri değiştir (Radyo teması)
+                    updateBackground(false);
 
                     fadeInterval = setInterval(() => {
                         if (audio.volume < targetVolume) {
-                            // 0.02'şer artır (daha pürüzsüz)
                             audio.volume = Math.min(audio.volume + 0.02, targetVolume);
                         } else {
                             clearInterval(fadeInterval);
                         }
-                    }, 100); // 100ms'de bir artır
-                })
-                .catch(error => {
+                    }, 100);
+                }).catch(error => {
                     console.log("Hata:", error);
                     statusTextEl.innerText = "Bağlanamadı";
                     statusTextEl.style.color = "red";
@@ -269,19 +310,20 @@
         }
 
         function pauseWithFade() {
-            clearInterval(fadeInterval); // Önceki işlemi durdur
+            clearInterval(fadeInterval);
             statusTextEl.innerText = "Durduruluyor...";
             statusTextEl.style.color = "#aaa";
+            
+            // Renkleri sıfırla (Default Siyah Tema)
+            updateBackground(true);
 
             fadeInterval = setInterval(() => {
                 if (audio.volume > 0.02) {
-                    audio.volume -= 0.02; // Sesi yavaşça kıs
+                    audio.volume -= 0.02;
                 } else {
-                    // Ses sıfırlandı, tamamen durdur
                     audio.volume = 0;
                     audio.pause();
                     clearInterval(fadeInterval);
-                    
                     playIcon.classList.remove("fa-pause");
                     playIcon.classList.add("fa-play");
                     statusTextEl.innerText = "Durduruldu";
@@ -299,8 +341,6 @@
         }
 
         function nextStation() {
-            // İleri geçince sesi küt diye kesme, durdurmadan değiştiriyoruz
-            // ama yeni istasyon yüklenirken ses zaten kesilir.
             currentStationIndex = (currentStationIndex + 1) % stations.length;
             changeStation();
         }
@@ -311,28 +351,26 @@
         }
 
         function changeStation() {
-            // Önce sesi kısarak durdurabiliriz ama hızlı geçiş için direkt yükleyip fade-in yapalım
             statusTextEl.innerText = "Bağlanıyor...";
             statusTextEl.style.color = "#f093fb";
-            
-            // Eğer müzik çalıyorsa, önce durdurup yeni kaynağı yükle
             audio.pause();
             loadStation(currentStationIndex);
             
-            // Otomatik fade-in ile başlat
             if (isPlaying) {
-                playWithFade();
+                playWithFade(); // Yeni istasyon, yeni renklerle başlasın
+            } else {
+                // Eğer durdurulmuşken değiştiriyorsak sadece ismini göster, rengi değiştirme
+                updateBackground(true);
             }
         }
 
-        // --- SES ANALİZİ VE KAR EFEKTİ ---
+        // --- SES ANALİZİ VE KAR ---
         let audioContext, analyser, dataArray, source;
         let audioInitialized = false;
         const canvas = document.getElementById("snowCanvas");
         const ctx = canvas.getContext("2d");
         let snowflakes = [];
         let kickImpulse = 0; 
-
         let isSiteActive = false;
 
         function enterSite() {
@@ -358,13 +396,12 @@
                     audioInitialized = true;
                 } catch (e) { }
             }
-            playWithFade(); // Fade in ile başla
+            playWithFade(); 
             setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
 
         // SWIPE
-        let startY = 0;
-        let endY = 0;
+        let startY = 0; let endY = 0;
         overlay.addEventListener('click', enterSite);
         overlay.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, {passive: true});
         overlay.addEventListener('touchend', (e) => {
@@ -372,7 +409,7 @@
             if (endY > startY + 50) enterSite();
         }, {passive: true});
 
-        // KAR EFEKTİ
+        // KAR ANİMASYONU
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -403,16 +440,9 @@
                 ctx.fill();
             }
         }
-
-        function initSnow() {
-            snowflakes = [];
-            for (let i = 0; i < 90; i++) { snowflakes.push(new Snowflake()); }
-            animateSnow();
-        }
-
+        function initSnow() { snowflakes = []; for (let i = 0; i < 90; i++) { snowflakes.push(new Snowflake()); } animateSnow(); }
         function animateSnow() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             if (audioInitialized && !audio.paused) {
                 try {
                     analyser.getByteFrequencyData(dataArray);
@@ -424,11 +454,9 @@
             }
             kickImpulse *= 0.95; 
             if (kickImpulse < 0.05) kickImpulse = 0;
-
             snowflakes.forEach(flake => { flake.update(); flake.draw(); });
             requestAnimationFrame(animateSnow);
         }
-
         initSnow();
     </script>
 </body>
