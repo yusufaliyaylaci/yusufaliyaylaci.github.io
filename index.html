@@ -40,12 +40,13 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* --- SAAT (DEVASA) --- */
+        /* --- SAAT (DEVASA - GÜNCELLENDİ) --- */
         .big-clock-num {
             position: absolute;
             top: 50%; transform: translateY(-50%);
             font-size: 30vw; font-weight: 800;
-            color: rgba(255, 255, 255, 0.05);
+            /* GÜNCELLENDİ: Opaklık 0.03'ten 0.06'ya çıkarıldı (Daha belirgin) */
+            color: rgba(255, 255, 255, 0.06); 
             z-index: -2; pointer-events: none;
             line-height: 1; transition: color 1s ease;
             font-variant-numeric: tabular-nums;
@@ -53,11 +54,14 @@
         #clock-hour { left: 2%; text-align: left; }
         #clock-minute { right: 2%; text-align: right; }
 
-        /* --- TARİH --- */
+        /* --- TARİH (YENİ KONUM) --- */
         #date-display {
-            position: absolute; top: 72%; left: 50%; transform: translateX(-50%);
+            position: fixed; /* Ekran altına sabitlemek için fixed */
+            bottom: 35px; /* Footer'ın hemen üstü */
+            left: 50%; transform: translateX(-50%);
             font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
-            opacity: 0.6; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.5); font-weight: 300;
+            opacity: 0.7; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.5); font-weight: 300;
+            pointer-events: none;
         }
 
         /* --- HATA EFEKTLERİ --- */
@@ -200,6 +204,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         @keyframes slideInList { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         .anim-slide { animation: slideInRight 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
         .anim-fade { animation: fadeInUp 0.6s ease forwards; }
@@ -213,8 +218,9 @@
             .weather-widget.visible { transform: translateX(50%) translateY(0); }
             .radio-player { padding: 10px 20px; width: 90%; justify-content: space-between;}
             .radio-info { min-width: auto; }
-            .big-clock-num { font-size: 35vw; opacity: 0.03; }
-            #date-display { top: 75%; }
+            .big-clock-num { font-size: 35vw; opacity: 0.05; }
+            /* Mobilde tarih, radyo player'ın üzerine çıksın */
+            #date-display { bottom: 90px; }
         }
     </style>
 </head>
@@ -228,6 +234,7 @@
     
     <div id="clock-hour" class="big-clock-num">00</div>
     <div id="clock-minute" class="big-clock-num">00</div>
+    
     <div id="date-display">Yükleniyor...</div>
 
     <audio id="bgMusic" crossorigin="anonymous" preload="none"></audio>
@@ -314,7 +321,6 @@
 
         // --- GÜVENLİ GİRİŞ FONKSİYONU ---
         function startExperience() {
-            // 1. Önce Arayüzü Aç (Donma riskini yok et)
             const overlay = document.getElementById("overlay");
             if(overlay) overlay.classList.add('slide-down-active');
             
@@ -323,14 +329,14 @@
             document.getElementById("footerText").classList.add('copyright-visible');
             document.getElementById("weatherWidget").classList.add('visible');
 
-            // 2. Ardından Sistemleri Başlat (Hata olsa bile site açılmış olur)
+            // 2. Ardından Sistemleri Başlat
             setTimeout(() => {
                 initClock();
                 initRadio();
                 initWeather();
                 initSnow();
                 setCircularFavicon();
-            }, 100); // 100ms gecikmeli başlat
+            }, 100); 
 
             setTimeout(() => { 
                 if(overlay) overlay.style.display = 'none'; 
@@ -366,7 +372,17 @@
             document.getElementById("stationName").innerText = stations[currentStationIndex].name;
             audio.src = stations[currentStationIndex].url;
 
-            // Events
+            // Events (UI Watchdog)
+            const syncUI = () => {
+                // Eğer müzik çalıyorsa ama yazı hala "Hazır" ise düzelt
+                if(!audio.paused && document.getElementById("statusText").innerText !== "Canlı Yayın") {
+                    updateUI("Canlı Yayın", stations[currentStationIndex].accent);
+                    document.getElementById("playerBox").classList.add("playing", "active-glow");
+                    document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
+                    updateThemeColors(false);
+                }
+            };
+
             audio.addEventListener('playing', () => {
                 clearTimeout(connectionTimeout); isSwitching = false; isPlaying = true;
                 fadeInMusic(); updateBackground('station'); updateThemeColors(false);
@@ -374,6 +390,9 @@
                 document.getElementById("playerBox").classList.add("playing", "active-glow");
                 document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
             });
+            
+            // Ekstra kontrol: Süre ilerliyorsa kesin çalıyordur
+            audio.addEventListener('timeupdate', syncUI);
 
             audio.addEventListener('error', () => {
                 handleConnectionError();
@@ -546,8 +565,8 @@
             playerBox.style.borderColor = isError ? "red" : "rgba(255,255,255,0.15)";
             
             document.querySelectorAll('.equalizer .bar').forEach(bar => bar.style.backgroundColor = color);
-            document.getElementById("clock-hour").style.color = isError ? "rgba(255,0,0,0.2)" : "rgba(255,255,255,0.03)";
-            document.getElementById("clock-minute").style.color = isError ? "rgba(255,0,0,0.2)" : "rgba(255,255,255,0.03)";
+            document.getElementById("clock-hour").style.color = isError ? "rgba(255,0,0,0.2)" : "rgba(255,255,255,0.06)";
+            document.getElementById("clock-minute").style.color = isError ? "rgba(255,0,0,0.2)" : "rgba(255,255,255,0.06)";
         }
 
         function handleConnectionError() {
@@ -574,6 +593,7 @@
             const code = current.weather_code;
             if (code === 0) { iconClass = "fa-sun"; color = "#ffd700"; }
             else if (code <= 3) { iconClass = "fa-cloud-sun"; color = "#d4d4d4"; }
+            else if (code <= 48) { iconClass = "fa-smog"; color = "#aaa"; }
             else if (code <= 67) { iconClass = "fa-cloud-rain"; color = "#00bfff"; }
             else if (code <= 77) { iconClass = "fa-snowflake"; color = "#fff"; }
             
@@ -622,7 +642,6 @@
             
             for (let i = 0; i < 90; i++) snowflakes.push(new Snowflake());
 
-            // Audio Context Başlatma (Güvenli)
             if(audio) {
                 try {
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
