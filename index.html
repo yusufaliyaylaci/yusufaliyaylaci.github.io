@@ -23,12 +23,12 @@
             position: relative;
         }
 
-        /* ARKA PLAN SİSTEMİ */
+        /* --- ARKA PLAN SİSTEMİ --- */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
-            transition: opacity 2s ease-in-out;
+            transition: opacity 3s ease-in-out;
             opacity: 0; z-index: -2;
         }
         .bg-layer.active { opacity: 1; z-index: -1; }
@@ -40,7 +40,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* HATA EFEKTLERİ */
+        /* --- HATA EFEKTLERİ --- */
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, transparent 40%, rgba(200, 0, 0, 0.4) 100%);
@@ -143,25 +143,93 @@
         .radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
         .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
         
-        /* HAVA DURUMU WIDGET */
+        /* --- GELİŞMİŞ HAVA DURUMU WIDGET --- */
         .weather-widget {
             position: absolute; top: 30px; right: 30px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(10, 10, 10, 0.6);
             backdrop-filter: blur(15px);
             padding: 10px 20px;
-            border-radius: 50px;
+            border-radius: 20px; /* Köşeli yuvarlak */
             border: 1px solid rgba(255,255,255,0.1);
-            display: flex; align-items: center; gap: 12px;
+            display: flex; flex-direction: column; /* İçeriği alt alta dizeceğiz */
+            align-items: flex-end;
             z-index: 20;
-            opacity: 0; transform: translateY(-20px); /* Başlangıçta gizli */
-            transition: all 1s ease 1s; /* Gecikmeli gelsin */
+            opacity: 0; transform: translateY(-20px);
+            transition: all 0.5s ease 1s; /* Gecikmeli giriş */
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+            
+            /* Varsayılan boyutlar (Kapalı hali) */
+            height: 60px; 
+            min-width: 140px;
         }
+
         .weather-widget.visible { opacity: 1; transform: translateY(0); }
-        .weather-icon { font-size: 1.5rem; color: #ffd700; }
-        .weather-info { display: flex; flex-direction: column; text-align: right; }
-        .weather-temp { font-size: 1rem; font-weight: 600; }
-        .weather-desc { font-size: 0.65rem; opacity: 0.8; }
+
+        /* Hover efekti veya mobilde tıklayınca genişlemesi için */
+        .weather-widget:hover, .weather-widget.expanded {
+            height: auto; /* İçeriğe göre uza */
+            min-width: 200px;
+            background: rgba(10, 10, 10, 0.85);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        /* Üst Kısım: İkon ve Derece */
+        .weather-header {
+            display: flex; align-items: center; gap: 12px;
+            width: 100%; justify-content: flex-end;
+            cursor: pointer;
+        }
+
+        .weather-icon { font-size: 1.8rem; color: #ffd700; transition: transform 0.3s; }
+        .weather-widget:hover .weather-icon { transform: scale(1.1) rotate(10deg); }
+
+        .weather-main-info { display: flex; flex-direction: column; text-align: right; }
+        .weather-temp { font-size: 1.2rem; font-weight: 700; color: white; }
+        .weather-city { font-size: 0.75rem; opacity: 0.7; }
+
+        /* Detay Kısmı (Gizli) */
+        .weather-details {
+            margin-top: 15px;
+            width: 100%;
+            opacity: 0; 
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            display: none; /* Yer kaplamasın */
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 10px;
+        }
+
+        /* Hover olunca detayları göster */
+        .weather-widget:hover .weather-details, .weather-widget.expanded .weather-details {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .detail-item {
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; color: #ccc; margin-bottom: 5px;
+        }
+
+        /* Şehir Arama Alanı (Konum yoksa görünür) */
+        .city-search-box {
+            display: none; width: 100%; flex-direction: column; gap: 5px; margin-top: 5px;
+        }
+        .search-input {
+            background: rgba(255,255,255,0.1); border: none; padding: 5px 10px;
+            border-radius: 5px; color: white; font-family: inherit; font-size: 0.8rem;
+        }
+        .search-input:focus { outline: none; background: rgba(255,255,255,0.2); }
+        .search-btn {
+            background: #00bfff; border: none; padding: 5px; border-radius: 5px;
+            color: white; font-size: 0.7rem; cursor: pointer; font-weight: 600;
+        }
+        
+        .weather-widget.search-mode { height: auto; min-width: 180px; }
+        .weather-widget.search-mode .city-search-box { display: flex; }
+        .weather-widget.search-mode .weather-header { display: none; } /* Header gizle, arama göster */
+
 
         @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
         @keyframes slideInRight { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -206,12 +274,36 @@
         </div>
     </div>
 
-    <div class="weather-widget" id="weatherWidget">
-        <div class="weather-info">
-            <span class="weather-temp" id="w-temp">--°</span>
-            <span class="weather-desc" id="w-desc">Konum Bekleniyor...</span>
+    <div class="weather-widget" id="weatherWidget" onclick="this.classList.toggle('expanded')">
+        
+        <div class="weather-header" id="weatherHeader">
+            <div class="weather-main-info">
+                <span class="weather-temp" id="w-temp">--°</span>
+                <span class="weather-city" id="w-city">Konum Bekleniyor</span>
+            </div>
+            <i class="fas fa-location-arrow weather-icon" id="w-icon"></i>
         </div>
-        <i class="fas fa-cloud-sun weather-icon" id="w-icon"></i>
+
+        <div class="weather-details" id="weatherDetails">
+            <div class="detail-item">
+                <span>Rüzgar:</span>
+                <span id="w-wind">-- km/s</span>
+            </div>
+            <div class="detail-item">
+                <span>Nem:</span>
+                <span id="w-hum">--%</span>
+            </div>
+            <div class="detail-item" style="text-align: center; margin-top: 8px; font-size: 0.6rem; opacity: 0.5;">
+                Şehir değiştirmek için tıkla
+            </div>
+        </div>
+
+        <div class="city-search-box" id="citySearchBox">
+            <div style="font-size: 0.8rem; margin-bottom: 5px; color:#ccc;">Şehir Seçiniz:</div>
+            <input type="text" class="search-input" id="cityInput" placeholder="Örn: Istanbul">
+            <button class="search-btn" onclick="manualCitySearch(event)">Hava Durumunu Getir</button>
+        </div>
+
     </div>
 
     <div class="card" id="mainCard">
@@ -287,67 +379,104 @@
 
         bg1.style.background = defaultGradient;
 
-        // --- HAVA DURUMU ENTEGRASYONU ---
+        // --- GELİŞMİŞ HAVA DURUMU LOGIC ---
+        const weatherWidget = document.getElementById("weatherWidget");
+        const citySearchBox = document.getElementById("citySearchBox");
+        const weatherHeader = document.getElementById("weatherHeader");
+
         function getWeather() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(fetchWeather, handleLocationError);
+                navigator.geolocation.getCurrentPosition(fetchWeatherByCoords, showSearchMode);
             } else {
-                handleLocationError(); // Tarayıcı desteklemiyorsa
+                showSearchMode();
             }
         }
 
-        // Konum bulunursa
-        function fetchWeather(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    updateWeatherUI(data.current_weather, "Konumun");
-                })
-                .catch(() => handleLocationError()); // API hatası olursa varsayılana dön
+        function showSearchMode() {
+            weatherWidget.classList.add("search-mode");
+            citySearchBox.style.display = "flex";
+            weatherHeader.style.display = "none";
         }
 
-        // Konum bulunamazsa veya izin verilmezse (VARSAYILAN: İZMİR)
-        function handleLocationError() {
-            // İzmir koordinatları
-            const lat = 38.41;
-            const lon = 27.12;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+        // Koordinat ile hava durumu
+        function fetchWeatherByCoords(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            // Şehir ismini bulmak için Reverse Geocoding yapıyoruz (Open-Meteo desteklemiyor, tahmini isim koyacağız veya başka API)
+            // Basitlik için koordinatları alıp API'ye soracağız, API timezone'dan şehir tahmin edebilir ama biz "Konumun" yazacağız veya Geocoding API kullanacağız.
             
+            // Open-Meteo'dan hava durumu al (Current + Wind + Humidity)
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
+
             fetch(url)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    updateWeatherUI(data.current_weather, "İzmir");
+                    updateWeatherUI(data.current, "Konumunuz");
+                    // Eğer search modundaysa kapat
+                    weatherWidget.classList.remove("search-mode");
+                    citySearchBox.style.display = "none";
+                    weatherHeader.style.display = "flex";
+                })
+                .catch(e => showSearchMode());
+        }
+
+        // Manuel Şehir Arama (Geocoding API)
+        function manualCitySearch(event) {
+            event.stopPropagation(); // Widget kapanmasın
+            const city = document.getElementById("cityInput").value;
+            if(!city) return;
+
+            // 1. Önce şehrin koordinatlarını bul
+            fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=tr&format=json`)
+                .then(res => res.json())
+                .then(geoData => {
+                    if(geoData.results && geoData.results.length > 0) {
+                        const { latitude, longitude, name } = geoData.results[0];
+                        
+                        // 2. Sonra o koordinatın havasını çek
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
+                        
+                        fetch(url)
+                            .then(res => res.json())
+                            .then(weatherData => {
+                                updateWeatherUI(weatherData.current, name);
+                                // Arayüzü düzelt
+                                weatherWidget.classList.remove("search-mode");
+                                citySearchBox.style.display = "none";
+                                weatherHeader.style.display = "flex";
+                            });
+                    } else {
+                        alert("Şehir bulunamadı!");
+                    }
                 });
         }
 
-        function updateWeatherUI(data, locationName) {
-            const temp = Math.round(data.temperature);
-            const code = data.weathercode;
-            const tempEl = document.getElementById("w-temp");
-            const descEl = document.getElementById("w-desc");
-            const iconEl = document.getElementById("w-icon");
+        function updateWeatherUI(current, locationName) {
+            const temp = Math.round(current.temperature_2m);
+            const wind = current.wind_speed_10m;
+            const hum = current.relative_humidity_2m;
+            const code = current.weather_code;
 
-            tempEl.innerText = `${temp}°C`;
-            descEl.innerText = locationName;
+            document.getElementById("w-temp").innerText = `${temp}°C`;
+            document.getElementById("w-city").innerText = locationName;
+            document.getElementById("w-wind").innerText = `${wind} km/s`;
+            document.getElementById("w-hum").innerText = `%${hum}`;
 
-            // WMO kodlarını ikonlara çevir
+            // İkon Seçimi
             let iconClass = "fa-cloud";
             let color = "#fff";
+            if (code === 0) { iconClass = "fa-sun"; color = "#ffd700"; }
+            else if (code <= 3) { iconClass = "fa-cloud-sun"; color = "#d4d4d4"; }
+            else if (code <= 48) { iconClass = "fa-smog"; color = "#aaa"; }
+            else if (code <= 67) { iconClass = "fa-cloud-rain"; color = "#00bfff"; }
+            else if (code <= 77) { iconClass = "fa-snowflake"; color = "#fff"; }
+            else if (code >= 95) { iconClass = "fa-bolt"; color = "#ff4500"; }
 
-            if (code === 0) { iconClass = "fa-sun"; color = "#fwd700"; } // Açık
-            else if (code >= 1 && code <= 3) { iconClass = "fa-cloud-sun"; color = "#d4d4d4"; } // Bulutlu
-            else if (code >= 45 && code <= 48) { iconClass = "fa-smog"; color = "#aaa"; } // Sis
-            else if (code >= 51 && code <= 67) { iconClass = "fa-cloud-rain"; color = "#00bfff"; } // Yağmur
-            else if (code >= 71 && code <= 77) { iconClass = "fa-snowflake"; color = "#fff"; } // Kar
-            else if (code >= 95) { iconClass = "fa-bolt"; color = "#ff4500"; } // Fırtına
-
+            const iconEl = document.getElementById("w-icon");
             iconEl.className = `fas ${iconClass} weather-icon`;
             iconEl.style.color = color;
         }
+
 
         // --- DİĞER FONKSİYONLAR (RADYO, UI VB.) ---
         function updateBackground(mode) {
