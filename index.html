@@ -143,12 +143,12 @@
         .radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
         .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
         
-        /* --- GELİŞMİŞ HAVA DURUMU WIDGET (DÜZELTİLMİŞ) --- */
+        /* --- GELİŞMİŞ HAVA DURUMU WIDGET --- */
         .weather-widget {
             position: absolute; top: 30px; right: 30px;
             background: rgba(10, 10, 10, 0.6);
             backdrop-filter: blur(15px);
-            padding: 15px 20px; /* Padding artırıldı */
+            padding: 15px 20px;
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.1);
             display: flex; flex-direction: column;
@@ -156,20 +156,25 @@
             z-index: 20;
             opacity: 0; transform: translateY(-20px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            overflow: hidden;
+            overflow: visible; /* Öneri listesi dışarı taşsın diye visible yaptık */
             
-            /* Animasyon Ayarları */
             transition: max-height 0.6s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.4s, opacity 1s ease 1s;
-            max-height: 70px; /* Kapalıyken yükseklik */
+            max-height: 70px;
             min-width: 160px;
+        }
+
+        /* HATA MODU (WIDGET) */
+        .weather-widget.widget-error {
+            border-color: #ff0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            animation: shakeError 0.5s ease-in-out;
         }
 
         .weather-widget.visible { opacity: 1; transform: translateY(0); }
 
-        /* Hover veya Expanded durumunda açılma */
         .weather-widget:hover, .weather-widget.expanded {
-            max-height: 300px; /* Açılınca maksimum yükseklik */
-            background: rgba(10, 10, 10, 0.9);
+            max-height: 400px; /* Listeye yer aç */
+            background: rgba(10, 10, 10, 0.95);
             border-color: rgba(255,255,255,0.3);
         }
 
@@ -186,57 +191,66 @@
         .weather-temp { font-size: 1.3rem; font-weight: 700; color: white; line-height: 1; }
         .weather-city { font-size: 0.8rem; opacity: 0.7; margin-top: 3px; }
 
-        /* Detay Alanı */
         .weather-details {
-            margin-top: 15px;
-            width: 100%;
-            opacity: 0; 
-            transform: translateY(-10px);
-            transition: all 0.4s ease 0.1s; /* Hafif gecikme */
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 10px;
+            margin-top: 15px; width: 100%; opacity: 0; 
+            transform: translateY(-10px); transition: all 0.4s ease 0.1s;
+            border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;
         }
 
         .weather-widget:hover .weather-details, .weather-widget.expanded .weather-details {
             opacity: 1; transform: translateY(0);
         }
 
-        .detail-item {
-            display: flex; justify-content: space-between;
-            font-size: 0.8rem; color: #ddd; margin-bottom: 6px;
-        }
+        .detail-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #ddd; margin-bottom: 6px; }
 
         .change-city-text {
-            text-align: center; margin-top: 10px; 
-            font-size: 0.7rem; color: #00bfff; 
-            cursor: pointer; text-decoration: underline;
-            transition: color 0.2s;
+            text-align: center; margin-top: 10px; font-size: 0.7rem; color: #00bfff; 
+            cursor: pointer; text-decoration: underline; transition: color 0.2s;
         }
         .change-city-text:hover { color: #fff; }
 
-        /* Arama Kutusu */
+        /* Arama Kutusu ve Öneriler */
         .city-search-box {
             display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.3s ease; position: relative;
         }
         
         .search-input {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); 
             padding: 8px 10px; border-radius: 8px; color: white; font-family: inherit; font-size: 0.85rem;
+            width: 100%;
         }
         .search-input:focus { outline: none; border-color: #00bfff; background: rgba(255,255,255,0.15); }
         
-        .search-btn {
-            background: linear-gradient(45deg, #00bfff, #0077ff); border: none; 
-            padding: 8px; border-radius: 8px; color: white; font-size: 0.8rem; cursor: pointer; font-weight: 600;
-            transition: transform 0.2s;
+        /* Şehir Öneri Listesi (Dropdown) */
+        .suggestions-list {
+            position: absolute;
+            top: 100%; left: 0; width: 100%;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 30;
+            display: none;
+            margin-top: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-        .search-btn:hover { transform: scale(1.02); }
-        
-        /* Arama Modu */
-        .weather-widget.search-mode { max-height: 300px; }
+        .suggestions-list.active { display: block; }
+        .suggestion-item {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            color: #ccc;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: rgba(0, 191, 255, 0.2); color: white; }
+
+        .weather-widget.search-mode { max-height: 400px; }
         .weather-widget.search-mode .city-search-box { display: flex; }
-        .weather-widget.search-mode .weather-details { display: none; } /* Detayları gizle */
+        .weather-widget.search-mode .weather-details { display: none; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
@@ -307,10 +321,11 @@
         </div>
 
         <div class="city-search-box" id="citySearchBox">
-            <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Seçiniz:</div>
-            <input type="text" class="search-input" id="cityInput" placeholder="Örn: Istanbul" onkeypress="handleEnter(event)">
-            <button class="search-btn" onclick="manualCitySearch(event)">Hava Durumunu Getir</button>
-            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 5px;" onclick="disableSearchMode(event)">İptal</div>
+            <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Ara:</div>
+            <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off">
+            <div class="suggestions-list" id="suggestionsList"></div>
+            
+            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" onclick="disableSearchMode(event)">İptal</div>
         </div>
 
     </div>
@@ -388,16 +403,19 @@
 
         bg1.style.background = defaultGradient;
 
-        // --- HAVA DURUMU LOGIC ---
+        // --- HAVA DURUMU LOGIC & AUTOCOMPLETE ---
         const weatherWidget = document.getElementById("weatherWidget");
         const citySearchBox = document.getElementById("citySearchBox");
         const weatherDetails = document.getElementById("weatherDetails");
         const weatherHeader = document.getElementById("weatherHeader");
+        const cityInput = document.getElementById("cityInput");
+        const suggestionsList = document.getElementById("suggestionsList");
+        let debounceTimer;
 
+        // Otomatik Konum
         function getWeather() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(fetchWeatherByCoords, () => {
-                    // İzin verilmezse direkt arama modunu açma, ama varsayılanı göster
                     updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin");
                 });
             } else {
@@ -405,29 +423,75 @@
             }
         }
 
-        // Tıklayınca Arama Modunu Aç
+        // Search Modu Aç/Kapa
         function enableSearchMode(event) {
             event.stopPropagation();
             weatherWidget.classList.add("search-mode");
             citySearchBox.style.display = "flex";
             weatherHeader.style.display = "none";
-            weatherDetails.style.display = "none"; // Detayları gizle
+            weatherDetails.style.display = "none";
+            cityInput.focus();
         }
 
-        // İptal Butonu
         function disableSearchMode(event) {
             event.stopPropagation();
             weatherWidget.classList.remove("search-mode");
             citySearchBox.style.display = "none";
             weatherHeader.style.display = "flex";
-            // Detaylar hover ile geri gelir, stile dokunma
+            suggestionsList.style.display = "none";
+            cityInput.value = "";
             setTimeout(() => { weatherDetails.style.display = ""; }, 100);
         }
 
-        function handleEnter(e) {
-            if(e.key === 'Enter') manualCitySearch(e);
+        // AUTOCOMPLETE LİSTENER
+        cityInput.addEventListener("input", function() {
+            const query = this.value;
+            clearTimeout(debounceTimer);
+            suggestionsList.innerHTML = "";
+            suggestionsList.style.display = "none";
+
+            if (query.length < 2) return;
+
+            debounceTimer = setTimeout(() => {
+                fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=tr&format=json`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.results) {
+                            suggestionsList.style.display = "block";
+                            data.results.forEach(city => {
+                                const item = document.createElement("div");
+                                item.className = "suggestion-item";
+                                item.innerText = `${city.name}, ${city.country || ''}`;
+                                item.onclick = (e) => {
+                                    e.stopPropagation();
+                                    selectCity(city);
+                                };
+                                suggestionsList.appendChild(item);
+                            });
+                        }
+                    }).catch(() => triggerWeatherError());
+            }, 300); // 300ms bekle (performans için)
+        });
+
+        // Şehir Seçildiğinde
+        function selectCity(cityData) {
+            const lat = cityData.latitude;
+            const lon = cityData.longitude;
+            const name = cityData.name;
+            
+            // Hava durumunu çek
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(weatherData => {
+                    updateWeatherUI(weatherData.current, name);
+                    disableSearchMode(new Event('click')); // Modu kapat
+                })
+                .catch(() => triggerWeatherError());
         }
 
+        // Koordinat ile hava durumu
         function fetchWeatherByCoords(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
@@ -437,31 +501,8 @@
                 .then(res => res.json())
                 .then(data => {
                     updateWeatherUI(data.current, "Konumunuz");
-                });
-        }
-
-        function manualCitySearch(event) {
-            event.stopPropagation();
-            const city = document.getElementById("cityInput").value;
-            if(!city) return;
-
-            fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=tr&format=json`)
-                .then(res => res.json())
-                .then(geoData => {
-                    if(geoData.results && geoData.results.length > 0) {
-                        const { latitude, longitude, name } = geoData.results[0];
-                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
-                        
-                        fetch(url)
-                            .then(res => res.json())
-                            .then(weatherData => {
-                                updateWeatherUI(weatherData.current, name);
-                                disableSearchMode(event);
-                            });
-                    } else {
-                        alert("Şehir bulunamadı!");
-                    }
-                });
+                })
+                .catch(() => triggerWeatherError());
         }
 
         function updateWeatherUI(current, locationName) {
@@ -489,7 +530,22 @@
             iconEl.style.color = color;
         }
 
-        // --- DİĞER FONKSİYONLAR ---
+        // --- HAVA DURUMU HATA EFEKTİ ---
+        function triggerWeatherError() {
+            // Widget Titremesi
+            weatherWidget.classList.add("widget-error");
+            document.getElementById("w-icon").className = "fas fa-exclamation-triangle weather-icon";
+            document.getElementById("w-icon").style.color = "red";
+            
+            // Genel Hata Efektleri (Radyo ile aynı)
+            handleConnectionError(); // Kırmızı vinyet ve shockwave'i tetikler
+
+            setTimeout(() => {
+                weatherWidget.classList.remove("widget-error");
+            }, 1000);
+        }
+
+        // --- DİĞER FONKSİYONLAR (RADYO, UI VB.) ---
         function updateBackground(mode) {
             let newGradient;
             if (mode === 'default') newGradient = defaultGradient;
@@ -523,10 +579,13 @@
             clearTimeout(connectionTimeout);
             errorOverlay.classList.add('active-error'); shockwave.classList.add('active-swipe'); playerBox.classList.add('player-error');
             updateBackground('error'); updateThemeColors(true);
-            updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+            
+            // Eğer radyo çalıyorsa durdurma, sadece efekt ver.
+            // Radyo modunda ise bu fonksiyon ayrıca geçişi tetikler.
+            // Hava durumundan çağrıldıysa sadece görsel efekt çalışır.
+            
             setTimeout(() => {
                 errorOverlay.classList.remove('active-error'); shockwave.classList.remove('active-swipe'); playerBox.classList.remove('player-error');
-                triggerChangeStation(1);
             }, 1200);
         }
 
@@ -538,7 +597,12 @@
             playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause");
         });
 
-        audio.addEventListener('error', (e) => { handleConnectionError(); });
+        audio.addEventListener('error', (e) => { 
+            // Sadece radyo hatası ise geçiş yap
+            handleConnectionError();
+            updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+            setTimeout(() => triggerChangeStation(1), 1200);
+        });
 
         function updateUI(statusMsg, statusColor) {
             stationNameEl.classList.remove('anim-slide'); void stationNameEl.offsetWidth; stationNameEl.classList.add('anim-slide');
@@ -565,8 +629,12 @@
             if (direction === 1) { currentStationIndex = (currentStationIndex + 1) % stations.length; } else if (direction === -1) { currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length; }
             audio.src = stations[currentStationIndex].url; audio.load();
             updateUI("Bağlanıyor...", "#fff"); playerBox.classList.remove("playing"); updateThemeColors(false);
-            connectionTimeout = setTimeout(() => { handleConnectionError(); }, 7000);
-            let playPromise = audio.play(); if (playPromise !== undefined) { playPromise.catch(e => { handleConnectionError(); }); }
+            connectionTimeout = setTimeout(() => { 
+                handleConnectionError();
+                updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+                setTimeout(() => triggerChangeStation(1), 1200);
+            }, 7000);
+            let playPromise = audio.play(); if (playPromise !== undefined) { playPromise.catch(e => { /* Error handler will catch */ }); }
         }
 
         function fadeInMusic() {
@@ -576,8 +644,12 @@
 
         function togglePlay() {
             if (audio.paused) {
-                clearTimeout(connectionTimeout); let playPromise = audio.play(); if(playPromise !== undefined) playPromise.catch(e => handleConnectionError());
-                connectionTimeout = setTimeout(() => { if(audio.paused) handleConnectionError(); }, 6000);
+                clearTimeout(connectionTimeout); let playPromise = audio.play(); if(playPromise !== undefined) playPromise.catch(e => { /* Error handler */ });
+                connectionTimeout = setTimeout(() => { if(audio.paused) {
+                    handleConnectionError();
+                    updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+                    setTimeout(() => triggerChangeStation(1), 1200);
+                } }, 6000);
             } else {
                 clearInterval(fadeInterval); statusTextEl.innerText = "Durduruluyor...";
                 fadeInterval = setInterval(() => {
@@ -613,7 +685,11 @@
             
             let playPromise = audio.play();
             if(playPromise !== undefined) playPromise.catch(() => setTimeout(() => triggerChangeStation(1), 1000));
-            connectionTimeout = setTimeout(() => { if(audio.paused) handleConnectionError(); }, 6000);
+            connectionTimeout = setTimeout(() => { if(audio.paused) {
+                handleConnectionError();
+                updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+                setTimeout(() => triggerChangeStation(1), 1200);
+            } }, 6000);
             setTimeout(() => { document.getElementById("overlay").style.display = 'none'; }, 1500); 
         }
 
