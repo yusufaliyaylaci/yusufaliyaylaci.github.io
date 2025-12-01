@@ -15,7 +15,6 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            /* Ana background rengi yerine katmanları kullanacağız */
             background-color: #1a1a1a;
             height: 100vh;
             display: flex; justify-content: center; align-items: center;
@@ -24,27 +23,43 @@
             position: relative;
         }
 
-        /* DİNAMİK ARKA PLAN KATMANLARI (Hareketli + Soft Geçişli) */
+        /* DİNAMİK ARKA PLAN KATMANLARI */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: 400% 400%;
-            /* ÖNEMLİ: Hareket animasyonu burada */
             animation: gradientBG 15s ease infinite;
-            /* ÖNEMLİ: Renk geçiş yumuşaklığı burada (Opacity) */
             transition: opacity 3s ease-in-out;
-            opacity: 0; z-index: -2; /* Varsayılan olarak gizli ve en arkada */
+            opacity: 0; z-index: -2;
         }
-
-        /* Aktif olan katman görünür olur */
         .bg-layer.active { opacity: 1; z-index: -1; }
-
-        /* Varsayılan Siyah Tema Renkleri */
         #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
 
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
+        }
+
+        /* --- KIRMIZI VİNYET EFEKTİ (HATA İÇİN) --- */
+        #error-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            /* Ortası şeffaf, kenarları kırmızı */
+            background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%);
+            opacity: 0; 
+            pointer-events: none; /* Tıklamayı engelleme */
+            z-index: 50;
+            transition: opacity 0.5s ease;
+        }
+        
+        /* JS ile eklenecek sınıf */
+        #error-overlay.active-error {
+            opacity: 1;
+            animation: pulseRed 1s infinite alternate;
+        }
+
+        @keyframes pulseRed {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
         }
 
         #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
@@ -71,7 +86,7 @@
         @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
-        /* KART TASARIMI */
+        /* KART */
         .card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(20px);
@@ -152,6 +167,8 @@
     <div class="bg-layer active" id="bg-layer-1"></div>
     <div class="bg-layer" id="bg-layer-2"></div>
 
+    <div id="error-overlay"></div>
+
     <canvas id="snowCanvas"></canvas>
     <audio id="bgMusic" crossorigin="anonymous"></audio>
 
@@ -205,12 +222,36 @@
     <script>
         const defaultGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)";
         const stations = [
-            { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)" },
-            { name: "Radyo Fenomen", url: "https://fenomen.listenfenomen.com/fenomen/128/icecast.audio", gradient: "linear-gradient(45deg, #ff512f, #dd2476, #ff512f, #dd2476)" },
-            { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #1cb5e0, #000046, #1cb5e0, #000046)" },
-            { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC", gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)" },
-            { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)" },
-            { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)" }
+            { 
+                name: "Lofi Hip Hop", 
+                url: "https://stream.zeno.fm/0r0xa792kwzuv",
+                gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)"
+            },
+            { 
+                name: "Radyo Fenomen", 
+                url: "https://fenomen.listenfenomen.com/fenomen/128/icecast.audio", // Fenomen linki (Hata verirse atlayacak)
+                gradient: "linear-gradient(45deg, #ff512f, #dd2476, #ff512f, #dd2476)"
+            },
+            { 
+                name: "Power FM", 
+                url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio",
+                gradient: "linear-gradient(45deg, #1cb5e0, #000046, #1cb5e0, #000046)"
+            },
+            { 
+                name: "Joy FM", 
+                url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC",
+                gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)"
+            },
+            { 
+                name: "Virgin Radio", 
+                url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio",
+                gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)"
+            },
+             { 
+                name: "Power Türk", 
+                url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio",
+                gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)"
+            }
         ];
 
         let currentStationIndex = 0;
@@ -228,29 +269,44 @@
         const playIcon = document.getElementById("playIcon");
         const playerBox = document.getElementById("playerBox");
         const equalizerAnim = document.getElementById("equalizerAnim");
+        const errorOverlay = document.getElementById("error-overlay"); // Kırmızı Vinyet
         
-        // Background Layer Kontrolü
         const bg1 = document.getElementById("bg-layer-1");
         const bg2 = document.getElementById("bg-layer-2");
-        let activeBgLayer = 1; // Hangi katman şu an önde?
+        let activeBgLayer = 1;
 
-        // --- DİNAMİK ARKA PLAN (Crossfade + Animasyon Koruma) ---
+        bg1.style.background = defaultGradient;
+
+        // --- HATA YÖNETİMİ ---
+        function handleConnectionError() {
+            console.log("Bağlantı Hatası Algılandı!");
+            
+            // 1. Kırmızı Vinyeti Yak
+            errorOverlay.classList.add('active-error');
+            
+            // 2. UI Güncelle
+            updateUI("Bağlanamadı -> Geçiliyor", "red");
+            
+            // 3. Kilidi aç ama bekle
+            isSwitching = false; 
+
+            // 4. Tam 1 Saniye Bekle ve Atla
+            setTimeout(() => {
+                errorOverlay.classList.remove('active-error'); // Kırmızıyı söndür
+                triggerChangeStation(1); // Bir sonrakine geç
+            }, 1000);
+        }
+
+        // --- ARKA PLAN DEĞİŞİMİ ---
         function updateBackground(isDefault = false) {
             const newGradient = isDefault ? defaultGradient : stations[currentStationIndex].gradient;
-            
-            // Hedef (şu an pasif olan) katmanı belirle
             const targetLayer = activeBgLayer === 1 ? bg2 : bg1;
             const currentLayer = activeBgLayer === 1 ? bg1 : bg2;
             
-            // Yeni rengi arka plana koy ve boyutunu ayarla (Animasyonun sürmesi için)
             targetLayer.style.backgroundImage = newGradient;
             targetLayer.style.backgroundSize = "400% 400%";
-            
-            // Crossfade işlemini başlat
             currentLayer.classList.remove('active');
             targetLayer.classList.add('active');
-
-            // Aktif katmanı değiştir
             activeBgLayer = activeBgLayer === 1 ? 2 : 1;
         }
 
@@ -260,6 +316,7 @@
             statusTextEl.classList.remove('anim-fade'); void statusTextEl.offsetWidth; statusTextEl.classList.add('anim-fade');
             if(statusMsg) { statusTextEl.innerText = statusMsg; statusTextEl.style.color = statusColor; }
         }
+
         function setPlayingState(playing) {
             if(playing) {
                 playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause");
@@ -269,14 +326,13 @@
                 playerBox.classList.remove("active-glow"); equalizerAnim.classList.remove("show");
             }
         }
-        function setCircularFavicon() {
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
-            img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
-        }
-        setCircularFavicon();
 
+        // --- RADYO KONTROL ---
         function triggerChangeStation(direction) {
-            if(isSwitching) return; isSwitching = true; clearTimeout(connectionTimeout);
+            if(isSwitching) return;
+            isSwitching = true;
+            clearTimeout(connectionTimeout); // Eski sayacı temizle
+
             if (isPlaying) {
                 statusTextEl.innerText = "Değiştiriliyor..."; statusTextEl.style.color = "#f093fb";
                 clearInterval(fadeInterval);
@@ -288,15 +344,43 @@
 
         function finalizeStationChange(direction) {
             if (direction === 1) { currentStationIndex = (currentStationIndex + 1) % stations.length; } else if (direction === -1) { currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length; }
-            audio.src = stations[currentStationIndex].url; audio.load();
+            
+            audio.src = stations[currentStationIndex].url;
+            audio.load();
+            
             updateUI("Bağlanıyor...", "#f093fb");
-            connectionTimeout = setTimeout(() => { console.log("Zaman aşımı!"); updateUI("Yanıt Yok -> Geçiliyor", "red"); isSwitching = false; triggerChangeStation(1); }, 5000);
+
+            // --- GÜVENLİK SAYACI (TIMEOUT) ---
+            // 5 saniye içinde çalmazsa hata fonksiyonunu çağır
+            connectionTimeout = setTimeout(() => {
+                handleConnectionError(); 
+            }, 5000);
+
             let playPromise = audio.play();
             if (playPromise !== undefined) {
-                playPromise.then(_ => { clearTimeout(connectionTimeout); fadeInMusic(); updateBackground(false); isSwitching = false; })
-                .catch(e => { clearTimeout(connectionTimeout); updateUI("Hata -> Geçiliyor", "red"); isSwitching = false; setTimeout(() => { triggerChangeStation(1); }, 1000); });
+                playPromise.catch(e => {
+                    clearTimeout(connectionTimeout); // Promise hatası gelirse sayacı durdur
+                    handleConnectionError(); // Ve direkt hata yönetimine git
+                });
             }
         }
+
+        // --- MÜZİK BAŞLAYINCA (ONPLAY) ---
+        // Bu event dinleyicisi ÇOK ÖNEMLİ. Müzik gerçekten çalmaya başladığı an çalışır.
+        audio.onplay = function() {
+            // Müzik başladıysa HATA sayacını ve GEÇİŞ kilidini iptal et!
+            clearTimeout(connectionTimeout);
+            isSwitching = false; 
+            
+            fadeInMusic();
+            updateBackground(false);
+        };
+        
+        // --- MÜZİK HATA VERİRSE (ONERROR) ---
+        audio.onerror = function() {
+            clearTimeout(connectionTimeout);
+            handleConnectionError();
+        };
 
         function fadeInMusic() {
             updateUI("Canlı Yayın", "#00ff00"); setPlayingState(true); isPlaying = true;
@@ -307,7 +391,10 @@
         function togglePlay() {
             if (audio.paused) {
                 clearTimeout(connectionTimeout);
-                audio.play().then(() => { fadeInMusic(); updateBackground(false); }).catch(e => { triggerChangeStation(1); });
+                let playPromise = audio.play();
+                if(playPromise !== undefined) {
+                     playPromise.catch(e => handleConnectionError());
+                }
             } else {
                 clearInterval(fadeInterval); statusTextEl.innerText = "Durduruluyor...";
                 fadeInterval = setInterval(() => {
@@ -315,6 +402,13 @@
                 }, 100);
             }
         }
+
+        // --- KAR VE DİĞERLERİ ---
+        function setCircularFavicon() {
+            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
+            img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
+        }
+        setCircularFavicon();
 
         let audioContext, analyser, dataArray, source; let audioInitialized = false;
         const canvas = document.getElementById("snowCanvas"); const ctx = canvas.getContext("2d");
@@ -325,9 +419,25 @@
             stationNameEl.innerText = stations[currentStationIndex].name; audio.src = stations[currentStationIndex].url;
             overlay.classList.add('slide-down-active'); card.style.opacity = "1"; card.style.transform = "translateY(0)"; footer.classList.add('copyright-visible');
             if (!audioInitialized) { try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); analyser = audioContext.createAnalyser(); source = audioContext.createMediaElementSource(audio); source.connect(analyser); analyser.connect(audioContext.destination); analyser.fftSize = 256; dataArray = new Uint8Array(analyser.frequencyBinCount); audioInitialized = true; } catch (e) { } }
-            isPlaying = true; audio.play().then(() => { fadeInMusic(); updateBackground(false); }).catch(() => { setTimeout(() => triggerChangeStation(1), 1000); });
+            
+            // Girişte başlatma denemesi
+            isPlaying = true;
+            let playPromise = audio.play();
+            if(playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // İlk açılışta hata verirse 1sn sonra diğerine geç
+                    setTimeout(() => triggerChangeStation(1), 1000);
+                });
+            }
+            
+            // 5 saniyelik güvenlik zamanlayıcısı (Giriş için)
+            connectionTimeout = setTimeout(() => {
+                 if(audio.paused) handleConnectionError();
+            }, 5000);
+
             setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
+
         let startY = 0; let endY = 0;
         overlay.addEventListener('click', enterSite); overlay.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, {passive: true}); overlay.addEventListener('touchend', (e) => { endY = e.changedTouches[0].clientY; if (endY > startY + 50) enterSite(); }, {passive: true});
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; } window.addEventListener('resize', resizeCanvas); resizeCanvas();
