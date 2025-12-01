@@ -89,7 +89,7 @@
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); }
         .social-btn:hover::before { opacity: 1; }
 
-        /* YENİ RADYO PLAYER TASARIMI */
+        /* RADYO PLAYER */
         .radio-wrapper {
             position: absolute; bottom: 30px; right: 30px;
             z-index: 20;
@@ -107,33 +107,18 @@
             transition: all 0.3s ease;
         }
         
-        .radio-info {
-            text-align: right;
-            margin-right: 5px;
-        }
-        
-        .station-name {
-            font-size: 0.85rem; font-weight: 600; color: #fff;
-            white-space: nowrap;
-        }
-        
-        .status-text {
-            font-size: 0.65rem; color: #aaa;
-        }
+        .radio-info { text-align: right; margin-right: 5px; }
+        .station-name { font-size: 0.85rem; font-weight: 600; color: #fff; white-space: nowrap; }
+        .status-text { font-size: 0.65rem; color: #aaa; }
 
-        .controls {
-            display: flex; align-items: center; gap: 10px;
-        }
-
+        .controls { display: flex; align-items: center; gap: 10px; }
         .control-btn {
             background: none; border: none; color: white;
-            cursor: pointer; font-size: 1rem; opacity: 0.7;
-            transition: 0.2s;
+            cursor: pointer; font-size: 1rem; opacity: 0.7; transition: 0.2s;
         }
         .control-btn:hover { opacity: 1; transform: scale(1.1); }
         .play-btn { font-size: 1.2rem; color: #f093fb; }
 
-        /* Footer */
         .footer-copyright {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
             font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%;
@@ -141,7 +126,6 @@
         }
         .copyright-visible { opacity: 0.7; }
         
-        /* Mobilde Player Düzeni */
         @media (max-width: 480px) {
             .radio-wrapper { bottom: 20px; right: 50%; transform: translateX(50%); align-items: center; }
             .radio-player { padding: 8px 15px; }
@@ -197,13 +181,14 @@
     </div>
 
     <script>
-        // --- RADYO İSTASYONLARI LİSTESİ ---
+        // --- GÜNCELLENMİŞ VE ÇALIŞAN RADYO LİSTESİ (HEPSİ HTTPS) ---
         const stations = [
             { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
             { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio" },
-            { name: "Kral Pop", url: "https://yayin.kralpop.com.tr/kralpop/mpeg/icecast.audio" },
-            { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio" },
-            { name: "Best FM", url: "http://46.20.7.126:8000/;" }
+            { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio" },
+            { name: "Fenomen", url: "https://listen.radyofenomen.com/fenomen/128/icecast.audio" },
+            { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone" },
+            { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC" }
         ];
 
         let currentStationIndex = 0;
@@ -214,12 +199,10 @@
         var card = document.getElementById("mainCard");
         var footer = document.getElementById("footerText");
         
-        // UI Elementleri
         const stationNameEl = document.getElementById("stationName");
         const statusTextEl = document.getElementById("statusText");
         const playIcon = document.getElementById("playIcon");
 
-        // Radyo Fonksiyonları
         function loadStation(index) {
             stationNameEl.innerText = stations[index].name;
             audio.src = stations[index].url;
@@ -228,16 +211,24 @@
 
         function togglePlay() {
             if (audio.paused) {
-                audio.play().then(() => {
-                    playIcon.classList.remove("fa-play");
-                    playIcon.classList.add("fa-pause");
-                    statusTextEl.innerText = "Canlı Yayın";
-                    statusTextEl.style.color = "#00ff00";
-                    isPlaying = true;
-                }).catch(e => {
-                    console.log("Oynatma hatası:", e);
-                    statusTextEl.innerText = "Hata!";
-                });
+                let playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        playIcon.classList.remove("fa-play");
+                        playIcon.classList.add("fa-pause");
+                        statusTextEl.innerText = "Canlı Yayın";
+                        statusTextEl.style.color = "#00ff00";
+                        isPlaying = true;
+                    })
+                    .catch(error => {
+                        console.log("Oynatma hatası:", error);
+                        statusTextEl.innerText = "Bağlanamadı";
+                        statusTextEl.style.color = "red";
+                        // Otomatik bir sonraki istasyona geçmeyi deneyebiliriz istersen
+                        // nextStation();
+                    });
+                }
             } else {
                 audio.pause();
                 playIcon.classList.remove("fa-pause");
@@ -262,14 +253,18 @@
             statusTextEl.innerText = "Bağlanıyor...";
             statusTextEl.style.color = "#f093fb";
             loadStation(currentStationIndex);
-            if(isPlaying) {
-                audio.play().then(() => {
-                    playIcon.classList.remove("fa-play");
-                    playIcon.classList.add("fa-pause");
-                    statusTextEl.innerText = "Canlı Yayın";
-                    statusTextEl.style.color = "#00ff00";
-                });
-            }
+            
+            // İstasyon değişince otomatik çalmaya çalış
+            audio.play().then(() => {
+                playIcon.classList.remove("fa-play");
+                playIcon.classList.add("fa-pause");
+                statusTextEl.innerText = "Canlı Yayın";
+                statusTextEl.style.color = "#00ff00";
+                isPlaying = true;
+            }).catch(e => {
+                statusTextEl.innerText = "Yayın Yok";
+                statusTextEl.style.color = "red";
+            });
         }
 
         // --- SES ANALİZİ VE KAR EFEKTİ ---
@@ -286,7 +281,6 @@
             if(isSiteActive) return;
             isSiteActive = true;
 
-            // İlk radyoyu yükle
             loadStation(currentStationIndex);
 
             overlay.classList.add('slide-down-active');
@@ -294,14 +288,10 @@
             card.style.transform = "translateY(0)";
             footer.classList.add('copyright-visible');
 
-            // Audio Context Başlat
             if (!audioInitialized) {
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     analyser = audioContext.createAnalyser();
-                    
-                    // Not: Radyo akışlarında CORS (Güvenlik) nedeniyle her zaman analiz yapılamayabilir.
-                    // Bu durumda müzik çalar ama kar efekti tepki vermeyebilir.
                     source = audioContext.createMediaElementSource(audio);
                     source.connect(analyser);
                     analyser.connect(audioContext.destination);
@@ -309,16 +299,14 @@
                     dataArray = new Uint8Array(analyser.frequencyBinCount);
                     audioInitialized = true;
                 } catch (e) {
-                    console.log("Audio Context (Radyo) uyarısı:", e);
+                    // Radyo sunucusu CORS hatası verirse burası sessizce geçilir
                 }
             }
-            
-            // Başlat
             togglePlay();
             setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
 
-        // --- SWIPE EVENT ---
+        // SWIPE
         let startY = 0;
         let endY = 0;
         overlay.addEventListener('click', enterSite);
@@ -328,7 +316,7 @@
             if (endY > startY + 50) enterSite();
         }, {passive: true});
 
-        // --- KAR ANİMASYONU ---
+        // KAR EFEKTİ
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -369,7 +357,6 @@
         function animateSnow() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Eğer radyo analiz edilebiliyorsa (CORS izni varsa)
             if (audioInitialized && !audio.paused) {
                 try {
                     analyser.getByteFrequencyData(dataArray);
@@ -377,10 +364,7 @@
                     for(let i = 0; i < 4; i++) { bassSum += dataArray[i]; }
                     let bassAvg = bassSum / 4; 
                     if (bassAvg > 210) { kickImpulse = 2.5; }
-                } catch(e) {
-                    // Radyo sunucusu veri analizine izin vermiyorsa burası çalışır
-                    // Kar yağmaya devam eder ama müziğe tepki vermez
-                }
+                } catch(e) {}
             }
             kickImpulse *= 0.95; 
             if (kickImpulse < 0.05) kickImpulse = 0;
