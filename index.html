@@ -35,18 +35,30 @@
             z-index: 1; pointer-events: none;
         }
 
-        /* GİRİŞ EKRANI */
+        /* GİRİŞ EKRANI (OVERLAY) */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 20, 35, 0.9);
-            backdrop-filter: blur(8px);
+            /* Hafif gradyanlı koyu arka plan */
+            background: linear-gradient(to bottom, rgba(15, 20, 35, 0.95), rgba(36, 11, 54, 0.9));
+            backdrop-filter: blur(10px);
             z-index: 100; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: all 0.8s ease-in-out;
+            cursor: pointer;
+            
+            /* YENİ: Aşağı kayma animasyonu ayarları */
+            transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1), opacity 1.2s ease;
+        }
+
+        /* JavaScript ile eklenecek sınıf: Overlay'i aşağı atar */
+        .slide-down-active {
+            transform: translateY(100%); /* Tamamen aşağı kaydır */
+            opacity: 0;
         }
 
         .overlay-content { text-align: center; animation: fadeUp 1s ease forwards; padding: 20px; }
         #overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
         #overlay p { font-size: 1.1rem; font-weight: 300; opacity: 0.8; margin-bottom: 30px; }
+        
+        /* Ok İkonu */
         .click-icon { font-size: 2rem; opacity: 0.7; animation: bounce 2s infinite; }
 
         @keyframes fadeUp {
@@ -55,7 +67,8 @@
         }
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); }
+            40% { transform: translateY(10px); } /* Aşağı doğru hareket vurgusu */
+            60% { transform: translateY(5px); }
         }
 
         /* ANA KART */
@@ -64,7 +77,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 40px; border-radius: 20px; text-align: center; width: 360px;
-            opacity: 0; transform: translateY(30px); transition: all 1s ease;
+            opacity: 0; transform: translateY(30px); transition: all 1s ease 0.5s; /* 0.5s gecikme ekledik ki perde inerken kart gelsin */
             box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10; position: relative;
         }
 
@@ -105,10 +118,10 @@
         <source src="muzik.mp3" type="audio/mpeg">
     </audio>
 
-    <div id="overlay" onclick="enterSite()">
+    <div id="overlay">
         <div class="overlay-content">
             <h1>Hoş Geldiniz</h1>
-            <p>Müzik eşliğinde giriş yapmak için ekrana dokunun.</p>
+            <p>Girmek için dokunun veya aşağı kaydırın</p>
             <i class="fas fa-chevron-down click-icon"></i>
         </div>
     </div>
@@ -140,107 +153,32 @@
         var overlay = document.getElementById("overlay");
         var card = document.getElementById("mainCard");
         
+        // Müzik Analiz Değişkenleri
         let audioContext, analyser, dataArray, source;
         let audioInitialized = false;
 
+        // Kar Efekti Değişkenleri
         const canvas = document.getElementById("snowCanvas");
         const ctx = canvas.getContext("2d");
         let snowflakes = [];
         let extraSpeed = 0; 
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        class Snowflake {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3 + 1; 
-                this.baseSpeed = Math.random() * 0.5 + 0.3; // Düşüş hızı
-                this.opacity = Math.random() * 0.5 + 0.3;
-                
-                // SALINIM (Sağ-Sol Hareketi) için değişkenler
-                this.angle = Math.random() * Math.PI * 2; // Başlangıç açısı
-                this.angleSpeed = Math.random() * 0.02 + 0.01; // Salınım hızı
-                this.swingRange = Math.random() * 0.5 + 0.2; // Ne kadar sağa sola gideceği
-            }
-
-            update() {
-                // Y Hareketi (Aşağı iniş + Bass etkisi)
-                this.y += this.baseSpeed + extraSpeed;
-
-                // X Hareketi (Salınım - Süzülme)
-                this.angle += this.angleSpeed; 
-                // Math.cos kullanarak dalgalı bir hareket oluşturuyoruz
-                this.x += Math.cos(this.angle) * this.swingRange;
-
-                // Ekranın altına gelince yukarı taşı
-                if (this.y > canvas.height) {
-                    this.y = 0 - this.size;
-                    this.x = Math.random() * canvas.width;
-                }
-                
-                // Sağdan veya soldan çıkarsa diğer taraftan girsin (Sonsuz döngü)
-                if (this.x > canvas.width) this.x = 0;
-                if (this.x < 0) this.x = canvas.width;
-            }
-
-            draw() {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function initSnow() {
-            snowflakes = [];
-            for (let i = 0; i < 90; i++) { 
-                snowflakes.push(new Snowflake());
-            }
-            animateSnow();
-        }
-
-        function animateSnow() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (audioInitialized && !audio.paused) {
-                analyser.getByteFrequencyData(dataArray);
-                let bassSum = 0;
-                for(let i = 0; i < 5; i++) {
-                    bassSum += dataArray[i];
-                }
-                let bassAvg = bassSum / 5; 
-
-                // Bass vuruşu algıla ve hızı artır
-                if (bassAvg > 170) {
-                    extraSpeed = 2.0; 
-                }
-            }
-
-            // Hızı yavaşça normale döndür (Smooth Decay)
-            extraSpeed *= 0.94; 
-            if (extraSpeed < 0.05) extraSpeed = 0;
-
-            snowflakes.forEach(flake => {
-                flake.update();
-                flake.draw();
-            });
-
-            requestAnimationFrame(animateSnow);
-        }
+        // --- GİRİŞ VE ANİMASYON FONKSİYONLARI ---
+        let isSiteActive = false; // Siteye girildi mi?
 
         function enterSite() {
-            overlay.style.opacity = "0";
-            overlay.style.backdropFilter = "blur(0px)";
-            setTimeout(() => { overlay.style.display = "none"; }, 800);
+            if(isSiteActive) return; // Zaten girildiyse tekrar çalışma
+            isSiteActive = true;
+
+            // 1. Overlay'i Aşağı Kaydır (Slide Down)
+            overlay.classList.add('slide-down-active');
+            
+            // 2. Kartı Getir (Gecikmeli)
+            // CSS'de transition delay var, o yüzden direkt stil veriyoruz
             card.style.opacity = "1";
             card.style.transform = "translateY(0)";
 
+            // 3. Ses Sistemini Başlat
             if (!audioInitialized) {
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -257,6 +195,100 @@
             }
             audio.volume = 0.4;
             audio.play();
+
+            // Animasyon bitince overlay'i tamamen gizle (performans için)
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 1200);
+        }
+
+        // --- MOBİL İÇİN KAYDIRMA (SWIPE) ALGILAMA ---
+        let startY = 0;
+        let endY = 0;
+
+        // Tıklama ile giriş
+        overlay.addEventListener('click', enterSite);
+
+        // Dokunma Başlangıcı
+        overlay.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+        }, {passive: true});
+
+        // Dokunma Bitişi
+        overlay.addEventListener('touchend', function(e) {
+            endY = e.changedTouches[0].clientY;
+            handleGesture();
+        }, {passive: true});
+
+        function handleGesture() {
+            // Eğer aşağı doğru (Y ekseninde pozitif) kaydırma 50px'den fazlaysa
+            if (endY > startY + 50) {
+                enterSite();
+            }
+        }
+
+        // --- KAR EFEKTİ VE MÜZİK ANALİZİ (Aynı kaldı) ---
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1; 
+                this.baseSpeed = Math.random() * 0.5 + 0.3; 
+                this.opacity = Math.random() * 0.5 + 0.3;
+                this.angle = Math.random() * Math.PI * 2; 
+                this.angleSpeed = Math.random() * 0.02 + 0.01; 
+                this.swingRange = Math.random() * 0.5 + 0.2; 
+            }
+
+            update() {
+                this.y += this.baseSpeed + extraSpeed;
+                this.angle += this.angleSpeed; 
+                this.x += Math.cos(this.angle) * this.swingRange;
+
+                if (this.y > canvas.height) {
+                    this.y = 0 - this.size;
+                    this.x = Math.random() * canvas.width;
+                }
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initSnow() {
+            snowflakes = [];
+            for (let i = 0; i < 90; i++) { snowflakes.push(new Snowflake()); }
+            animateSnow();
+        }
+
+        function animateSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (audioInitialized && !audio.paused) {
+                analyser.getByteFrequencyData(dataArray);
+                let bassSum = 0;
+                for(let i = 0; i < 5; i++) { bassSum += dataArray[i]; }
+                let bassAvg = bassSum / 5; 
+                if (bassAvg > 170) { extraSpeed = 2.0; }
+            }
+            extraSpeed *= 0.94; 
+            if (extraSpeed < 0.05) extraSpeed = 0;
+
+            snowflakes.forEach(flake => { flake.update(); flake.draw(); });
+            requestAnimationFrame(animateSnow);
         }
 
         function toggleMusic() {
