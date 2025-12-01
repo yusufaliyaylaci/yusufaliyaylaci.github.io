@@ -23,7 +23,7 @@
             position: relative;
         }
 
-        /* DİNAMİK ARKA PLAN KATMANLARI */
+        /* --- ARKA PLAN SİSTEMİ --- */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: 400% 400%;
@@ -40,27 +40,14 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* --- KIRMIZI VİNYET EFEKTİ (HATA İÇİN) --- */
+        /* --- KIRMIZI VİNYET (HATA) --- */
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            /* Ortası şeffaf, kenarları kırmızı */
             background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%);
-            opacity: 0; 
-            pointer-events: none; /* Tıklamayı engelleme */
-            z-index: 50;
-            transition: opacity 0.5s ease;
+            opacity: 0; pointer-events: none; z-index: 50; transition: opacity 0.5s ease;
         }
-        
-        /* JS ile eklenecek sınıf */
-        #error-overlay.active-error {
-            opacity: 1;
-            animation: pulseRed 1s infinite alternate;
-        }
-
-        @keyframes pulseRed {
-            from { opacity: 0.5; }
-            to { opacity: 1; }
-        }
+        #error-overlay.active-error { opacity: 1; animation: pulseRed 1s infinite alternate; }
+        @keyframes pulseRed { from { opacity: 0.5; } to { opacity: 1; } }
 
         #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
@@ -76,7 +63,6 @@
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
         }
-
         .slide-down-active { transform: translateY(115%); opacity: 0; }
         .overlay-content { text-align: center; animation: fadeUp 1s ease forwards; padding: 20px; }
         #overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
@@ -120,41 +106,77 @@
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
         .social-btn:hover::before { opacity: 1; }
 
-        /* RADYO PLAYER */
+        /* --- DİNAMİK RADYO PLAYER --- */
         .radio-wrapper {
             position: absolute; bottom: 30px; right: 30px;
             z-index: 20; display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
         }
+
         .radio-player {
-            background: rgba(10, 10, 10, 0.6);
+            background: rgba(10, 10, 10, 0.75);
             backdrop-filter: blur(15px);
-            padding: 12px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.08);
+            padding: 12px 25px; 
+            border-radius: 50px; 
+            border: 1px solid rgba(255,255,255,0.1);
             display: flex; align-items: center; gap: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            
+            /* DİNAMİK GENİŞLİK AYARLARI */
+            width: fit-content; /* İçeriğe göre genişle */
+            min-width: 280px; /* Çok küçülmesin */
+            max-width: 400px; /* Çok büyümesin */
+            
+            /* Genişleme animasyonu */
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         }
-        .radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
-        .radio-info { text-align: right; display: flex; flex-direction: column; justify-content: center; min-width: 120px; }
-        .station-name { font-size: 0.9rem; font-weight: 600; color: #fff; white-space: nowrap; margin-bottom: 2px; }
-        .status-container { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-        .status-text { font-size: 0.65rem; color: #aaa; }
-        .equalizer { display: flex; gap: 2px; height: 10px; align-items: flex-end; opacity: 0; transition: opacity 0.3s; }
-        .equalizer.show { opacity: 1; }
-        .bar { width: 3px; background-color: #00ff00; animation: equalize 0.5s infinite; }
-        .bar:nth-child(1) { height: 4px; animation-delay: 0.1s; }
-        .bar:nth-child(2) { height: 8px; animation-delay: 0.2s; }
-        .bar:nth-child(3) { height: 6px; animation-delay: 0.3s; }
-        @keyframes equalize { 0%, 100% { height: 3px; } 50% { height: 10px; } }
+
+        .radio-player.active-glow { border-color: rgba(0, 255, 128, 0.3); box-shadow: 0 0 20px rgba(0, 255, 128, 0.1); }
+
+        .radio-info { 
+            flex-grow: 1; /* Boşluğu doldur */
+            text-align: right; 
+            display: flex; flex-direction: column; justify-content: center; 
+            overflow: hidden; /* Taşmayı gizle */
+        }
+        
+        .station-name { 
+            font-size: 0.95rem; font-weight: 600; color: #fff; white-space: nowrap; 
+            margin-bottom: 2px;
+        }
+        
+        .status-container { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .status-text { font-size: 0.7rem; color: #aaa; white-space: nowrap;}
+
+        /* --- YENİ EKOLAYZER SİSTEMİ --- */
+        .equalizer {
+            display: flex; gap: 3px; height: 12px; align-items: flex-end;
+            transition: all 0.3s;
+        }
+        .bar { width: 3px; background-color: #555; height: 2px; transition: all 0.3s; }
+
+        /* Çalarken */
+        .radio-player.playing .equalizer .bar { background-color: #00ff00; animation: equalize 0.5s infinite alternate; }
+        .radio-player.playing .equalizer .bar:nth-child(1) { animation-delay: 0.1s; }
+        .radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
+        .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
+
+        /* Animasyonlar */
         @keyframes slideInRight { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .anim-slide { animation: slideInRight 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
         .anim-fade { animation: fadeInUp 0.6s ease forwards; }
+
         .controls { display: flex; align-items: center; gap: 15px; }
-        .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; }
         .control-btn:hover { opacity: 1; transform: scale(1.15); color: #fff; }
-        .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; color: #f093fb; }
+        .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; color: #f093fb; display: flex; align-items: center; justify-content: center; }
         .play-btn:hover { background: rgba(255,255,255,0.2); }
+
         .footer-copyright { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%; color: white; pointer-events: none; transition: opacity 1s; }
         .copyright-visible { opacity: 0.7; }
+
         @media (max-width: 480px) {
             .radio-wrapper { bottom: 20px; right: 50%; transform: translateX(50%); align-items: center; }
             .radio-player { padding: 10px 20px; width: 90%; justify-content: space-between;}
@@ -166,11 +188,10 @@
 
     <div class="bg-layer active" id="bg-layer-1"></div>
     <div class="bg-layer" id="bg-layer-2"></div>
-
     <div id="error-overlay"></div>
-
     <canvas id="snowCanvas"></canvas>
-    <audio id="bgMusic" crossorigin="anonymous"></audio>
+    
+    <audio id="bgMusic" crossorigin="anonymous" preload="none"></audio>
 
     <div id="overlay">
         <div class="overlay-content">
@@ -228,9 +249,9 @@
                 gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)"
             },
             { 
-                name: "Radyo Fenomen", 
-                url: "https://fenomen.listenfenomen.com/fenomen/128/icecast.audio", // Fenomen linki (Hata verirse atlayacak)
-                gradient: "linear-gradient(45deg, #ff512f, #dd2476, #ff512f, #dd2476)"
+                name: "Number 1 FM", 
+                url: "https://n10101m.mediatriple.net/numberone", // Fenomen yerine Number 1 geldi
+                gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)"
             },
             { 
                 name: "Power FM", 
@@ -244,10 +265,10 @@
             },
             { 
                 name: "Virgin Radio", 
-                url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio",
+                url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", // HTTPS Uyumlu Link
                 gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)"
             },
-             { 
+            { 
                 name: "Power Türk", 
                 url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio",
                 gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)"
@@ -255,7 +276,6 @@
         ];
 
         let currentStationIndex = 0;
-        let isPlaying = false;
         let fadeInterval;
         let isSwitching = false;
         let connectionTimeout;
@@ -268,36 +288,57 @@
         const statusTextEl = document.getElementById("statusText");
         const playIcon = document.getElementById("playIcon");
         const playerBox = document.getElementById("playerBox");
-        const equalizerAnim = document.getElementById("equalizerAnim");
-        const errorOverlay = document.getElementById("error-overlay"); // Kırmızı Vinyet
-        
+        const errorOverlay = document.getElementById("error-overlay");
         const bg1 = document.getElementById("bg-layer-1");
         const bg2 = document.getElementById("bg-layer-2");
         let activeBgLayer = 1;
 
         bg1.style.background = defaultGradient;
 
-        // --- HATA YÖNETİMİ ---
+        // --- OLAY DİNLEYİCİLERİ (EN ÖNEMLİ KISIM) ---
+        
+        // 1. Müzik Gerçekten Çalmaya Başlayınca
+        audio.addEventListener('playing', () => {
+            console.log("Playing event triggered");
+            clearTimeout(connectionTimeout); // Hata sayacını iptal et
+            isSwitching = false;
+            
+            fadeInMusic();
+            updateBackground(false);
+            
+            // UI Güncelle
+            updateUI("Canlı Yayın", "#00ff00");
+            playerBox.classList.add("playing"); // Ekolayzer oyna
+            playerBox.classList.add("active-glow");
+            playIcon.classList.remove("fa-play");
+            playIcon.classList.add("fa-pause");
+        });
+
+        // 2. Müzik Yüklenirken (Bekleme)
+        audio.addEventListener('waiting', () => {
+            updateUI("Tamponlanıyor...", "#f093fb");
+        });
+
+        // 3. Hata Oluşursa
+        audio.addEventListener('error', (e) => {
+            console.log("Audio Error:", e);
+            handleConnectionError();
+        });
+
         function handleConnectionError() {
-            console.log("Bağlantı Hatası Algılandı!");
-            
-            // 1. Kırmızı Vinyeti Yak
+            clearTimeout(connectionTimeout);
             errorOverlay.classList.add('active-error');
-            
-            // 2. UI Güncelle
-            updateUI("Bağlanamadı -> Geçiliyor", "red");
-            
-            // 3. Kilidi aç ama bekle
+            updateUI("Hata! Geçiliyor...", "red");
+            playerBox.classList.remove("playing");
             isSwitching = false; 
 
-            // 4. Tam 1 Saniye Bekle ve Atla
             setTimeout(() => {
-                errorOverlay.classList.remove('active-error'); // Kırmızıyı söndür
-                triggerChangeStation(1); // Bir sonrakine geç
+                errorOverlay.classList.remove('active-error');
+                triggerChangeStation(1);
             }, 1000);
         }
 
-        // --- ARKA PLAN DEĞİŞİMİ ---
+        // --- ARKA PLAN & UI ---
         function updateBackground(isDefault = false) {
             const newGradient = isDefault ? defaultGradient : stations[currentStationIndex].gradient;
             const targetLayer = activeBgLayer === 1 ? bg2 : bg1;
@@ -311,33 +352,33 @@
         }
 
         function updateUI(statusMsg, statusColor) {
+            // İsim Animasyonu
             stationNameEl.classList.remove('anim-slide'); void stationNameEl.offsetWidth; stationNameEl.classList.add('anim-slide');
             stationNameEl.innerText = stations[currentStationIndex].name;
+            
+            // Durum Animasyonu
             statusTextEl.classList.remove('anim-fade'); void statusTextEl.offsetWidth; statusTextEl.classList.add('anim-fade');
             if(statusMsg) { statusTextEl.innerText = statusMsg; statusTextEl.style.color = statusColor; }
         }
 
-        function setPlayingState(playing) {
-            if(playing) {
-                playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause");
-                playerBox.classList.add("active-glow"); equalizerAnim.classList.add("show");
-            } else {
-                playIcon.classList.remove("fa-pause"); playIcon.classList.add("fa-play");
-                playerBox.classList.remove("active-glow"); equalizerAnim.classList.remove("show");
-            }
+        function setCircularFavicon() {
+            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
+            img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
         }
+        setCircularFavicon();
 
-        // --- RADYO KONTROL ---
+        // --- KONTROLLER ---
         function triggerChangeStation(direction) {
             if(isSwitching) return;
             isSwitching = true;
-            clearTimeout(connectionTimeout); // Eski sayacı temizle
+            clearTimeout(connectionTimeout);
 
-            if (isPlaying) {
-                statusTextEl.innerText = "Değiştiriliyor..."; statusTextEl.style.color = "#f093fb";
+            // Eğer müzik çalıyorsa önce kıs
+            if (!audio.paused && audio.duration > 0) {
+                statusTextEl.innerText = "Değiştiriliyor...";
                 clearInterval(fadeInterval);
                 fadeInterval = setInterval(() => {
-                    if (audio.volume > 0.05) { audio.volume -= 0.05; } else { clearInterval(fadeInterval); audio.pause(); audio.volume = 0; finalizeStationChange(direction); }
+                    if (audio.volume > 0.05) { audio.volume -= 0.05; } else { clearInterval(fadeInterval); audio.pause(); finalizeStationChange(direction); }
                 }, 50);
             } else { finalizeStationChange(direction); }
         }
@@ -345,45 +386,28 @@
         function finalizeStationChange(direction) {
             if (direction === 1) { currentStationIndex = (currentStationIndex + 1) % stations.length; } else if (direction === -1) { currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length; }
             
+            // Yeni kaynağı yükle
             audio.src = stations[currentStationIndex].url;
-            audio.load();
+            audio.load(); // Önemli
             
             updateUI("Bağlanıyor...", "#f093fb");
+            playerBox.classList.remove("playing"); // Ekolayzer durdur
 
-            // --- GÜVENLİK SAYACI (TIMEOUT) ---
-            // 5 saniye içinde çalmazsa hata fonksiyonunu çağır
+            // 7 Saniye Zaman Aşımı
             connectionTimeout = setTimeout(() => {
-                handleConnectionError(); 
-            }, 5000);
+                handleConnectionError();
+            }, 7000);
 
             let playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(e => {
-                    clearTimeout(connectionTimeout); // Promise hatası gelirse sayacı durdur
-                    handleConnectionError(); // Ve direkt hata yönetimine git
+                    // Promise hemen reddedilirse
+                    handleConnectionError();
                 });
             }
         }
 
-        // --- MÜZİK BAŞLAYINCA (ONPLAY) ---
-        // Bu event dinleyicisi ÇOK ÖNEMLİ. Müzik gerçekten çalmaya başladığı an çalışır.
-        audio.onplay = function() {
-            // Müzik başladıysa HATA sayacını ve GEÇİŞ kilidini iptal et!
-            clearTimeout(connectionTimeout);
-            isSwitching = false; 
-            
-            fadeInMusic();
-            updateBackground(false);
-        };
-        
-        // --- MÜZİK HATA VERİRSE (ONERROR) ---
-        audio.onerror = function() {
-            clearTimeout(connectionTimeout);
-            handleConnectionError();
-        };
-
         function fadeInMusic() {
-            updateUI("Canlı Yayın", "#00ff00"); setPlayingState(true); isPlaying = true;
             audio.volume = 0; clearInterval(fadeInterval);
             fadeInterval = setInterval(() => { if (audio.volume < 0.4) { audio.volume = Math.min(audio.volume + 0.02, 0.4); } else { clearInterval(fadeInterval); } }, 100);
         }
@@ -392,49 +416,40 @@
             if (audio.paused) {
                 clearTimeout(connectionTimeout);
                 let playPromise = audio.play();
-                if(playPromise !== undefined) {
-                     playPromise.catch(e => handleConnectionError());
-                }
+                if(playPromise !== undefined) playPromise.catch(e => handleConnectionError());
+                
+                // Güvenlik zamanlayıcısını başlat (Hala 'playing' eventini bekliyoruz)
+                connectionTimeout = setTimeout(() => { if(audio.paused) handleConnectionError(); }, 6000);
             } else {
+                // Pause
                 clearInterval(fadeInterval); statusTextEl.innerText = "Durduruluyor...";
                 fadeInterval = setInterval(() => {
-                    if (audio.volume > 0.02) { audio.volume -= 0.02; } else { audio.pause(); audio.volume = 0; clearInterval(fadeInterval); isPlaying = false; updateUI("Durduruldu", "#aaa"); updateBackground(true); setPlayingState(false); }
+                    if (audio.volume > 0.02) { audio.volume -= 0.02; } else { 
+                        audio.pause(); audio.volume = 0; clearInterval(fadeInterval); 
+                        updateUI("Durduruldu", "#aaa"); updateBackground(true); 
+                        playerBox.classList.remove("playing"); playerBox.classList.remove("active-glow");
+                        playIcon.classList.remove("fa-pause"); playIcon.classList.add("fa-play");
+                    }
                 }, 100);
             }
         }
 
-        // --- KAR VE DİĞERLERİ ---
-        function setCircularFavicon() {
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
-            img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
-        }
-        setCircularFavicon();
-
+        // --- SES ANALİZİ VE KAR ---
         let audioContext, analyser, dataArray, source; let audioInitialized = false;
         const canvas = document.getElementById("snowCanvas"); const ctx = canvas.getContext("2d");
         let snowflakes = []; let kickImpulse = 0; let isSiteActive = false;
 
         function enterSite() {
             if(isSiteActive) return; isSiteActive = true;
-            stationNameEl.innerText = stations[currentStationIndex].name; audio.src = stations[currentStationIndex].url;
+            stationNameEl.innerText = stations[currentStationIndex].name;
+            audio.src = stations[currentStationIndex].url;
             overlay.classList.add('slide-down-active'); card.style.opacity = "1"; card.style.transform = "translateY(0)"; footer.classList.add('copyright-visible');
             if (!audioInitialized) { try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); analyser = audioContext.createAnalyser(); source = audioContext.createMediaElementSource(audio); source.connect(analyser); analyser.connect(audioContext.destination); analyser.fftSize = 256; dataArray = new Uint8Array(analyser.frequencyBinCount); audioInitialized = true; } catch (e) { } }
             
-            // Girişte başlatma denemesi
-            isPlaying = true;
+            // Başlat
             let playPromise = audio.play();
-            if(playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // İlk açılışta hata verirse 1sn sonra diğerine geç
-                    setTimeout(() => triggerChangeStation(1), 1000);
-                });
-            }
-            
-            // 5 saniyelik güvenlik zamanlayıcısı (Giriş için)
-            connectionTimeout = setTimeout(() => {
-                 if(audio.paused) handleConnectionError();
-            }, 5000);
-
+            if(playPromise !== undefined) playPromise.catch(() => setTimeout(() => triggerChangeStation(1), 1000));
+            connectionTimeout = setTimeout(() => { if(audio.paused) handleConnectionError(); }, 6000);
             setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
 
