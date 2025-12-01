@@ -163,10 +163,9 @@
         </p>
 
         <div class="social-links">
-            <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="social-btn"><i class="fab fa-github"></i></a>
-            <a href="#" class="social-btn"><i class="fab fa-spotify"></i></a>
+            <a href="https://instagram.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-instagram"></i></a>
+            <a href="https://x.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-twitter"></i></a>
+            <a href="https://github.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-github"></i></a>
         </div>
     </div>
 
