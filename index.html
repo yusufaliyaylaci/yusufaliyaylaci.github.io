@@ -43,17 +43,16 @@
             z-index: 100; display: flex; justify-content: center; align-items: center;
             cursor: pointer;
             
-            /* GÜNCELLENDİ: Daha yavaş ve akışkan (liquid) bir geçiş */
             transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.5s ease;
 
-            /* YENİ: Alt kısmı yumuşatan maske (Keskin çizgiyi yok eder) */
-            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
-            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            /* YENİLEME: Maskeyi ÜST kısma uyguladık */
+            /* En üstten başlar (transparent), %10 aşağı inince tamamen görünür (black) olur */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%);
         }
 
         .slide-down-active {
-            /* Biraz daha aşağı itiyoruz ki maskelenmiş kısım tamamen ekrandan çıksın */
-            transform: translateY(110%);
+            transform: translateY(100%);
             opacity: 0;
         }
 
@@ -79,7 +78,6 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 40px; border-radius: 20px; text-align: center; width: 360px;
             opacity: 0; transform: translateY(30px); 
-            /* Gecikmeyi biraz artırdık, perde tam inerken belirecek */
             transition: all 1.2s ease 0.6s;
             box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10; position: relative;
         }
@@ -112,14 +110,13 @@
         }
         .music-control:hover { opacity: 1; }
 
-        /* COPYRIGHT ALANI (YENİ) */
+        /* COPYRIGHT ALANI */
         .footer-copyright {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
             font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%;
-            color: white; pointer-events: none; /* Tıklamayı engelle */
+            color: white; pointer-events: none; 
             transition: opacity 1s;
         }
-        /* Site açılınca copyright daha belirgin olsun */
         .copyright-visible { opacity: 0.7; }
     </style>
 </head>
@@ -213,7 +210,7 @@
             audio.volume = 0.4;
             audio.play();
 
-            setTimeout(() => { overlay.style.display = 'none'; }, 1500); // Süre animasyona göre artırıldı
+            setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
 
         // MOBİL SWIPE
