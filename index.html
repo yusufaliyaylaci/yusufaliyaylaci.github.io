@@ -140,15 +140,13 @@
         var overlay = document.getElementById("overlay");
         var card = document.getElementById("mainCard");
         
-        // Audio Değişkenleri
         let audioContext, analyser, dataArray, source;
         let audioInitialized = false;
 
-        // Kar Efekti Değişkenleri
         const canvas = document.getElementById("snowCanvas");
         const ctx = canvas.getContext("2d");
         let snowflakes = [];
-        let extraSpeed = 0; // Bass vuruşuyla artan geçici hız
+        let extraSpeed = 0; 
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -162,19 +160,33 @@
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
                 this.size = Math.random() * 3 + 1; 
-                this.baseSpeed = Math.random() * 0.5 + 0.2; // Çok yavaş süzülme (Base)
+                this.baseSpeed = Math.random() * 0.5 + 0.3; // Düşüş hızı
                 this.opacity = Math.random() * 0.5 + 0.3;
+                
+                // SALINIM (Sağ-Sol Hareketi) için değişkenler
+                this.angle = Math.random() * Math.PI * 2; // Başlangıç açısı
+                this.angleSpeed = Math.random() * 0.02 + 0.01; // Salınım hızı
+                this.swingRange = Math.random() * 0.5 + 0.2; // Ne kadar sağa sola gideceği
             }
 
             update() {
-                // Normal hız + Bass etkisi (extraSpeed)
-                // extraSpeed tüm tanelere aynı anda etki eder
+                // Y Hareketi (Aşağı iniş + Bass etkisi)
                 this.y += this.baseSpeed + extraSpeed;
 
+                // X Hareketi (Salınım - Süzülme)
+                this.angle += this.angleSpeed; 
+                // Math.cos kullanarak dalgalı bir hareket oluşturuyoruz
+                this.x += Math.cos(this.angle) * this.swingRange;
+
+                // Ekranın altına gelince yukarı taşı
                 if (this.y > canvas.height) {
                     this.y = 0 - this.size;
                     this.x = Math.random() * canvas.width;
                 }
+                
+                // Sağdan veya soldan çıkarsa diğer taraftan girsin (Sonsuz döngü)
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
             }
 
             draw() {
@@ -187,7 +199,7 @@
 
         function initSnow() {
             snowflakes = [];
-            for (let i = 0; i < 80; i++) { // Tane sayısı
+            for (let i = 0; i < 90; i++) { 
                 snowflakes.push(new Snowflake());
             }
             animateSnow();
@@ -198,27 +210,20 @@
             
             if (audioInitialized && !audio.paused) {
                 analyser.getByteFrequencyData(dataArray);
-                
-                // Sadece ilk 5 frekansı (Bass/Kick) kontrol et
                 let bassSum = 0;
                 for(let i = 0; i < 5; i++) {
                     bassSum += dataArray[i];
                 }
-                let bassAvg = bassSum / 5; // 0 ile 255 arası
+                let bassAvg = bassSum / 5; 
 
-                // EŞİK DEĞERİ: Eğer bass gücü 190'ı geçerse (güçlü vuruş) hız ekle
-                if (bassAvg > 180) {
-                    // Kick geldiğinde hızı 2 birim artır (Çok aşırı değil)
-                    extraSpeed = 2.5; 
+                // Bass vuruşu algıla ve hızı artır
+                if (bassAvg > 170) {
+                    extraSpeed = 2.0; 
                 }
             }
 
-            // SMOOTH YAVAŞLAMA (Decay)
-            // Her karede ekstra hızı %5 azaltarak sıfıra yaklaştır.
-            // Bu sayede "küt" diye durmaz, süzülerek yavaşlar.
-            extraSpeed *= 0.95; 
-
-            // Eğer çok azaldıysa tamamen sıfırla (işlem yükünü azaltmak için)
+            // Hızı yavaşça normale döndür (Smooth Decay)
+            extraSpeed *= 0.94; 
             if (extraSpeed < 0.05) extraSpeed = 0;
 
             snowflakes.forEach(flake => {
