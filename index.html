@@ -45,7 +45,7 @@
             position: absolute;
             top: 50%; transform: translateY(-50%);
             font-size: 30vw; font-weight: 800;
-            /* GÜNCELLENDİ: Opaklık 0.03'ten 0.06'ya çıkarıldı (Daha belirgin) */
+            /* Opaklık 0.06 */
             color: rgba(255, 255, 255, 0.06); 
             z-index: -2; pointer-events: none;
             line-height: 1; transition: color 1s ease;
@@ -54,10 +54,11 @@
         #clock-hour { left: 2%; text-align: left; }
         #clock-minute { right: 2%; text-align: right; }
 
-        /* --- TARİH (YENİ KONUM) --- */
+        /* --- TARİH (KONUM DÜZELTİLDİ) --- */
         #date-display {
             position: fixed; /* Ekran altına sabitlemek için fixed */
-            bottom: 35px; /* Footer'ın hemen üstü */
+            /* GÜNCELLENDİ: Footer'dan daha yukarıya alındı (35px -> 60px) */
+            bottom: 60px; 
             left: 50%; transform: translateX(-50%);
             font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
             opacity: 0.7; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.5); font-weight: 300;
@@ -219,8 +220,8 @@
             .radio-player { padding: 10px 20px; width: 90%; justify-content: space-between;}
             .radio-info { min-width: auto; }
             .big-clock-num { font-size: 35vw; opacity: 0.05; }
-            /* Mobilde tarih, radyo player'ın üzerine çıksın */
-            #date-display { bottom: 90px; }
+            /* GÜNCELLENDİ: Mobilde tarih, radyo player'ın üzerine çıksın diye 100px yapıldı */
+            #date-display { bottom: 100px; }
         }
     </style>
 </head>
