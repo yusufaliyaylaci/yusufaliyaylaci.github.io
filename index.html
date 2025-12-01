@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yusuf Ali - Blog</title>
     
-    <link rel="icon" href="profil.jpg" type="image/jpeg">
+    <link rel="icon" href="profil.jpg" id="dynamicFavicon">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -181,18 +181,19 @@
     </div>
 
     <script>
-        // --- GÜNCELLENMİŞ VE ÇALIŞAN RADYO LİSTESİ (HEPSİ HTTPS) ---
+        // --- GÜNCELLENMİŞ RADYO LİSTESİ ---
         const stations = [
             { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
+            { name: "Radyo Fenomen", url: "https://fenomen.listenfenomen.com/fenomen/128/icecast.audio" }, // Yeni Link
             { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio" },
             { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio" },
-            { name: "Fenomen", url: "https://listen.radyofenomen.com/fenomen/128/icecast.audio" },
             { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone" },
             { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC" }
         ];
 
         let currentStationIndex = 0;
         let isPlaying = false;
+        let fadeInterval; // Fade efekti için sayaç
 
         var audio = document.getElementById("bgMusic");
         var overlay = document.getElementById("overlay");
@@ -203,43 +204,103 @@
         const statusTextEl = document.getElementById("statusText");
         const playIcon = document.getElementById("playIcon");
 
+        // --- YUVARLAK FAVICON YAPICI ---
+        // Profil fotoğrafını alıp yuvarlak kesip favicon yapar
+        function setCircularFavicon() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.src = 'profil.jpg'; // Dosya adınla aynı olmalı
+            img.onload = () => {
+                canvas.width = 64;
+                canvas.height = 64;
+                ctx.beginPath();
+                ctx.arc(32, 32, 32, 0, 2 * Math.PI);
+                ctx.closePath();
+                ctx.clip(); // Yuvarlak kırpma
+                ctx.drawImage(img, 0, 0, 64, 64);
+                
+                // Oluşan yeni resmi favicon yap
+                const link = document.getElementById('dynamicFavicon');
+                link.href = canvas.toDataURL();
+            };
+        }
+        // Sayfa açılınca çalıştır
+        setCircularFavicon();
+
         function loadStation(index) {
             stationNameEl.innerText = stations[index].name;
             audio.src = stations[index].url;
             audio.load();
         }
 
+        // --- FADE IN & OUT FONKSİYONLARI ---
+        const targetVolume = 0.4; // Maksimum ses seviyesi (%40)
+
+        function playWithFade() {
+            clearInterval(fadeInterval); // Önceki işlemi durdur
+            audio.volume = 0; // Sesi sıfırla
+            let playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    // Müzik başladı, şimdi sesi yavaşça artır
+                    playIcon.classList.remove("fa-play");
+                    playIcon.classList.add("fa-pause");
+                    statusTextEl.innerText = "Canlı Yayın";
+                    statusTextEl.style.color = "#00ff00";
+                    isPlaying = true;
+
+                    fadeInterval = setInterval(() => {
+                        if (audio.volume < targetVolume) {
+                            // 0.02'şer artır (daha pürüzsüz)
+                            audio.volume = Math.min(audio.volume + 0.02, targetVolume);
+                        } else {
+                            clearInterval(fadeInterval);
+                        }
+                    }, 100); // 100ms'de bir artır
+                })
+                .catch(error => {
+                    console.log("Hata:", error);
+                    statusTextEl.innerText = "Bağlanamadı";
+                    statusTextEl.style.color = "red";
+                });
+            }
+        }
+
+        function pauseWithFade() {
+            clearInterval(fadeInterval); // Önceki işlemi durdur
+            statusTextEl.innerText = "Durduruluyor...";
+            statusTextEl.style.color = "#aaa";
+
+            fadeInterval = setInterval(() => {
+                if (audio.volume > 0.02) {
+                    audio.volume -= 0.02; // Sesi yavaşça kıs
+                } else {
+                    // Ses sıfırlandı, tamamen durdur
+                    audio.volume = 0;
+                    audio.pause();
+                    clearInterval(fadeInterval);
+                    
+                    playIcon.classList.remove("fa-pause");
+                    playIcon.classList.add("fa-play");
+                    statusTextEl.innerText = "Durduruldu";
+                    isPlaying = false;
+                }
+            }, 100);
+        }
+
         function togglePlay() {
             if (audio.paused) {
-                let playPromise = audio.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        playIcon.classList.remove("fa-play");
-                        playIcon.classList.add("fa-pause");
-                        statusTextEl.innerText = "Canlı Yayın";
-                        statusTextEl.style.color = "#00ff00";
-                        isPlaying = true;
-                    })
-                    .catch(error => {
-                        console.log("Oynatma hatası:", error);
-                        statusTextEl.innerText = "Bağlanamadı";
-                        statusTextEl.style.color = "red";
-                        // Otomatik bir sonraki istasyona geçmeyi deneyebiliriz istersen
-                        // nextStation();
-                    });
-                }
+                playWithFade();
             } else {
-                audio.pause();
-                playIcon.classList.remove("fa-pause");
-                playIcon.classList.add("fa-play");
-                statusTextEl.innerText = "Durduruldu";
-                statusTextEl.style.color = "#aaa";
-                isPlaying = false;
+                pauseWithFade();
             }
         }
 
         function nextStation() {
+            // İleri geçince sesi küt diye kesme, durdurmadan değiştiriyoruz
+            // ama yeni istasyon yüklenirken ses zaten kesilir.
             currentStationIndex = (currentStationIndex + 1) % stations.length;
             changeStation();
         }
@@ -250,21 +311,18 @@
         }
 
         function changeStation() {
+            // Önce sesi kısarak durdurabiliriz ama hızlı geçiş için direkt yükleyip fade-in yapalım
             statusTextEl.innerText = "Bağlanıyor...";
             statusTextEl.style.color = "#f093fb";
+            
+            // Eğer müzik çalıyorsa, önce durdurup yeni kaynağı yükle
+            audio.pause();
             loadStation(currentStationIndex);
             
-            // İstasyon değişince otomatik çalmaya çalış
-            audio.play().then(() => {
-                playIcon.classList.remove("fa-play");
-                playIcon.classList.add("fa-pause");
-                statusTextEl.innerText = "Canlı Yayın";
-                statusTextEl.style.color = "#00ff00";
-                isPlaying = true;
-            }).catch(e => {
-                statusTextEl.innerText = "Yayın Yok";
-                statusTextEl.style.color = "red";
-            });
+            // Otomatik fade-in ile başlat
+            if (isPlaying) {
+                playWithFade();
+            }
         }
 
         // --- SES ANALİZİ VE KAR EFEKTİ ---
@@ -298,11 +356,9 @@
                     analyser.fftSize = 256; 
                     dataArray = new Uint8Array(analyser.frequencyBinCount);
                     audioInitialized = true;
-                } catch (e) {
-                    // Radyo sunucusu CORS hatası verirse burası sessizce geçilir
-                }
+                } catch (e) { }
             }
-            togglePlay();
+            playWithFade(); // Fade in ile başla
             setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
 
