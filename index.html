@@ -3,59 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hoş Geldiniz</title>
+    <title>Yusuf Ali - Blog</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
             background-size: 400% 400%;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
             overflow: hidden;
             animation: gradientBG 15s ease infinite;
             color: white;
         }
 
-        /* Arka plan hareket animasyonu */
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Giriş Ekranı (Müzik için gerekli) */
         #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: opacity 1s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: opacity 1s ease;
         }
 
-        #overlay h1 {
-            font-size: 2rem;
-            animation: pulse 2s infinite;
-        }
+        #overlay h1 { font-size: 2rem; animation: pulse 2s infinite; text-align: center; }
 
-        /* Profil Kartı */
         .card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -63,84 +44,56 @@
             padding: 40px;
             border-radius: 20px;
             text-align: center;
-            width: 350px;
+            width: 360px; /* Yazılar rahat sığsın diye çok az genişlettim */
             opacity: 0;
             transform: translateY(30px);
             transition: all 1s ease;
             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
-        /* Fotoğraf Alanı */
         .profile-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
+            width: 120px; height: 120px;
+            border-radius: 50%; object-fit: cover;
             border: 3px solid rgba(255,255,255,0.5);
-            margin-bottom: 20px;
-            transition: transform 0.5s;
+            margin-bottom: 20px; transition: transform 0.5s;
         }
 
-        .profile-img:hover {
-            transform: scale(1.1) rotate(5deg);
-        }
+        .profile-img:hover { transform: scale(1.1) rotate(5deg); }
 
-        h2 { margin-bottom: 10px; font-weight: 600; }
-        p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 25px; line-height: 1.6; }
+        h2 { margin-bottom: 5px; font-weight: 600; font-size: 1.8rem; }
+        
+        /* Yeni eklenen alt başlık stili */
+        .subtitle { font-size: 0.8rem; color: #ccc; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase;}
 
-        /* Sosyal Medya Butonları */
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
+        p { font-size: 0.9rem; opacity: 0.9; margin-bottom: 25px; line-height: 1.6; color: #e0e0e0; }
+
+        .social-links { display: flex; justify-content: center; gap: 15px; }
 
         .social-btn {
-            text-decoration: none;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
+            text-decoration: none; color: white;
+            width: 45px; height: 45px; border-radius: 50%;
             background: rgba(255,255,255,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; transition: all 0.3s ease;
+            position: relative; overflow: hidden;
         }
 
         .social-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(45deg, #f093fb, #f5576c);
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
+            opacity: 0; transition: opacity 0.3s; z-index: -1;
         }
 
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); }
         .social-btn:hover::before { opacity: 1; }
 
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
-        /* Müzik kontrolü (Köşede dursun) */
         .music-control {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: 0.3s;
+            position: absolute; bottom: 20px; right: 20px;
+            cursor: pointer; opacity: 0.5; transition: 0.3s;
         }
         .music-control:hover { opacity: 1; }
-
     </style>
 </head>
 <body>
@@ -156,10 +109,12 @@
     <div class="card" id="mainCard">
         <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&q=80" alt="Profil Resmi" class="profile-img">
         
-        <h2>Merhaba, Ben [Adın]</h2>
+        <h2>Yusuf Ali</h2>
+        <div class="subtitle">Dokuz Eylül Üni. & Musician</div>
+        
         <p>
-            Buraya kendin hakkında kısa, etkileyici bir açıklama yazabilirsin. 
-            Teknoloji meraklısı, gezgin veya sadece hayalperest.
+            Dokuz Eylül Üniversitesi'nde <strong>Elektrik ve Elektronik Teknolojisi</strong> üzerine kariyerimi inşa ediyorum. 
+            Teknolojinin teknik dünyasını müziğin ritmiyle harmanlıyor; devrelerin arasında sanat, notaların arasında mühendislik arıyorum.
         </p>
 
         <div class="social-links">
@@ -179,16 +134,11 @@
         var card = document.getElementById("mainCard");
 
         function enterSite() {
-            // Overlay'i kaldır
             overlay.style.opacity = "0";
             setTimeout(() => { overlay.style.display = "none"; }, 1000);
-
-            // Kartı animasyonla getir
             card.style.opacity = "1";
             card.style.transform = "translateY(0)";
-
-            // Müziği başlat
-            audio.volume = 0.4; // Ses seviyesi %40
+            audio.volume = 0.4;
             audio.play().catch(error => {
                 console.log("Otomatik oynatma engellendi, kullanıcı etkileşimi bekleniyor.");
             });
