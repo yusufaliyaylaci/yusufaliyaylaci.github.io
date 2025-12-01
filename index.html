@@ -23,16 +23,22 @@
             position: relative;
         }
 
-        /* --- ARKA PLAN KATMANLARI --- */
+        /* --- ARKA PLAN KATMANLARI (DÜZELTİLDİ) --- */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            transition: opacity 3s ease-in-out;
+            background-size: 400% 400%; /* Hareket için şart */
+            animation: gradientBG 15s ease infinite; /* Sürekli akış */
+            transition: opacity 3s ease-in-out; /* Renk değişimi yumuşaklığı */
             opacity: 0; z-index: -5;
         }
+        
         .bg-layer.active { opacity: 1; z-index: -4; }
-        #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
+        
+        /* Varsayılan Arka Plan */
+        #bg-layer-1 { 
+            background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000);
+            opacity: 1; /* İlk açılışta görünsün */
+        }
 
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
@@ -40,39 +46,24 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* --- DEVASA SAAT (GÜNCELLENDİ) --- */
+        /* --- DEVASA SAAT --- */
         .big-clock-num {
             position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 30vw;
-            font-weight: 800;
-            /* GÜNCELLENDİ: Opaklık 0.03'ten 0.08'e çıkarıldı (Daha belirgin) */
-            color: rgba(255, 255, 255, 0.08); 
-            z-index: -2;
-            pointer-events: none;
-            line-height: 1;
-            transition: color 1s ease;
+            top: 50%; transform: translateY(-50%);
+            font-size: 30vw; font-weight: 800;
+            color: rgba(255, 255, 255, 0.08); /* Belirginlik artırıldı */
+            z-index: -2; pointer-events: none;
+            line-height: 1; transition: color 1s ease;
             font-variant-numeric: tabular-nums;
         }
         #clock-hour { left: 2%; text-align: left; }
         #clock-minute { right: 2%; text-align: right; }
 
-        /* --- TARİH (YENİ KONUM) --- */
         #date-display {
-            position: absolute;
-            /* GÜNCELLENDİ: Kartın altına inmesi için %80 yapıldı */
-            top: 80%; 
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1rem; 
-            letter-spacing: 3px; 
-            text-transform: uppercase;
-            opacity: 0.8; /* Biraz daha parlak */
-            z-index: 5;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            font-weight: 400;
-            white-space: nowrap;
+            position: absolute; top: 80%; left: 50%; transform: translateX(-50%);
+            font-size: 1rem; letter-spacing: 3px; text-transform: uppercase;
+            opacity: 0.8; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            font-weight: 400; white-space: nowrap;
         }
 
         /* --- HATA EFEKTLERİ --- */
@@ -89,12 +80,13 @@
             transform: translateX(100%); z-index: 50; pointer-events: none;
         }
         #shockwave.active-swipe { animation: swipeLeft 1.2s cubic-bezier(0.19, 1, 0.22, 1); }
+        
         @keyframes swipeLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
 
         #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
-        /* GİRİŞ EKRANI */
+        /* --- GİRİŞ EKRANI (OK DÜZELTİLDİ) --- */
         #overlay {
             position: fixed; top: -15vh; left: 0; width: 100%; height: 115vh; padding-top: 15vh;
             background: linear-gradient(to bottom, rgba(10, 10, 10, 0.98), rgba(30, 30, 30, 0.98));
@@ -104,10 +96,24 @@
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
         }
         .slide-down-active { transform: translateY(115%); opacity: 0; pointer-events: none; }
+        
         .overlay-content { text-align: center; animation: fadeUp 1s ease forwards; padding: 20px; }
         #overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
         #overlay p { font-size: 1.1rem; font-weight: 300; opacity: 0.8; margin-bottom: 30px; }
-        .click-icon { font-size: 2rem; opacity: 0.7; animation: bounce 2s infinite; }
+        
+        /* ZIPLAYAN OK İKONU */
+        .click-icon { 
+            font-size: 2rem; opacity: 0.7; 
+            animation: bounce 2s infinite; /* Animasyon burada */
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
         /* KART */
         .card {
@@ -148,6 +154,7 @@
         }
         .radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
         .radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
+        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         
         .radio-info { flex-grow: 1; text-align: right; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
         .station-name { font-size: 0.95rem; font-weight: 600; color: #fff; white-space: nowrap; margin-bottom: 2px; }
@@ -197,9 +204,6 @@
         .city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; animation: fadeIn 0.3s ease; position: relative; }
         .search-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 10px; border-radius: 8px; color: white; font-family: inherit; font-size: 0.85rem; width: 100%; }
         .search-input:focus { outline: none; border-color: #00bfff; background: rgba(255,255,255,0.2); }
-        .search-btn { background: linear-gradient(45deg, #00bfff, #0077ff); border: none; padding: 8px; border-radius: 8px; color: white; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: transform 0.2s; }
-        .search-btn:hover { transform: scale(1.02); }
-        
         .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; max-height: 150px; overflow-y: auto; z-index: 30; display: none; margin-top: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .suggestions-list.active { display: block; }
         .suggestion-item { padding: 10px; font-size: 0.8rem; color: #ddd; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); opacity: 0; animation: slideInList 0.3s forwards; }
@@ -211,7 +215,6 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeInUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         @keyframes slideInList { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         .anim-slide { animation: slideInRight 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
         .anim-fade { animation: fadeInUp 0.6s ease forwards; }
@@ -225,10 +228,8 @@
             .weather-widget.visible { transform: translateX(50%) translateY(0); }
             .radio-player { padding: 10px 20px; width: 90%; justify-content: space-between;}
             .radio-info { min-width: auto; }
-            .big-clock-num { font-size: 40vw; opacity: 0.05; }
-            #clock-hour { top: 30%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-            #clock-minute { top: 70%; right: 50%; transform: translate(50%, -50%); text-align: center; }
-            #date-display { top: 85%; }
+            .big-clock-num { font-size: 35vw; opacity: 0.05; }
+            #date-display { top: 75%; }
         }
     </style>
 </head>
@@ -310,6 +311,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
+            // --- VERİLER ---
+            const defaultGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)";
+            const errorGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)";
+            
             const stations = [
                 { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
                 { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", accent: "#8E2DE2" },
@@ -328,6 +333,7 @@
             let isPlaying = false;
             let debounceTimer;
 
+            // DOM Elements
             const audio = document.getElementById("bgMusic");
             const overlay = document.getElementById("overlay");
             const stationNameEl = document.getElementById("stationName");
@@ -525,6 +531,8 @@
                 const currentLayer = activeBgLayer === 1 ? bg1 : bg2;
                 if(targetLayer) {
                     targetLayer.style.backgroundImage = newGradient;
+                    // ÖNEMLİ: Background-size'ı tekrar ayarla ki animasyon devam etsin
+                    targetLayer.style.backgroundSize = "400% 400%";
                     if(currentLayer) currentLayer.classList.remove('active'); 
                     targetLayer.classList.add('active');
                     activeBgLayer = activeBgLayer === 1 ? 2 : 1;
@@ -546,7 +554,7 @@
                 equalizerBars.forEach(bar => bar.style.backgroundColor = color);
                 
                 if(clockHour && clockMinute) {
-                    const clockColor = isError ? "rgba(255,0,0,0.2)" : "rgba(255,255,255,0.08)";
+                    const clockColor = isError ? "rgba(255,0,0,0.2)" : (isPlaying ? hexToRgba(color, 0.15) : "rgba(255,255,255,0.08)");
                     clockHour.style.color = clockColor;
                     clockMinute.style.color = clockColor;
                 }
