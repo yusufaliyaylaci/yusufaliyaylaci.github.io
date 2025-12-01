@@ -60,18 +60,23 @@
         #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
         /* --- İHTİŞAMLI DİJİTAL SAAT --- */
-        #digitalClock {
+        #clock-container {
             position: absolute; top: 5%; left: 50%; transform: translateX(-50%);
-            font-size: 3.5rem; font-weight: 700; letter-spacing: 2px; z-index: 15;
+            z-index: 15; text-align: center;
+            opacity: 0; transition: opacity 1s ease 1s; /* Gecikmeli gelsin */
+        }
+        #clock-container.visible { opacity: 1; }
+
+        #digitalClock {
+            font-size: 3.5rem; font-weight: 700; letter-spacing: 2px;
             text-shadow: 0 5px 15px rgba(0,0,0,0.3);
             background: rgba(20, 20, 20, 0.2); backdrop-filter: blur(5px);
             padding: 5px 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
             transition: color 1s ease, border-color 1s ease;
-            white-space: nowrap;
+            white-space: nowrap; display: inline-block;
         }
         #dateText {
-            position: absolute; top: 13%; left: 50%; transform: translateX(-50%);
-            font-size: 0.9rem; opacity: 0.8; letter-spacing: 1px; z-index: 15; white-space: nowrap;
+            margin-top: 5px; font-size: 0.9rem; opacity: 0.8; letter-spacing: 1px; white-space: nowrap;
         }
 
         /* GİRİŞ EKRANI */
@@ -216,12 +221,14 @@
     <div id="shockwave"></div>
     <canvas id="snowCanvas"></canvas>
     
-    <div id="digitalClock">00:00</div>
-    <div id="dateText">Yükleniyor...</div>
+    <div id="clock-container">
+        <div id="digitalClock">00:00</div>
+        <div id="dateText">Yükleniyor...</div>
+    </div>
 
     <audio id="bgMusic" crossorigin="anonymous" preload="none"></audio>
 
-    <div id="overlay">
+    <div id="overlay" onclick="window.enterSite()">
         <div class="overlay-content">
             <h1>Hoş Geldiniz</h1>
             <p>Radyo eşliğinde girmek için dokunun</p>
@@ -240,13 +247,13 @@
         <div class="weather-details" id="weatherDetails">
             <div class="detail-item"><span>Rüzgar:</span><span id="w-wind">-- km/s</span></div>
             <div class="detail-item"><span>Nem:</span><span id="w-hum">--%</span></div>
-            <div class="change-city-text" onclick="enableSearchMode(event)">Şehir değiştirmek için tıkla</div>
+            <div class="change-city-text" onclick="window.enableSearchMode(event)">Şehir değiştirmek için tıkla</div>
         </div>
         <div class="city-search-box" id="citySearchBox">
             <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Ara:</div>
             <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off">
             <div class="suggestions-list" id="suggestionsList"></div>
-            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" onclick="disableSearchMode(event)">İptal</div>
+            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" onclick="window.disableSearchMode(event)">İptal</div>
         </div>
     </div>
 
@@ -272,9 +279,9 @@
                 </div>
             </div>
             <div class="controls">
-                <button class="control-btn" onclick="triggerChangeStation(-1)"><i class="fas fa-step-backward"></i></button>
-                <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
-                <button class="control-btn" onclick="triggerChangeStation(1)"><i class="fas fa-step-forward"></i></button>
+                <button class="control-btn" onclick="window.triggerChangeStation(-1)"><i class="fas fa-step-backward"></i></button>
+                <button class="control-btn play-btn" id="playBtn" onclick="window.togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
+                <button class="control-btn" onclick="window.triggerChangeStation(1)"><i class="fas fa-step-forward"></i></button>
             </div>
         </div>
     </div>
@@ -282,343 +289,370 @@
     <div class="footer-copyright" id="footerText">&copy; 2025 Yusuf Ali. Tüm Hakları Saklıdır.<br><span style="font-size: 0.6rem;">Design & Code by Yusuf Ali</span></div>
 
     <script>
-        // --- DEĞİŞKEN TANIMLAMALARI (EN BAŞTA) ---
-        const defaultGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)";
-        const errorGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)";
-        
-        const stations = [
-            { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
-            { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", accent: "#8E2DE2" },
-            { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #1cb5e0, #000046, #1cb5e0, #000046)", accent: "#1cb5e0" },
-            { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC", gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", accent: "#71b280" },
-            { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)", accent: "#f093fb" },
-            { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", accent: "#e52d27" }
-        ];
-
-        let currentStationIndex = 0;
-        let fadeInterval;
-        let isSwitching = false;
-        let connectionTimeout;
-        let userTimeZone = 'Europe/Istanbul'; 
-
-        // DOM Elements
-        const audio = document.getElementById("bgMusic");
-        const overlay = document.getElementById("overlay");
-        const stationNameEl = document.getElementById("stationName");
-        const statusTextEl = document.getElementById("statusText");
-        const playIcon = document.getElementById("playIcon");
-        const playBtn = document.getElementById("playBtn");
-        const playerBox = document.getElementById("playerBox");
-        const errorOverlay = document.getElementById("error-overlay");
-        const shockwave = document.getElementById("shockwave");
-        const equalizerBars = document.querySelectorAll('.equalizer .bar');
-        const bg1 = document.getElementById("bg-layer-1");
-        const bg2 = document.getElementById("bg-layer-2");
-        const digitalClock = document.getElementById("digitalClock");
-        const dateText = document.getElementById("dateText");
-        const weatherWidget = document.getElementById("weatherWidget");
-        const citySearchBox = document.getElementById("citySearchBox");
-        const weatherDetails = document.getElementById("weatherDetails");
-        const weatherHeader = document.getElementById("weatherHeader");
-        const cityInput = document.getElementById("cityInput");
-        const suggestionsList = document.getElementById("suggestionsList");
-        
-        let activeBgLayer = 1;
-        let debounceTimer;
-
-        bg1.style.background = defaultGradient;
-
-        // --- SAAT FONKSİYONU ---
-        function updateClock() {
-            const now = new Date();
-            const options = { timeZone: userTimeZone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-            const timeString = new Intl.DateTimeFormat('tr-TR', options).format(now);
+        // DOM LOADED EVENT (En önemli güvenlik önlemi)
+        document.addEventListener('DOMContentLoaded', () => {
             
-            const dateOptions = { timeZone: userTimeZone, weekday: 'long', day: 'numeric', month: 'long' };
-            const dateString = new Intl.DateTimeFormat('tr-TR', dateOptions).format(now);
+            // --- DEĞİŞKENLER ---
+            const defaultGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)";
+            const errorGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)";
+            
+            const stations = [
+                { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
+                { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", accent: "#8E2DE2" },
+                { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #1cb5e0, #000046, #1cb5e0, #000046)", accent: "#1cb5e0" },
+                { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC", gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", accent: "#71b280" },
+                { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)", accent: "#f093fb" },
+                { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", accent: "#e52d27" }
+            ];
 
-            if(digitalClock) digitalClock.innerText = timeString;
-            if(dateText) dateText.innerText = dateString;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
+            let currentStationIndex = 0;
+            let fadeInterval;
+            let isSwitching = false;
+            let connectionTimeout;
+            let userTimeZone = 'Europe/Istanbul'; 
+            let activeBgLayer = 1;
+            let isPlaying = false;
+            let debounceTimer;
 
-        // --- HAVA DURUMU LOGIC ---
-        function getWeather() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(fetchWeatherByCoords, () => {
-                    updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin");
-                });
-            } else {
-                updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin");
+            // DOM Elements
+            const audio = document.getElementById("bgMusic");
+            const overlay = document.getElementById("overlay");
+            const stationNameEl = document.getElementById("stationName");
+            const statusTextEl = document.getElementById("statusText");
+            const playIcon = document.getElementById("playIcon");
+            const playBtn = document.getElementById("playBtn");
+            const playerBox = document.getElementById("playerBox");
+            const errorOverlay = document.getElementById("error-overlay");
+            const shockwave = document.getElementById("shockwave");
+            const equalizerBars = document.querySelectorAll('.equalizer .bar');
+            const bg1 = document.getElementById("bg-layer-1");
+            const bg2 = document.getElementById("bg-layer-2");
+            const digitalClock = document.getElementById("digitalClock");
+            const dateText = document.getElementById("dateText");
+            const clockContainer = document.getElementById("clock-container");
+            const weatherWidget = document.getElementById("weatherWidget");
+            const citySearchBox = document.getElementById("citySearchBox");
+            const weatherDetails = document.getElementById("weatherDetails");
+            const weatherHeader = document.getElementById("weatherHeader");
+            const cityInput = document.getElementById("cityInput");
+            const suggestionsList = document.getElementById("suggestionsList");
+
+            // Başlangıç Rengi
+            if(bg1) bg1.style.background = defaultGradient;
+
+            // --- SAAT ---
+            function updateClock() {
+                try {
+                    const now = new Date();
+                    const options = { timeZone: userTimeZone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                    const timeString = new Intl.DateTimeFormat('tr-TR', options).format(now);
+                    const dateOptions = { timeZone: userTimeZone, weekday: 'long', day: 'numeric', month: 'long' };
+                    const dateString = new Intl.DateTimeFormat('tr-TR', dateOptions).format(now);
+
+                    if(digitalClock) digitalClock.innerText = timeString;
+                    if(dateText) dateText.innerText = dateString;
+                } catch(e) { console.log("Saat hatası (Timezone desteklenmiyor olabilir):", e); }
             }
-        }
+            setInterval(updateClock, 1000);
+            updateClock();
 
-        function enableSearchMode(event) {
-            event.stopPropagation();
-            weatherWidget.classList.add("search-mode");
-            citySearchBox.style.display = "flex";
-            weatherHeader.style.display = "none";
-            weatherDetails.style.display = "none";
-            cityInput.focus();
-        }
+            // --- GLOBAL FONKSİYONLAR (Window'a Bağlama) ---
+            window.enterSite = function() {
+                if(!overlay) return;
+                
+                // Başlangıç Verilerini Yükle
+                if(stationNameEl) stationNameEl.innerText = stations[currentStationIndex].name;
+                if(audio) audio.src = stations[currentStationIndex].url;
+                
+                // Animasyonlar
+                overlay.classList.add('slide-down-active');
+                if(document.getElementById("mainCard")) {
+                    document.getElementById("mainCard").style.opacity = "1"; 
+                    document.getElementById("mainCard").style.transform = "translateY(0)"; 
+                }
+                if(document.getElementById("footerText")) document.getElementById("footerText").classList.add('copyright-visible');
+                if(weatherWidget) weatherWidget.classList.add('visible');
+                if(clockContainer) clockContainer.classList.add('visible');
 
-        function disableSearchMode(event) {
-            event.stopPropagation();
-            weatherWidget.classList.remove("search-mode");
-            citySearchBox.style.display = "none";
-            weatherHeader.style.display = "flex";
-            suggestionsList.style.display = "none";
-            cityInput.value = "";
-            setTimeout(() => { weatherDetails.style.display = ""; }, 100);
-        }
+                // Hava Durumu ve Müzik Başlat
+                getWeather();
+                
+                if(audio) {
+                    let playPromise = audio.play();
+                    if(playPromise !== undefined) playPromise.catch(() => setTimeout(() => window.triggerChangeStation(1), 1000));
+                    connectionTimeout = setTimeout(() => { if(audio.paused) handleConnectionError(); }, 6000);
+                }
+                
+                setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
+                initSnow(); // Kar efektini başlat
+            };
 
-        // AUTOCOMPLETE
-        cityInput.addEventListener("input", function() {
-            const query = this.value;
-            clearTimeout(debounceTimer);
-            suggestionsList.innerHTML = "";
-            suggestionsList.style.display = "none";
+            window.togglePlay = function() {
+                if (audio.paused) {
+                    clearTimeout(connectionTimeout); 
+                    let playPromise = audio.play(); 
+                    if(playPromise !== undefined) playPromise.catch(e => handleConnectionError());
+                    connectionTimeout = setTimeout(() => { if(audio.paused) handleConnectionError(); }, 6000);
+                } else {
+                    clearInterval(fadeInterval); if(statusTextEl) statusTextEl.innerText = "Durduruluyor...";
+                    fadeInterval = setInterval(() => {
+                        if (audio.volume > 0.02) { audio.volume -= 0.02; } else { 
+                            audio.pause(); audio.volume = 0; clearInterval(fadeInterval); isPlaying = false;
+                            updateUI("Durduruldu", "#aaa"); updateBackground('default'); updateThemeColors(false);
+                            playerBox.classList.remove("playing"); playerBox.classList.remove("active-glow");
+                            playIcon.classList.remove("fa-pause"); playIcon.classList.add("fa-play");
+                        }
+                    }, 100);
+                }
+            };
 
-            if (query.length < 2) return;
+            window.triggerChangeStation = function(direction) {
+                if(isSwitching) return; isSwitching = true; clearTimeout(connectionTimeout);
+                if (!audio.paused && audio.duration > 0) {
+                    if(statusTextEl) { statusTextEl.innerText = "Değiştiriliyor..."; statusTextEl.style.color = "#f093fb"; }
+                    clearInterval(fadeInterval);
+                    fadeInterval = setInterval(() => { if (audio.volume > 0.05) { audio.volume -= 0.05; } else { clearInterval(fadeInterval); audio.pause(); finalizeStationChange(direction); } }, 50);
+                } else { finalizeStationChange(direction); }
+            };
 
-            debounceTimer = setTimeout(() => {
-                fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=tr&format=json`)
+            window.enableSearchMode = function(event) {
+                event.stopPropagation();
+                weatherWidget.classList.add("search-mode");
+                citySearchBox.style.display = "flex";
+                weatherHeader.style.display = "none";
+                weatherDetails.style.display = "none";
+                cityInput.focus();
+            };
+
+            window.disableSearchMode = function(event) {
+                event.stopPropagation();
+                weatherWidget.classList.remove("search-mode");
+                citySearchBox.style.display = "none";
+                weatherHeader.style.display = "flex";
+                suggestionsList.style.display = "none";
+                cityInput.value = "";
+                setTimeout(() => { weatherDetails.style.display = ""; }, 100);
+            };
+
+            // --- YARDIMCI FONKSİYONLAR ---
+            function finalizeStationChange(direction) {
+                if (direction === 1) { currentStationIndex = (currentStationIndex + 1) % stations.length; } else if (direction === -1) { currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length; }
+                audio.src = stations[currentStationIndex].url; audio.load();
+                updateUI("Bağlanıyor...", "#fff"); playerBox.classList.remove("playing"); updateThemeColors(false);
+                connectionTimeout = setTimeout(() => { 
+                    handleConnectionError();
+                    updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+                    setTimeout(() => window.triggerChangeStation(1), 1200);
+                }, 7000);
+                let playPromise = audio.play(); if (playPromise !== undefined) { playPromise.catch(e => { }); }
+            }
+
+            function handleConnectionError() {
+                clearTimeout(connectionTimeout);
+                if(errorOverlay) errorOverlay.classList.add('active-error'); 
+                if(shockwave) shockwave.classList.add('active-swipe'); 
+                if(playerBox) playerBox.classList.add('player-error');
+                updateBackground('error'); updateThemeColors(true);
+                
+                setTimeout(() => {
+                    if(errorOverlay) errorOverlay.classList.remove('active-error'); 
+                    if(shockwave) shockwave.classList.remove('active-swipe'); 
+                    if(playerBox) playerBox.classList.remove('player-error');
+                }, 1200);
+            }
+
+            function updateUI(statusMsg, statusColor) {
+                stationNameEl.classList.remove('anim-slide'); void stationNameEl.offsetWidth; stationNameEl.classList.add('anim-slide');
+                stationNameEl.innerText = stations[currentStationIndex].name;
+                statusTextEl.classList.remove('anim-fade'); void statusTextEl.offsetWidth; statusTextEl.classList.add('anim-fade');
+                if(statusMsg) { statusTextEl.innerText = statusMsg; statusTextEl.style.color = statusColor; }
+            }
+
+            function updateBackground(mode) {
+                let newGradient;
+                if (mode === 'default') newGradient = defaultGradient;
+                else if (mode === 'error') newGradient = errorGradient;
+                else newGradient = stations[currentStationIndex].gradient;
+                const targetLayer = activeBgLayer === 1 ? bg2 : bg1;
+                const currentLayer = activeBgLayer === 1 ? bg1 : bg2;
+                targetLayer.style.backgroundImage = newGradient;
+                currentLayer.classList.remove('active'); targetLayer.classList.add('active');
+                activeBgLayer = activeBgLayer === 1 ? 2 : 1;
+            }
+
+            function updateThemeColors(isError = false) {
+                let color;
+                if(isError) {
+                    color = "red";
+                    playBtn.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+                    playerBox.style.borderColor = "red";
+                } else {
+                    color = stations[currentStationIndex].accent;
+                    playBtn.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                    playerBox.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                }
+                playBtn.style.color = color;
+                equalizerBars.forEach(bar => bar.style.backgroundColor = color);
+                digitalClock.style.color = isError ? "red" : (isPlaying ? color : "white");
+                digitalClock.style.borderColor = isError ? "red" : (isPlaying ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)");
+            }
+
+            function fadeInMusic() {
+                audio.volume = 0; clearInterval(fadeInterval);
+                fadeInterval = setInterval(() => { if (audio.volume < 0.4) { audio.volume = Math.min(audio.volume + 0.02, 0.4); } else { clearInterval(fadeInterval); } }, 100);
+            }
+
+            // --- AUDIO EVENTS ---
+            if(audio) {
+                audio.addEventListener('playing', () => {
+                    clearTimeout(connectionTimeout); isSwitching = false; isPlaying = true;
+                    fadeInMusic(); updateBackground('station'); updateThemeColors(false);
+                    updateUI("Canlı Yayın", stations[currentStationIndex].accent);
+                    playerBox.classList.add("playing"); playerBox.classList.add("active-glow");
+                    playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause");
+                });
+
+                audio.addEventListener('error', (e) => { 
+                    handleConnectionError();
+                    updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
+                    setTimeout(() => window.triggerChangeStation(1), 1200);
+                });
+            }
+
+            // --- HAVA DURUMU ---
+            function getWeather() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude), 
+                        () => updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin")
+                    );
+                } else {
+                    updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin");
+                }
+            }
+
+            function fetchWeather(lat, lon, cityName = "Konumunuz") {
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`)
                     .then(res => res.json())
                     .then(data => {
-                        if (data.results) {
-                            suggestionsList.style.display = "block";
-                            data.results.forEach((city, index) => {
-                                const item = document.createElement("div");
-                                item.className = "suggestion-item";
-                                item.style.animationDelay = `${index * 0.05}s`;
-                                item.innerText = `${city.name}, ${city.country || ''}`;
-                                item.onclick = (e) => { e.stopPropagation(); selectCity(city); };
-                                suggestionsList.appendChild(item);
+                        if(data.timezone) userTimeZone = data.timezone; updateClock();
+                        updateWeatherUI(data.current, cityName);
+                    })
+                    .catch(() => triggerWeatherError());
+            }
+
+            function updateWeatherUI(current, locationName) {
+                const temp = current.temperature_2m !== "--" ? Math.round(current.temperature_2m) : "--";
+                document.getElementById("w-temp").innerText = `${temp}°C`;
+                document.getElementById("w-city").innerText = locationName;
+                document.getElementById("w-wind").innerText = `${current.wind_speed_10m} km/s`;
+                document.getElementById("w-hum").innerText = `%${current.relative_humidity_2m}`;
+                
+                let iconClass = "fa-cloud", color = "#fff";
+                const code = current.weather_code;
+                if (code === 0) { iconClass = "fa-sun"; color = "#ffd700"; }
+                else if (code <= 3) { iconClass = "fa-cloud-sun"; color = "#d4d4d4"; }
+                else if (code <= 48) { iconClass = "fa-smog"; color = "#aaa"; }
+                else if (code <= 67) { iconClass = "fa-cloud-rain"; color = "#00bfff"; }
+                else if (code <= 77) { iconClass = "fa-snowflake"; color = "#fff"; }
+                else if (code >= 95) { iconClass = "fa-bolt"; color = "#ff4500"; }
+                
+                const iconEl = document.getElementById("w-icon");
+                iconEl.className = `fas ${iconClass} weather-icon`;
+                iconEl.style.color = color;
+            }
+
+            function triggerWeatherError() {
+                weatherWidget.classList.add("widget-error");
+                document.getElementById("w-icon").className = "fas fa-exclamation-triangle weather-icon";
+                document.getElementById("w-icon").style.color = "red";
+                handleConnectionError(); 
+                setTimeout(() => { weatherWidget.classList.remove("widget-error"); }, 1000);
+            }
+
+            if(cityInput) {
+                cityInput.addEventListener("input", function() {
+                    const query = this.value;
+                    clearTimeout(debounceTimer);
+                    suggestionsList.innerHTML = ""; suggestionsList.style.display = "none";
+                    if (query.length < 2) return;
+                    debounceTimer = setTimeout(() => {
+                        fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=tr&format=json`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.results) {
+                                    suggestionsList.style.display = "block";
+                                    data.results.forEach((city, index) => {
+                                        const item = document.createElement("div");
+                                        item.className = "suggestion-item";
+                                        item.style.animationDelay = `${index * 0.05}s`;
+                                        item.innerText = `${city.name}, ${city.country || ''}`;
+                                        item.onclick = (e) => {
+                                            e.stopPropagation();
+                                            if(city.timezone) userTimeZone = city.timezone;
+                                            fetchWeather(city.latitude, city.longitude, city.name);
+                                            window.disableSearchMode(new Event('click'));
+                                        };
+                                        suggestionsList.appendChild(item);
+                                    });
+                                }
                             });
-                        }
-                    }).catch(() => triggerWeatherError());
-            }, 300);
-        });
-
-        function selectCity(cityData) {
-            const { latitude: lat, longitude: lon, name } = cityData;
-            if (cityData.timezone) { userTimeZone = cityData.timezone; updateClock(); }
-
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`;
-            
-            fetch(url)
-                .then(res => res.json())
-                .then(weatherData => {
-                    if(weatherData.timezone) userTimeZone = weatherData.timezone; updateClock();
-                    updateWeatherUI(weatherData.current, name);
-                    disableSearchMode(new Event('click'));
-                })
-                .catch(() => triggerWeatherError());
-        }
-
-        function fetchWeatherByCoords(position) {
-            const { latitude: lat, longitude: lon } = position.coords;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`;
-
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    if(data.timezone) userTimeZone = data.timezone; updateClock();
-                    updateWeatherUI(data.current, "Konumunuz");
-                })
-                .catch(() => triggerWeatherError());
-        }
-
-        function updateWeatherUI(current, locationName) {
-            const temp = current.temperature_2m !== "--" ? Math.round(current.temperature_2m) : "--";
-            const wind = current.wind_speed_10m;
-            const hum = current.relative_humidity_2m;
-            const code = current.weather_code;
-
-            document.getElementById("w-temp").innerText = `${temp}°C`;
-            document.getElementById("w-city").innerText = locationName;
-            document.getElementById("w-wind").innerText = `${wind} km/s`;
-            document.getElementById("w-hum").innerText = `%${hum}`;
-
-            let iconClass = "fa-cloud", color = "#fff";
-            if (code === 0) { iconClass = "fa-sun"; color = "#ffd700"; }
-            else if (code <= 3) { iconClass = "fa-cloud-sun"; color = "#d4d4d4"; }
-            else if (code <= 48) { iconClass = "fa-smog"; color = "#aaa"; }
-            else if (code <= 67) { iconClass = "fa-cloud-rain"; color = "#00bfff"; }
-            else if (code <= 77) { iconClass = "fa-snowflake"; color = "#fff"; }
-            else if (code >= 95) { iconClass = "fa-bolt"; color = "#ff4500"; }
-
-            const iconEl = document.getElementById("w-icon");
-            iconEl.className = `fas ${iconClass} weather-icon`;
-            iconEl.style.color = color;
-        }
-
-        function triggerWeatherError() {
-            weatherWidget.classList.add("widget-error");
-            document.getElementById("w-icon").className = "fas fa-exclamation-triangle weather-icon";
-            document.getElementById("w-icon").style.color = "red";
-            handleConnectionError(); 
-            setTimeout(() => { weatherWidget.classList.remove("widget-error"); }, 1000);
-        }
-
-        // --- RADYO VE ARKA PLAN ---
-        function updateBackground(mode) {
-            let newGradient;
-            if (mode === 'default') newGradient = defaultGradient;
-            else if (mode === 'error') newGradient = errorGradient;
-            else newGradient = stations[currentStationIndex].gradient;
-            const targetLayer = activeBgLayer === 1 ? bg2 : bg1;
-            const currentLayer = activeBgLayer === 1 ? bg1 : bg2;
-            targetLayer.style.backgroundImage = newGradient;
-            targetLayer.style.backgroundSize = "400% 400%";
-            currentLayer.classList.remove('active');
-            targetLayer.classList.add('active');
-            activeBgLayer = activeBgLayer === 1 ? 2 : 1;
-        }
-
-        function updateThemeColors(isError = false) {
-            let color;
-            if(isError) {
-                color = "red";
-                playBtn.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
-                playerBox.style.borderColor = "red";
-            } else {
-                color = stations[currentStationIndex].accent;
-                playBtn.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-                playerBox.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                    }, 300);
+                });
             }
-            playBtn.style.color = color;
-            equalizerBars.forEach(bar => bar.style.backgroundColor = color);
-            
-            digitalClock.style.color = isError ? "red" : (isPlaying ? color : "white");
-            digitalClock.style.borderColor = isError ? "red" : (isPlaying ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)");
-        }
 
-        function handleConnectionError() {
-            clearTimeout(connectionTimeout);
-            errorOverlay.classList.add('active-error'); shockwave.classList.add('active-swipe'); playerBox.classList.add('player-error');
-            updateBackground('error'); updateThemeColors(true);
-            setTimeout(() => {
-                errorOverlay.classList.remove('active-error'); shockwave.classList.remove('active-swipe'); playerBox.classList.remove('player-error');
-            }, 1200);
-        }
+            // --- FAVICON ---
+            function setCircularFavicon() {
+                const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
+                img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
+            }
+            setCircularFavicon();
 
-        audio.addEventListener('playing', () => {
-            clearTimeout(connectionTimeout); isSwitching = false; isPlaying = true;
-            fadeInMusic(); updateBackground('station'); updateThemeColors(false);
-            updateUI("Canlı Yayın", stations[currentStationIndex].accent);
-            playerBox.classList.add("playing"); playerBox.classList.add("active-glow");
-            playIcon.classList.remove("fa-play"); playIcon.classList.add("fa-pause");
-        });
+            // --- KAR EFEKTİ ---
+            function initSnow() {
+                const canvas = document.getElementById("snowCanvas"); 
+                if(!canvas) return;
+                const ctx = canvas.getContext("2d");
+                let snowflakes = []; let kickImpulse = 0;
+                let audioCtx, analyzer, dataArray;
 
-        audio.addEventListener('error', (e) => { 
-            handleConnectionError();
-            updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
-            setTimeout(() => triggerChangeStation(1), 1200);
-        });
+                function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+                window.addEventListener('resize', resize); resize();
 
-        function updateUI(statusMsg, statusColor) {
-            stationNameEl.classList.remove('anim-slide'); void stationNameEl.offsetWidth; stationNameEl.classList.add('anim-slide');
-            stationNameEl.innerText = stations[currentStationIndex].name;
-            statusTextEl.classList.remove('anim-fade'); void statusTextEl.offsetWidth; statusTextEl.classList.add('anim-fade');
-            if(statusMsg) { statusTextEl.innerText = statusMsg; statusTextEl.style.color = statusColor; }
-        }
+                class Snowflake { constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 3 + 1; this.baseSpeed = Math.random() * 0.5 + 0.3; this.opacity = Math.random() * 0.5 + 0.3; this.angle = Math.random() * Math.PI * 2; this.angleSpeed = Math.random() * 0.02 + 0.01; this.swingRange = Math.random() * 0.5 + 0.2; } update() { this.y += this.baseSpeed + kickImpulse; this.angle += this.angleSpeed; this.x += Math.cos(this.angle) * this.swingRange; if (this.y > canvas.height) { this.y = 0 - this.size; this.x = Math.random() * canvas.width; } if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width; } draw() { ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } }
+                
+                for (let i = 0; i < 90; i++) snowflakes.push(new Snowflake());
 
-        function setCircularFavicon() {
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
-            img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
-        }
-        setCircularFavicon();
+                // Audio Context Bağlama
+                if(audio) {
+                    try {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        analyzer = audioCtx.createAnalyser();
+                        const source = audioCtx.createMediaElementSource(audio);
+                        source.connect(analyzer);
+                        analyzer.connect(audioCtx.destination);
+                        analyzer.fftSize = 256;
+                        dataArray = new Uint8Array(analyzer.frequencyBinCount);
+                    } catch(e) { console.log("Audio API hatası:", e); }
+                }
 
-        function triggerChangeStation(direction) {
-            if(isSwitching) return; isSwitching = true; clearTimeout(connectionTimeout);
-            if (!audio.paused && audio.duration > 0) {
-                statusTextEl.innerText = "Değiştiriliyor..."; clearInterval(fadeInterval);
-                fadeInterval = setInterval(() => { if (audio.volume > 0.05) { audio.volume -= 0.05; } else { clearInterval(fadeInterval); audio.pause(); finalizeStationChange(direction); } }, 50);
-            } else { finalizeStationChange(direction); }
-        }
-
-        function finalizeStationChange(direction) {
-            if (direction === 1) { currentStationIndex = (currentStationIndex + 1) % stations.length; } else if (direction === -1) { currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length; }
-            audio.src = stations[currentStationIndex].url; audio.load();
-            updateUI("Bağlanıyor...", "#fff"); playerBox.classList.remove("playing"); updateThemeColors(false);
-            connectionTimeout = setTimeout(() => { 
-                handleConnectionError();
-                updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
-                setTimeout(() => triggerChangeStation(1), 1200);
-            }, 7000);
-            let playPromise = audio.play(); if (playPromise !== undefined) { playPromise.catch(e => { }); }
-        }
-
-        function fadeInMusic() {
-            audio.volume = 0; clearInterval(fadeInterval);
-            fadeInterval = setInterval(() => { if (audio.volume < 0.4) { audio.volume = Math.min(audio.volume + 0.02, 0.4); } else { clearInterval(fadeInterval); } }, 100);
-        }
-
-        function togglePlay() {
-            if (audio.paused) {
-                clearTimeout(connectionTimeout); let playPromise = audio.play(); if(playPromise !== undefined) playPromise.catch(e => { });
-                connectionTimeout = setTimeout(() => { if(audio.paused) {
-                    handleConnectionError(); updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
-                    setTimeout(() => triggerChangeStation(1), 1200);
-                } }, 6000);
-            } else {
-                clearInterval(fadeInterval); statusTextEl.innerText = "Durduruluyor...";
-                fadeInterval = setInterval(() => {
-                    if (audio.volume > 0.02) { audio.volume -= 0.02; } else { 
-                        audio.pause(); audio.volume = 0; clearInterval(fadeInterval); isPlaying = false;
-                        updateUI("Durduruldu", "#aaa"); updateBackground('default'); updateThemeColors(false);
-                        playerBox.classList.remove("playing"); playerBox.classList.remove("active-glow");
-                        playIcon.classList.remove("fa-pause"); playIcon.classList.add("fa-play");
+                function animate() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (analyzer && !audio.paused) {
+                        try {
+                            analyzer.getByteFrequencyData(dataArray);
+                            let bassSum = 0;
+                            for(let i = 0; i < 3; i++) bassSum += dataArray[i];
+                            if ((bassSum / 3) > 215) kickImpulse = 2.0;
+                        } catch(e) {}
                     }
-                }, 100);
+                    kickImpulse *= 0.90; if (kickImpulse < 0.05) kickImpulse = 0;
+                    snowflakes.forEach(flake => { flake.update(); flake.draw(); });
+                    requestAnimationFrame(animate);
+                }
+                animate();
             }
-        }
-        updateThemeColors(false);
-
-        // --- SİTE GİRİŞ ---
-        let audioContext, analyser, dataArray, source; let audioInitialized = false;
-        const canvas = document.getElementById("snowCanvas"); const ctx = canvas.getContext("2d");
-        let snowflakes = []; let kickImpulse = 0; let isSiteActive = false;
-
-        function enterSite() {
-            if(isSiteActive) return; isSiteActive = true;
-            stationNameEl.innerText = stations[currentStationIndex].name;
-            audio.src = stations[currentStationIndex].url;
-            
-            document.getElementById("overlay").classList.add('slide-down-active');
-            document.getElementById("mainCard").style.opacity = "1"; document.getElementById("mainCard").style.transform = "translateY(0)"; 
-            document.getElementById("footerText").classList.add('copyright-visible');
-            document.getElementById("weatherWidget").classList.add('visible'); 
-
-            getWeather();
-
-            if (!audioInitialized) { try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); analyser = audioContext.createAnalyser(); source = audioContext.createMediaElementSource(audio); source.connect(analyser); analyser.connect(audioContext.destination); analyser.fftSize = 256; dataArray = new Uint8Array(analyser.frequencyBinCount); audioInitialized = true; } catch (e) { } }
-            
-            let playPromise = audio.play();
-            if(playPromise !== undefined) playPromise.catch(() => setTimeout(() => triggerChangeStation(1), 1000));
-            connectionTimeout = setTimeout(() => { if(audio.paused) {
-                handleConnectionError(); updateUI("Hata! Geçiliyor...", "red"); playerBox.classList.remove("playing"); isSwitching = false; 
-                setTimeout(() => triggerChangeStation(1), 1200);
-            } }, 6000);
-            setTimeout(() => { document.getElementById("overlay").style.display = 'none'; }, 1500); 
-        }
-
-        let startY = 0; let endY = 0;
-        document.getElementById("overlay").addEventListener('click', enterSite); 
-        document.getElementById("overlay").addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, {passive: true}); 
-        document.getElementById("overlay").addEventListener('touchend', (e) => { endY = e.changedTouches[0].clientY; if (endY > startY + 50) enterSite(); }, {passive: true});
-        
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; } window.addEventListener('resize', resizeCanvas); resizeCanvas();
-        class Snowflake { constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 3 + 1; this.baseSpeed = Math.random() * 0.5 + 0.3; this.opacity = Math.random() * 0.5 + 0.3; this.angle = Math.random() * Math.PI * 2; this.angleSpeed = Math.random() * 0.02 + 0.01; this.swingRange = Math.random() * 0.5 + 0.2; } update() { this.y += this.baseSpeed + kickImpulse; this.angle += this.angleSpeed; this.x += Math.cos(this.angle) * this.swingRange; if (this.y > canvas.height) { this.y = 0 - this.size; this.x = Math.random() * canvas.width; } if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width; } draw() { ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } }
-        function initSnow() { snowflakes = []; for (let i = 0; i < 90; i++) { snowflakes.push(new Snowflake()); } animateSnow(); }
-        function animateSnow() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (audioInitialized && !audio.paused) { try { analyser.getByteFrequencyData(dataArray); let bassSum = 0; for(let i = 0; i < 3; i++) { bassSum += dataArray[i]; } let bassAvg = bassSum / 3; if (bassAvg > 215) { kickImpulse = 2.0; } } catch(e) {} }
-            kickImpulse *= 0.90; if (kickImpulse < 0.05) kickImpulse = 0; snowflakes.forEach(flake => { flake.update(); flake.draw(); }); requestAnimationFrame(animateSnow);
-        }
-        initSnow();
+        });
     </script>
 </body>
 </html>
