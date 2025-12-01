@@ -31,62 +31,31 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* KAR EFEKTİ CANVAS */
-        #snowCanvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none;
-        }
+        #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* GİRİŞ EKRANI (OVERLAY) - GÜNCELLENMİŞ VERSİYON */
+        /* GİRİŞ EKRANI */
         #overlay {
-            position: fixed;
-            
-            /* DEĞİŞİKLİK 1: Ekranı yukarıdan %15 dışarı taşırıyoruz */
-            top: -15vh;
-            left: 0;
-            width: 100%;
-            
-            /* DEĞİŞİKLİK 2: Boyunu uzatıyoruz ki alt taraf açık kalmasın */
-            height: 115vh;
-            
-            /* İçeriği ortalarken, yukarıdaki boşluğu telafi etmek için padding veriyoruz */
+            position: fixed; top: -15vh; left: 0; width: 100%; height: 115vh;
             padding-top: 15vh;
-
             background: linear-gradient(to bottom, rgba(15, 20, 35, 0.98), rgba(36, 11, 54, 0.98));
             backdrop-filter: blur(15px);
             z-index: 100; display: flex; justify-content: center; align-items: center;
             cursor: pointer;
-            
             transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.5s ease;
-
-            /* DEĞİŞİKLİK 3: Maske sadece o gizli olan üst %15'lik kısımda */
-            /* 0% (en tepe) şeffaf başlar, 15% (ekranın başladığı yer) tam siyah olur */
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
         }
 
-        .slide-down-active {
-            /* Perdeyi ekran boyundan daha fazla aşağı itmeliyiz */
-            transform: translateY(115%);
-            opacity: 0;
-        }
-
+        .slide-down-active { transform: translateY(115%); opacity: 0; }
         .overlay-content { text-align: center; animation: fadeUp 1s ease forwards; padding: 20px; }
         #overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
         #overlay p { font-size: 1.1rem; font-weight: 300; opacity: 0.8; margin-bottom: 30px; }
         .click-icon { font-size: 2rem; opacity: 0.7; animation: bounce 2s infinite; }
 
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(10px); }
-            60% { transform: translateY(5px); }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
-        /* ANA KART */
+        /* KART */
         .card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -120,48 +89,87 @@
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); }
         .social-btn:hover::before { opacity: 1; }
 
-        .music-control {
-            position: absolute; bottom: 20px; right: 20px; cursor: pointer; opacity: 0.5; transition: 0.3s; z-index: 20;
+        /* YENİ RADYO PLAYER TASARIMI */
+        .radio-wrapper {
+            position: absolute; bottom: 30px; right: 30px;
+            z-index: 20;
+            display: flex; flex-direction: column; align-items: flex-end;
+            gap: 10px;
         }
-        .music-control:hover { opacity: 1; }
 
-        /* COPYRIGHT ALANI */
+        .radio-player {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .radio-info {
+            text-align: right;
+            margin-right: 5px;
+        }
+        
+        .station-name {
+            font-size: 0.85rem; font-weight: 600; color: #fff;
+            white-space: nowrap;
+        }
+        
+        .status-text {
+            font-size: 0.65rem; color: #aaa;
+        }
+
+        .controls {
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .control-btn {
+            background: none; border: none; color: white;
+            cursor: pointer; font-size: 1rem; opacity: 0.7;
+            transition: 0.2s;
+        }
+        .control-btn:hover { opacity: 1; transform: scale(1.1); }
+        .play-btn { font-size: 1.2rem; color: #f093fb; }
+
+        /* Footer */
         .footer-copyright {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
             font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%;
-            color: white; pointer-events: none; 
-            transition: opacity 1s;
+            color: white; pointer-events: none; transition: opacity 1s;
         }
         .copyright-visible { opacity: 0.7; }
+        
+        /* Mobilde Player Düzeni */
+        @media (max-width: 480px) {
+            .radio-wrapper { bottom: 20px; right: 50%; transform: translateX(50%); align-items: center; }
+            .radio-player { padding: 8px 15px; }
+        }
     </style>
 </head>
 <body>
 
     <canvas id="snowCanvas"></canvas>
 
-    <audio id="bgMusic" loop crossorigin="anonymous">
-        <source src="muzik.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="bgMusic" crossorigin="anonymous"></audio>
 
     <div id="overlay">
         <div class="overlay-content">
             <h1>Hoş Geldiniz</h1>
-            <p>Girmek için dokunun veya aşağı kaydırın</p>
+            <p>Radyo eşliğinde girmek için dokunun</p>
             <i class="fas fa-chevron-down click-icon"></i>
         </div>
     </div>
 
     <div class="card" id="mainCard">
         <img src="profil.jpg" alt="Yusuf Ali" class="profile-img">
-        
         <h2>Yusuf Ali</h2>
         <div class="subtitle">Dokuz Eylül Üni. & Musician</div>
-        
         <p class="bio">
             Dokuz Eylül Üniversitesi'nde <strong>Elektrik ve Elektronik Teknolojisi</strong> üzerine kariyerimi inşa ediyorum. 
             Teknolojinin teknik dünyasını müziğin ritmiyle harmanlıyor; devrelerin arasında sanat, notaların arasında mühendislik arıyorum.
         </p>
-
         <div class="social-links">
             <a href="https://instagram.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-instagram"></i></a>
             <a href="https://x.com/yusufaliyaylaci" class="social-btn"><i class="fab fa-twitter"></i></a>
@@ -169,8 +177,18 @@
         </div>
     </div>
 
-    <div class="music-control" onclick="toggleMusic()">
-        <i class="fas fa-music" id="musicIcon"></i>
+    <div class="radio-wrapper">
+        <div class="radio-player">
+            <div class="radio-info">
+                <div class="station-name" id="stationName">Yükleniyor...</div>
+                <div class="status-text" id="statusText">Hazır</div>
+            </div>
+            <div class="controls">
+                <button class="control-btn" onclick="prevStation()"><i class="fas fa-step-backward"></i></button>
+                <button class="control-btn play-btn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
+                <button class="control-btn" onclick="nextStation()"><i class="fas fa-step-forward"></i></button>
+            </div>
+        </div>
     </div>
 
     <div class="footer-copyright" id="footerText">
@@ -179,36 +197,111 @@
     </div>
 
     <script>
+        // --- RADYO İSTASYONLARI LİSTESİ ---
+        const stations = [
+            { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
+            { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio" },
+            { name: "Kral Pop", url: "https://yayin.kralpop.com.tr/kralpop/mpeg/icecast.audio" },
+            { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio" },
+            { name: "Best FM", url: "http://46.20.7.126:8000/;" }
+        ];
+
+        let currentStationIndex = 0;
+        let isPlaying = false;
+
         var audio = document.getElementById("bgMusic");
         var overlay = document.getElementById("overlay");
         var card = document.getElementById("mainCard");
         var footer = document.getElementById("footerText");
         
+        // UI Elementleri
+        const stationNameEl = document.getElementById("stationName");
+        const statusTextEl = document.getElementById("statusText");
+        const playIcon = document.getElementById("playIcon");
+
+        // Radyo Fonksiyonları
+        function loadStation(index) {
+            stationNameEl.innerText = stations[index].name;
+            audio.src = stations[index].url;
+            audio.load();
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play().then(() => {
+                    playIcon.classList.remove("fa-play");
+                    playIcon.classList.add("fa-pause");
+                    statusTextEl.innerText = "Canlı Yayın";
+                    statusTextEl.style.color = "#00ff00";
+                    isPlaying = true;
+                }).catch(e => {
+                    console.log("Oynatma hatası:", e);
+                    statusTextEl.innerText = "Hata!";
+                });
+            } else {
+                audio.pause();
+                playIcon.classList.remove("fa-pause");
+                playIcon.classList.add("fa-play");
+                statusTextEl.innerText = "Durduruldu";
+                statusTextEl.style.color = "#aaa";
+                isPlaying = false;
+            }
+        }
+
+        function nextStation() {
+            currentStationIndex = (currentStationIndex + 1) % stations.length;
+            changeStation();
+        }
+
+        function prevStation() {
+            currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length;
+            changeStation();
+        }
+
+        function changeStation() {
+            statusTextEl.innerText = "Bağlanıyor...";
+            statusTextEl.style.color = "#f093fb";
+            loadStation(currentStationIndex);
+            if(isPlaying) {
+                audio.play().then(() => {
+                    playIcon.classList.remove("fa-play");
+                    playIcon.classList.add("fa-pause");
+                    statusTextEl.innerText = "Canlı Yayın";
+                    statusTextEl.style.color = "#00ff00";
+                });
+            }
+        }
+
+        // --- SES ANALİZİ VE KAR EFEKTİ ---
         let audioContext, analyser, dataArray, source;
         let audioInitialized = false;
-
         const canvas = document.getElementById("snowCanvas");
         const ctx = canvas.getContext("2d");
         let snowflakes = [];
         let kickImpulse = 0; 
 
-        // --- GİRİŞ FONKSİYONLARI ---
         let isSiteActive = false;
 
         function enterSite() {
             if(isSiteActive) return;
             isSiteActive = true;
 
+            // İlk radyoyu yükle
+            loadStation(currentStationIndex);
+
             overlay.classList.add('slide-down-active');
-            
             card.style.opacity = "1";
             card.style.transform = "translateY(0)";
             footer.classList.add('copyright-visible');
 
+            // Audio Context Başlat
             if (!audioInitialized) {
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     analyser = audioContext.createAnalyser();
+                    
+                    // Not: Radyo akışlarında CORS (Güvenlik) nedeniyle her zaman analiz yapılamayabilir.
+                    // Bu durumda müzik çalar ama kar efekti tepki vermeyebilir.
                     source = audioContext.createMediaElementSource(audio);
                     source.connect(analyser);
                     analyser.connect(audioContext.destination);
@@ -216,16 +309,16 @@
                     dataArray = new Uint8Array(analyser.frequencyBinCount);
                     audioInitialized = true;
                 } catch (e) {
-                    console.log("Audio Context hatası:", e);
+                    console.log("Audio Context (Radyo) uyarısı:", e);
                 }
             }
-            audio.volume = 0.4;
-            audio.play();
-
+            
+            // Başlat
+            togglePlay();
             setTimeout(() => { overlay.style.display = 'none'; }, 1500); 
         }
 
-        // MOBİL SWIPE
+        // --- SWIPE EVENT ---
         let startY = 0;
         let endY = 0;
         overlay.addEventListener('click', enterSite);
@@ -235,11 +328,8 @@
             if (endY > startY + 50) enterSite();
         }, {passive: true});
 
-        // --- GELİŞMİŞ KAR SİSTEMİ ---
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
+        // --- KAR ANİMASYONU ---
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
@@ -254,20 +344,14 @@
                 this.angleSpeed = Math.random() * 0.02 + 0.01; 
                 this.swingRange = Math.random() * 0.5 + 0.2; 
             }
-
             update() {
                 this.y += this.baseSpeed + kickImpulse;
                 this.angle += this.angleSpeed; 
                 this.x += Math.cos(this.angle) * this.swingRange;
-
-                if (this.y > canvas.height) {
-                    this.y = 0 - this.size;
-                    this.x = Math.random() * canvas.width;
-                }
+                if (this.y > canvas.height) { this.y = 0 - this.size; this.x = Math.random() * canvas.width; }
                 if (this.x > canvas.width) this.x = 0;
                 if (this.x < 0) this.x = canvas.width;
             }
-
             draw() {
                 ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
                 ctx.beginPath();
@@ -285,14 +369,17 @@
         function animateSnow() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Eğer radyo analiz edilebiliyorsa (CORS izni varsa)
             if (audioInitialized && !audio.paused) {
-                analyser.getByteFrequencyData(dataArray);
-                let bassSum = 0;
-                for(let i = 0; i < 4; i++) { bassSum += dataArray[i]; }
-                let bassAvg = bassSum / 4; 
-
-                if (bassAvg > 210) { 
-                    kickImpulse = 2.5; 
+                try {
+                    analyser.getByteFrequencyData(dataArray);
+                    let bassSum = 0;
+                    for(let i = 0; i < 4; i++) { bassSum += dataArray[i]; }
+                    let bassAvg = bassSum / 4; 
+                    if (bassAvg > 210) { kickImpulse = 2.5; }
+                } catch(e) {
+                    // Radyo sunucusu veri analizine izin vermiyorsa burası çalışır
+                    // Kar yağmaya devam eder ama müziğe tepki vermez
                 }
             }
             kickImpulse *= 0.95; 
@@ -300,19 +387,6 @@
 
             snowflakes.forEach(flake => { flake.update(); flake.draw(); });
             requestAnimationFrame(animateSnow);
-        }
-
-        function toggleMusic() {
-            var icon = document.getElementById("musicIcon");
-            if (audio.paused) {
-                audio.play();
-                icon.classList.remove("fa-volume-mute");
-                icon.classList.add("fa-music");
-            } else {
-                audio.pause();
-                icon.classList.add("fa-volume-mute");
-                icon.classList.remove("fa-music");
-            }
         }
 
         initSnow();
