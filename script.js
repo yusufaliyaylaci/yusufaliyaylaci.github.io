@@ -36,7 +36,7 @@ let timers = {
 let audioCtx, analyzer, dataArray;
 
 // =========================================
-// 2. BAŞLATMA VE AUTOPLAY (GÜNCELLENDİ)
+// 2. BAŞLATMA VE AUTOPLAY
 // =========================================
 function startExperience() {
     const overlay = document.getElementById("overlay");
@@ -53,11 +53,9 @@ function startExperience() {
     // Müzik Analizörünü Hazırla
     setupAudioContext();
     
-    // Radyoyu yükle ve OYNAT (Autoplay Eklendi)
+    // Radyoyu yükle ve OYNAT
     initRadio();
     
-    // Kullanıcı tıkladığı için tarayıcı oynatmaya izin verir.
-    // togglePlay() fonksiyonunu çağırarak oynatmayı başlatıyoruz.
     setTimeout(() => {
         togglePlay(); 
     }, 100);
@@ -117,12 +115,14 @@ function changeStage() {
     card.classList.remove("state-album", "state-bio", "state-social");
     card.setAttribute("data-state", state.stage);
     
+    // CSS bu class'ı dinleyerek radyo ve kart görünümünü değiştirecek
     if(state.stage === 3) document.body.classList.add('view-mode-social');
     else document.body.classList.remove('view-mode-social');
 
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
-    else if(state.stage === 3) card.classList.add("state-social");
+    // state-social class'ını artık karta eklemeye gerek yok çünkü kart gizleniyor,
+    // ama HTML attribute olarak kalmasında sakınca yok.
 }
 
 // =========================================
@@ -132,7 +132,6 @@ function initRadio() {
     const audio = document.getElementById("bgMusic");
     if(!audio) return;
     
-    // Varsayılan istasyonu yükle (Fakat henüz çalmaz, startExperience çalacak)
     updateUI(CONFIG.stations[state.currentStation].name, "Hazırlanıyor...", "#aaa");
     audio.src = CONFIG.stations[state.currentStation].url;
 
