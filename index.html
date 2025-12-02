@@ -33,7 +33,7 @@
         #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* Saat */
+        /* Arkaplan Saati */
         .big-clock-num {
             position: absolute; top: 50%; transform: translateY(-50%);
             font-size: 30vw; font-weight: 800; color: rgba(255, 255, 255, 0.06);
@@ -68,36 +68,13 @@
         @keyframes swipeLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
 
-        /* --- GLOBAL ESNEME (BOUNCING) ANİMASYONLARI --- */
+        /* --- GLOBAL ESNEME (BOUNCING) --- */
+        @keyframes bumpUp { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1); } 100% { transform: translateY(0) scale(1); } }
+        @keyframes bumpDown { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(20px) scale(1); } 100% { transform: translateY(0) scale(1); } }
         
-        /* Normal Kart */
-        @keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
-        @keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
-
-        /* DASHBOARD - RADYO (Merkez) */
-        @keyframes bumpUpRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 30px)); } 100% { transform: translate(-50%, -50%); } }
-        @keyframes bumpDownRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% + 30px)); } 100% { transform: translate(-50%, -50%); } }
-
-        /* DASHBOARD - HAVA DURUMU (Üst) */
-        @keyframes bumpUpWeather { 0% { transform: translate(-50%, -100%); } 50% { transform: translate(-50%, calc(-100% - 30px)); } 100% { transform: translate(-50%, -100%); } }
-        @keyframes bumpDownWeather { 0% { transform: translate(-50%, -100%); } 50% { transform: translate(-50%, calc(-100% + 30px)); } 100% { transform: translate(-50%, -100%); } }
-
-        /* DASHBOARD - İKONLAR (Alt) */
-        @keyframes bumpUpVis { 0% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -30px); } 100% { transform: translate(-50%, 0); } }
-        @keyframes bumpDownVis { 0% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 30px); } 100% { transform: translate(-50%, 0); } }
-
-        /* Animasyon Atamaları */
-        body.bump-up:not(.view-mode-social) .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        body.bump-down:not(.view-mode-social) .card { animation: bumpDownCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        body.bump-up.view-mode-social .radio-wrapper { animation: bumpUpRadio 0.4s; }
-        body.bump-down.view-mode-social .radio-wrapper { animation: bumpDownRadio 0.4s; }
-        
-        body.bump-up.view-mode-social .weather-widget { animation: bumpUpWeather 0.4s; }
-        body.bump-down.view-mode-social .weather-widget { animation: bumpDownWeather 0.4s; }
-
-        body.bump-up.view-mode-social .card.state-social .social-box { animation: bumpUpVis 0.4s; }
-        body.bump-down.view-mode-social .card.state-social .social-box { animation: bumpDownVis 0.4s; }
+        /* Dashboard Esnemesi: Parçalar Kartın içinde olduğu için sadece kartı esnetmek yeterli */
+        body.bump-up .card { animation: bumpUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        body.bump-down .card { animation: bumpDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         /* Visualizer Beat */
         @keyframes visualizerBeat {
@@ -125,20 +102,21 @@
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
         /* =========================================
-           3. KART (PROFİL & BIO)
+           3. KART (GÖVDE)
         ========================================= */
         .card {
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1); 
-            padding: 40px; border-radius: 30px;
+            border-radius: 30px;
             text-align: center; width: 360px; height: 380px;
             opacity: 0; 
-            transform: translateY(30px) scale(1.12); 
+            transform: translateY(30px) scale(1.12); /* Default Scale */
             transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: visible;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: hidden;
         }
 
+        /* İçerik Elemanları */
         .profile-img {
             position: absolute; top: 35px; left: 50%; transform: translateX(-50%);
             width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
@@ -170,16 +148,23 @@
         .card.state-bio .info-box { top: 40px; transform: scale(1); }
         .card.state-bio .bio-box { top: 130px; opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-        /* STATE 3: DASHBOARD (Kart Şeffaf) */
+        /* STATE 3: DASHBOARD (Kart Büyür) */
         .card.state-social { 
-            width: 100%; height: 100%; background-color: transparent; border-color: transparent; 
-            backdrop-filter: blur(0px); box-shadow: none; pointer-events: none; transform: scale(1);
+            /* Toplam Yükseklik: Hava(80) + Radyo(280) + Buton(80) = ~440px */
+            height: 460px; 
+            transform: scale(1);
+            background: rgba(255, 255, 255, 0.03);
         }
-        .card.state-social .bio-box { opacity: 0; transform: translateY(-50px); pointer-events: none; }
-        .card.state-social .profile-img, .card.state-social .info-box { opacity: 0; pointer-events: none; }
+        /* İsim ve Biyografi YUKARI doğru kaybolur */
+        .card.state-social .profile-img, 
+        .card.state-social .info-box,
+        .card.state-social .bio-box { 
+            opacity: 0; 
+            transform: translateY(-60px); 
+            pointer-events: none; 
+        }
 
-        /* --- SOSYAL KUTU (Kartın İçinde) --- */
-        /* Normal Hal */
+        /* --- SOSYAL KUTU --- */
         .social-box {
             position: absolute; bottom: 50px; left: 0; width: 100%;
             display: flex; justify-content: center; gap: 12px; transition: all 0.8s ease;
@@ -191,61 +176,46 @@
             position: relative; overflow: hidden;
         }
         
-        /* Dashboard Hali - MUTLAK KONUM (Radyonun Altına) */
+        /* Dashboard Modu (Visualizer - Kartın Altına) */
         .card.state-social .social-box { 
-            /* Ekranın Ortası referans */
-            top: 50%; left: 50%; bottom: auto; right: auto;
-            /* Radyo Yarı Boy (190px) kadar aşağı it */
-            margin-top: 190px;
-            /* X ekseninde ortala */
-            transform: translate(-50%, 0);
-            
-            gap: 0; width: 360px; height: auto;
-            align-items: flex-start; z-index: 60; /* Tıklanabilir */
-            pointer-events: auto;
+            bottom: 0; left: 0; width: 100%;
+            padding: 0; gap: 0; 
+            height: 80px; align-items: flex-start;
+            z-index: 60;
         }
         .card.state-social .social-btn {
             width: 33.33%; height: 40px; 
-            /* Üst Keskin (Radyoya yapışık), Alt Oval */
-            border-radius: 0 0 20px 20px;
+            border-radius: 0 0 20px 20px; /* Üst Düz, Alt Oval */
             font-size: 1.5rem; 
-            background: rgba(255,255,255,0.03); 
-            /* Üst kenarlık yok - Birleşme efekti */
+            background: transparent; 
             border: 1px solid rgba(255,255,255,0.1); border-top: none;
-            
             animation: visualizerBeat 1.2s infinite alternate ease-in-out;
-            transition: all 0.3s;
-            cursor: pointer; pointer-events: auto;
         }
-        /* Kenar Düzeltmeleri */
-        .card.state-social .social-btn:first-child { border-bottom-left-radius: 20px; border-bottom-right-radius: 4px; }
+        .card.state-social .social-btn:first-child { border-bottom-left-radius: 30px; border-bottom-right-radius: 4px; }
         .card.state-social .social-btn:nth-child(2) { border-radius: 0 0 4px 4px; }
-        .card.state-social .social-btn:last-child { border-bottom-left-radius: 4px; border-bottom-right-radius: 20px; }
+        .card.state-social .social-btn:last-child { border-bottom-left-radius: 4px; border-bottom-right-radius: 30px; }
 
-        .card.state-social .social-btn:nth-child(1) { animation-delay: 0s; }
-        .card.state-social .social-btn:nth-child(2) { animation-delay: 0.4s; }
-        .card.state-social .social-btn:nth-child(3) { animation-delay: 0.8s; }
-        
-        .card.state-social .social-btn:hover { background: rgba(255,255,255,0.2); height: 90px; animation-play-state: paused; }
-        .social-text { max-width: 0; overflow: hidden; opacity: 0; transition: all 0.4s; font-size: 0.9rem; margin-left: 0; white-space: nowrap; }
+        .card.state-social .social-btn:hover { background: rgba(255,255,255,0.2); height: 80px; animation-play-state: paused; }
         .card.state-social .social-text { display: none; }
 
         /* =========================================
-           4. RADYO & HAVA (Kartın DIŞINDA)
+           4. WIDGET'LAR (DIŞARIDAN İÇERİYE)
         ========================================= */
         
-        /* --- RADYO (Normal: Sağ Alt, Dashboard: Merkez) --- */
+        /* --- RADYO (Sağ Alt -> Merkez) --- */
         .radio-wrapper { 
             position: fixed; bottom: 30px; right: 30px; z-index: 50; 
             display: flex; flex-direction: column; align-items: flex-end; gap: 10px; 
-            transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
         
-        /* Dashboard Modu */
+        /* Dashboard: Kartın Tam Ortasına */
         body.view-mode-social .radio-wrapper {
-            top: 50%; left: 50%; bottom: auto; right: auto;
-            transform: translate(-50%, -50%); /* Tam Merkez */
-            align-items: center; width: 360px; margin: 0; z-index: 50;
+            position: absolute; /* Kartın içine girmese de üstüne tam oturacak */
+            top: 50%; left: 50%; bottom: auto; right: auto; margin: 0;
+            transform: translate(-50%, -50%); 
+            width: 360px; height: 300px;
+            align-items: center; justify-content: center;
         }
 
         .radio-player {
@@ -255,28 +225,75 @@
             width: fit-content; min-width: 280px; max-width: 400px; transition: all 0.5s;
         }
         
-        /* Dashboard Stili */
+        /* Dashboard Radyo Stili */
         body.view-mode-social .radio-player {
-            width: 360px; height: 380px; 
-            /* Köşeler Düz (Üstte hava, altta ikon var) */
-            border-radius: 4px; 
+            width: 100%; height: 100%; 
+            border-radius: 4px; /* Düz köşeler */
             flex-direction: column; justify-content: center;
-            background: rgba(255, 255, 255, 0.03); /* Cam */
-            padding: 30px; gap: 30px;
-            /* Kenarlık çizgilerini ayarlayalım - Üst ve Alt yok */
-            border-bottom: none; border-top: none; 
+            background: transparent; border: none; box-shadow: none; backdrop-filter: none;
+            padding: 20px; gap: 20px;
         }
 
-        body.view-mode-social .radio-info { text-align: center; align-items: center; width: 100%; flex-grow: 0; }
-        body.view-mode-social .station-name { font-size: 2rem; margin-bottom: 10px; white-space: normal; }
-        body.view-mode-social .status-container { justify-content: center; width: 100%; flex-direction: column; gap: 10px; }
-        body.view-mode-social .status-text { font-size: 1rem; }
-        body.view-mode-social .equalizer { height: 40px; gap: 8px; opacity: 0.8; }
-        body.view-mode-social .equalizer .bar { width: 8px; background-color: white !important; }
-        body.view-mode-social .controls { gap: 40px; margin-top: 20px; }
-        body.view-mode-social .control-btn { font-size: 1.5rem; }
-        body.view-mode-social .play-btn { width: 70px; height: 70px; font-size: 1.5rem; }
+        body.view-mode-social .radio-info { text-align: center; width: 100%; }
+        body.view-mode-social .station-name { font-size: 1.8rem; margin-bottom: 5px; white-space: normal; }
+        body.view-mode-social .status-container { justify-content: center; width: 100%; flex-direction: column; gap: 5px; }
+        body.view-mode-social .equalizer { height: 30px; opacity: 0.8; }
+        body.view-mode-social .controls { gap: 30px; margin-top: 10px; }
+        body.view-mode-social .control-btn { font-size: 1.4rem; }
+        body.view-mode-social .play-btn { width: 60px; height: 60px; }
 
+        /* --- HAVA DURUMU (Sağ Üst -> Radyo Üstü) --- */
+        .weather-widget {
+            position: fixed; top: 30px; right: 30px;
+            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(25px);
+            padding: 15px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
+            display: flex; flex-direction: column; align-items: flex-end; z-index: 20;
+            opacity: 0; transform: translateY(-20px); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            overflow: visible; transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            max-height: 70px; min-width: 160px;
+        }
+
+        /* Dashboard: Radyonun Tepesine */
+        body.view-mode-social .weather-widget {
+            position: absolute;
+            top: 50%; left: 50%; bottom: auto; right: auto; margin: 0;
+            /* Y: -50% (Merkez) - 150px (Radyo Yarı) - 40px (Hava Yarı) = ~ -190px */
+            /* Daha basit: transform ile yukarı itelim. Radyo boyu 300px. Yarı 150px. */
+            transform: translate(-50%, -190px); 
+            
+            width: 360px; max-height: 80px; height: 80px;
+            background: transparent; border: none; box-shadow: none; backdrop-filter: none;
+            border-radius: 30px 30px 4px 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            align-items: center; justify-content: center;
+            padding: 0 20px;
+        }
+        
+        body.view-mode-social .weather-header { justify-content: space-between; width: 100%; margin: 0; flex-direction: row-reverse; }
+        body.view-mode-social .weather-details { display: none; }
+        body.view-mode-social .weather-main-info { text-align: left; }
+        body.view-mode-social .weather-temp { font-size: 2rem; }
+
+        .weather-widget.visible { opacity: 1; transform: translateY(0); }
+        .weather-widget:hover:not(.view-mode-social) { max-height: 400px; background: rgba(20, 20, 20, 0.5); }
+        
+        .weather-header { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: flex-end; cursor: pointer; }
+        .weather-icon { font-size: 2rem; color: #ffd700; transition: transform 0.4s; }
+        .weather-widget:hover .weather-icon { transform: scale(1.1) rotate(15deg); }
+        .weather-main-info { display: flex; flex-direction: column; text-align: right; }
+        .weather-temp { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+        .weather-city { font-size: 0.8rem; opacity: 0.7; margin-top: 3px; }
+        .weather-details { margin-top: 15px; width: 100%; opacity: 0; transform: translateY(-10px); transition: all 0.4s ease 0.1s; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+        .weather-widget:hover .weather-details { opacity: 1; transform: translateY(0); }
+        .detail-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #ddd; margin-bottom: 6px; }
+        .city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; animation: fadeIn 0.3s ease; position: relative; }
+        .search-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 10px; border-radius: 8px; color: white; width: 100%; }
+        .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: rgba(30,30,30,0.9); border-radius: 8px; max-height: 150px; overflow-y: auto; z-index: 30; display: none; margin-top: 5px; }
+        .suggestion-item { padding: 10px; font-size: 0.8rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .suggestion-item:hover { background: rgba(255,255,255,0.1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Radyo Ortak */
         .radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
         .radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
         .radio-info { flex-grow: 1; text-align: right; display: flex; flex-direction: column; overflow: hidden; }
@@ -297,61 +314,6 @@
         .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; display: flex; align-items: center; justify-content: center; }
         .play-btn:hover { background: rgba(255,255,255,0.2); }
 
-        /* --- HAVA DURUMU (Normal: Sağ Üst, Dashboard: Merkez Üst) --- */
-        .weather-widget {
-            position: fixed; top: 30px; right: 30px;
-            background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(25px);
-            padding: 15px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
-            display: flex; flex-direction: column; align-items: flex-end; z-index: 20;
-            opacity: 0; transform: translateY(-20px); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            overflow: visible; transition: all 1s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease 1s;
-            max-height: 70px; min-width: 160px;
-        }
-
-        /* Dashboard Modu (Radyonun Tepesine Kilitle) */
-        body.view-mode-social .weather-widget {
-            top: auto; left: 50%; bottom: 50%; right: auto;
-            /* Radyo Yarı Boy (190px) kadar yukarı it */
-            margin-bottom: 190px;
-            /* X'de Ortala, Y'de kendi boyu (-100%) kadar yukarı */
-            transform: translate(-50%, -100%); 
-            
-            width: 360px; max-height: 100px;
-            background: rgba(255, 255, 255, 0.03); 
-            /* Alt köşe DÜZ (Radyoya yapışık), Üst Oval */
-            border-radius: 30px 30px 4px 4px;
-            /* Alt Çizgiyi Kaldır (Bitişik Görünüm) */
-            border-bottom: none;
-            align-items: center; justify-content: center;
-        }
-        
-        body.view-mode-social .weather-header { justify-content: space-between; width: 100%; margin-bottom: 0; flex-direction: row-reverse; padding: 0 20px; }
-        body.view-mode-social .weather-details { display: none; }
-        body.view-mode-social .weather-main-info { text-align: left; }
-        body.view-mode-social .weather-temp { font-size: 2.2rem; }
-
-        .weather-widget.visible { opacity: 1; transform: translateY(0); }
-        .weather-widget:hover:not(.view-mode-social), .weather-widget.search-mode { max-height: 400px; background: rgba(20, 20, 20, 0.5); border-color: rgba(255,255,255,0.3); }
-        
-        .weather-header { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: flex-end; cursor: pointer; }
-        .weather-icon { font-size: 2rem; color: #ffd700; transition: transform 0.4s; }
-        .weather-widget:hover .weather-icon { transform: scale(1.1) rotate(15deg); }
-        .weather-main-info { display: flex; flex-direction: column; text-align: right; }
-        .weather-temp { font-size: 1.3rem; font-weight: 700; line-height: 1; }
-        .weather-city { font-size: 0.8rem; opacity: 0.7; margin-top: 3px; }
-        .weather-details { margin-top: 15px; width: 100%; opacity: 0; transform: translateY(-10px); transition: all 0.4s ease 0.1s; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-        .weather-widget:hover .weather-details, .weather-widget.search-mode .weather-details { opacity: 1; transform: translateY(0); }
-        .detail-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #ddd; margin-bottom: 6px; }
-        .city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; animation: fadeIn 0.3s ease; position: relative; }
-        .weather-widget.search-mode .city-search-box { display: flex; }
-        .weather-widget.search-mode .weather-details { display: none; }
-        .search-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 10px; border-radius: 8px; color: white; width: 100%; }
-        .search-input:focus { outline: none; border-color: #00bfff; }
-        .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: rgba(30,30,30,0.9); border-radius: 8px; max-height: 150px; overflow-y: auto; z-index: 30; display: none; margin-top: 5px; }
-        .suggestion-item { padding: 10px; font-size: 0.8rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .suggestion-item:hover { background: rgba(255,255,255,0.1); }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         .footer-copyright {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
             font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%;
@@ -360,9 +322,9 @@
         .copyright-visible { opacity: 0.7; }
 
         @media (max-width: 480px) {
-            .radio-wrapper { bottom: 20px; right: 50%; transform: translateX(50%); align-items: center; }
-            .weather-widget { top: 20px; right: 50%; transform: translateX(50%) translateY(-20px); }
-            .weather-widget.visible { transform: translateX(50%) translateY(0); }
+            .radio-wrapper:not(.view-mode-social .radio-wrapper) { bottom: 20px; right: 50%; transform: translateX(50%); align-items: center; }
+            .weather-widget:not(.view-mode-social .weather-widget) { top: 20px; right: 50%; transform: translateX(50%) translateY(-20px); }
+            .weather-widget.visible:not(.view-mode-social .weather-widget) { transform: translateX(50%) translateY(0); }
             .card { width: 90vw; height: 60vh; }
             .card.state-album { width: 100vw; height: 50vh; }
             .card.state-social { width: 90vw; }
