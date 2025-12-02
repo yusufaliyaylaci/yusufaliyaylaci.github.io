@@ -7,10 +7,8 @@
     
     <link rel="icon" href="profil.jpg" id="dynamicFavicon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.1">
 </head>
 <body>
 
@@ -53,22 +51,12 @@
         <div class="extended-info" id="extendedInfo">
             <div class="graph-container">
                 <h3>Saatlik Tahmin & Yağış</h3>
-                <div class="hourly-graph" id="hourlyGraph">
-                    </div>
+                <div class="hourly-graph" id="hourlyGraph"></div>
             </div>
             <div class="extra-grid">
-                <div class="extra-card">
-                    <i class="fas fa-tint"></i>
-                    <div><span id="ex-hum">--%</span><small>Nem</small></div>
-                </div>
-                <div class="extra-card">
-                    <i class="fas fa-wind"></i>
-                    <div><span id="ex-wind">--</span><small>Rüzgar</small></div>
-                </div>
-                <div class="extra-card">
-                    <i class="fas fa-sun"></i>
-                    <div><span id="ex-uv">--</span><small>UV İndeksi</small></div>
-                </div>
+                <div class="extra-card"><i class="fas fa-tint"></i><div><span id="ex-hum">--%</span><small>Nem</small></div></div>
+                <div class="extra-card"><i class="fas fa-wind"></i><div><span id="ex-wind">--</span><small>Rüzgar</small></div></div>
+                <div class="extra-card"><i class="fas fa-sun"></i><div><span id="ex-uv">--</span><small>UV İndeksi</small></div></div>
             </div>
         </div>
 
@@ -83,18 +71,14 @@
     <div class="card" id="mainCard" data-state="1">
         <div class="album-nav nav-left" onclick="prevPhoto()"><i class="fas fa-chevron-left"></i></div>
         <div class="album-nav nav-right" onclick="nextPhoto()"><i class="fas fa-chevron-right"></i></div>
-
         <img src="profil.jpg" alt="Yusuf Ali" class="profile-img" id="profileImg">
-        
         <div class="info-box">
             <h2>Yusuf Ali</h2>
             <div class="subtitle">Dokuz Eylül Üni. & Musician</div>
         </div>
-
         <div class="bio-box">
             <p class="bio">Dokuz Eylül Üniversitesi'nde <strong>Elektrik ve Elektronik Teknolojisi</strong> üzerine kariyerimi inşa ediyorum. Teknolojinin teknik dünyasını müziğin ritmiyle harmanlıyor; devrelerin arasında sanat, notaların arasında mühendislik arıyorum.</p>
         </div>
-
         <div class="social-box">
             <a href="https://instagram.com/yusufaliyaylaci" class="social-btn" target="_blank"><i class="fab fa-instagram"></i><span class="social-text">Instagram</span></a>
             <a href="https://x.com/yusufaliyaylaci" class="social-btn" target="_blank"><i class="fab fa-twitter"></i><span class="social-text">Twitter / X</span></a>
@@ -115,12 +99,22 @@
                 <button class="control-btn" onclick="triggerChangeStation(-1)"><i class="fas fa-step-backward"></i></button>
                 <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
                 <button class="control-btn" onclick="triggerChangeStation(1)"><i class="fas fa-step-forward"></i></button>
-            </div>
+                
+                <div class="volume-group" id="volGroup">
+                    <button class="control-btn vol-btn" onclick="toggleMute(event)">
+                        <i class="fas fa-volume-up" id="volIcon"></i>
+                    </button>
+                    <div class="vol-slider-wrapper">
+                        <input type="range" class="vol-range" id="volRange" min="0" max="1" step="0.01">
+                        <div class="vol-fill" id="volFill"></div>
+                    </div>
+                </div>
+                </div>
         </div>
     </div>
 
     <div class="footer-copyright" id="footerText">&copy; 2025 Yusuf Ali. Tüm Hakları Saklıdır.<br><span style="font-size: 0.6rem;">Design & Code by Yusuf Ali</span></div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=1.1"></script>
 </body>
 </html>

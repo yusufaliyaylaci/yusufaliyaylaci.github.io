@@ -24,7 +24,8 @@ let state = {
     isSwitching: false,
     photoIndex: 0,
     activeBgLayer: 1,
-    kickImpulse: 0
+    kickImpulse: 0,
+    lastVolume: 0.5 // Ses hafızası
 };
 
 let timers = {
@@ -36,13 +37,12 @@ let timers = {
 let audioCtx, analyzer, dataArray;
 
 // =========================================
-// 2. BAŞLATMA VE AUTOPLAY
+// 2. BAŞLATMA
 // =========================================
 function startExperience() {
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
     
-    // Kartı göster
     const card = document.getElementById("mainCard");
     card.style.opacity = "1"; 
     card.style.transform = "translateY(0) scale(1.12)"; 
@@ -50,25 +50,18 @@ function startExperience() {
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
 
-    // Müzik Analizörünü Hazırla
     setupAudioContext();
-    
-    // Radyoyu yükle ve OYNAT
     initRadio();
     
-    setTimeout(() => {
-        togglePlay(); 
-    }, 100);
+    setTimeout(() => { togglePlay(); }, 100);
 
-    // Diğer bileşenler
     setTimeout(() => {
         initClock();
         initWeather();
         initSnow();
         setCircularFavicon();
-        
-        // YENİ: Tıklama Etkileşimlerini Başlat
         setupClickInteractions();
+        setupVolumeControl(); // Yeni: Ses kontrolü başlat
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
@@ -89,11 +82,10 @@ function setupAudioContext() {
 }
 
 // =========================================
-// 3. OLAY DİNLEYİCİLERİ (SCROLL & INPUT)
+// 3. ETKİLEŞİM VE SCROLL
 // =========================================
 window.addEventListener('wheel', (e) => {
     if(state.isScrolling) return;
-    
     if(e.deltaY > 0) { 
         if(state.stage < 4) { state.stage++; changeStage(); lockScroll(); } 
         else { triggerBump('bump-up'); lockScroll(400); }
@@ -103,92 +95,50 @@ window.addEventListener('wheel', (e) => {
     }
 });
 
-// YENİ: Tıklama Etkileşimleri (Widget Açma/Kapama)
 function setupClickInteractions() {
-    // 1. HAVA DURUMU WIDGET'INA TIKLAMA
     const wWidget = document.getElementById("weatherWidget");
     wWidget.addEventListener('click', (e) => {
-        // Arama yapılıyorsa genişletme yapma
         if(wWidget.classList.contains('search-mode')) return;
-        // Zaten hava durumu sayfasındaysak işlem yapma
         if(state.stage === 4) return;
-
-        // Hava Durumu Sayfasına Geç (Stage 4)
-        state.stage = 4;
-        changeStage();
-        e.stopPropagation(); // Tıklamanın body'ye ulaşmasını engelle
+        state.stage = 4; changeStage(); e.stopPropagation();
     });
 
-    // 2. RADYO WIDGET'INA TIKLAMA
     const rPlayer = document.getElementById("playerBox");
     rPlayer.addEventListener('click', (e) => {
-        // Eğer butonlara (play/pause/next) tıklandıysa sayfayı açma, sadece butonu çalıştır
-        if(e.target.closest('button')) return;
-        
-        // Zaten radyo sayfasındaysak işlem yapma
+        // Buton veya slider etkileşimiyse genişletme yapma
+        if(e.target.closest('button') || e.target.closest('input')) return;
         if(state.stage === 3) return;
-
-        // Radyo Sayfasına Geç (Stage 3)
-        state.stage = 3;
-        changeStage();
-        e.stopPropagation(); 
+        state.stage = 3; changeStage(); e.stopPropagation(); 
     });
 
-    // 3. BOŞLUĞA TIKLAMA (GERİ DÖNME)
     document.addEventListener('click', (e) => {
-        // Sadece genişletilmiş modlardaysak (Radyo veya Hava Durumu) çalışsın
         if(state.stage === 3 || state.stage === 4) {
-            
-            // Tıklanan yer aktif widget'ın içi mi?
             const insideRadio = e.target.closest('.radio-player');
             const insideWeather = e.target.closest('.weather-widget');
-
-            // Eğer Radyo modundaysak ve radyoya tıklanmadıysa -> Varsayılana dön
-            if(state.stage === 3 && !insideRadio) {
-                goDefaultPage();
-            }
-            // Eğer Hava Durumu modundaysak ve widgeta tıklanmadıysa -> Varsayılana dön
-            if(state.stage === 4 && !insideWeather) {
-                goDefaultPage();
-            }
+            if(state.stage === 3 && !insideRadio) goDefaultPage();
+            if(state.stage === 4 && !insideWeather) goDefaultPage();
         }
     });
 }
 
-function goDefaultPage() {
-    state.stage = 1; // 1. Sayfa (Profil/Varsayılan)
-    changeStage();
-}
-
-function lockScroll(duration = 1200) {
-    state.isScrolling = true;
-    setTimeout(() => { state.isScrolling = false; }, duration);
-}
-
-function triggerBump(className) {
-    document.body.classList.add(className);
-    setTimeout(() => document.body.classList.remove(className), 400);
-}
+function goDefaultPage() { state.stage = 1; changeStage(); }
+function lockScroll(duration = 1200) { state.isScrolling = true; setTimeout(() => { state.isScrolling = false; }, duration); }
+function triggerBump(className) { document.body.classList.add(className); setTimeout(() => document.body.classList.remove(className), 400); }
 
 function changeStage() {
     const card = document.getElementById("mainCard");
     card.classList.remove("state-album", "state-bio", "state-social");
     card.setAttribute("data-state", state.stage);
     
-    // RADYO MODU (STAGE 3)
-    if(state.stage === 3) document.body.classList.add('view-mode-social');
-    else document.body.classList.remove('view-mode-social');
-
-    // HAVA DURUMU MODU (STAGE 4)
-    if(state.stage === 4) document.body.classList.add('view-mode-weather');
-    else document.body.classList.remove('view-mode-weather');
+    if(state.stage === 3) document.body.classList.add('view-mode-social'); else document.body.classList.remove('view-mode-social');
+    if(state.stage === 4) document.body.classList.add('view-mode-weather'); else document.body.classList.remove('view-mode-weather');
 
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
 }
 
 // =========================================
-// 4. RADYO MANTIĞI
+// 4. RADYO VE SES KONTROLÜ
 // =========================================
 function initRadio() {
     const audio = document.getElementById("bgMusic");
@@ -196,6 +146,7 @@ function initRadio() {
     
     updateUI(CONFIG.stations[state.currentStation].name, "Hazırlanıyor...", "#aaa");
     audio.src = CONFIG.stations[state.currentStation].url;
+    audio.volume = state.lastVolume; // Kayıtlı sesi ayarla
 
     audio.addEventListener('playing', () => {
         clearTimeout(timers.connection); 
@@ -214,6 +165,56 @@ function initRadio() {
         updateUI(null, "Hata! Geçiliyor...", "red");
         setTimeout(() => forceSkipStation(), 1500); 
     });
+}
+
+// YENİ: Ses Kontrol Kurulumu
+function setupVolumeControl() {
+    const slider = document.getElementById("volRange");
+    const fill = document.getElementById("volFill");
+    const audio = document.getElementById("bgMusic");
+
+    // Başlangıç değerleri
+    slider.value = state.lastVolume;
+    updateVolFill(state.lastVolume);
+
+    slider.addEventListener("input", (e) => {
+        const val = parseFloat(e.target.value);
+        audio.volume = val;
+        state.lastVolume = val;
+        updateVolFill(val);
+        
+        // İkon güncelleme
+        const icon = document.getElementById("volIcon");
+        if(val === 0) icon.className = "fas fa-volume-mute";
+        else if(val < 0.5) icon.className = "fas fa-volume-down";
+        else icon.className = "fas fa-volume-up";
+    });
+}
+
+function updateVolFill(val) {
+    const fill = document.getElementById("volFill");
+    fill.style.width = (val * 100) + "%";
+}
+
+function toggleMute(e) {
+    if(e) e.stopPropagation();
+    const audio = document.getElementById("bgMusic");
+    const slider = document.getElementById("volRange");
+    
+    if(audio.volume > 0) {
+        state.lastVolume = audio.volume; // Kaydet
+        audio.volume = 0;
+        slider.value = 0;
+        updateVolFill(0);
+        document.getElementById("volIcon").className = "fas fa-volume-mute";
+    } else {
+        // Geri yükle (eğer önceden 0 ise varsayılan 0.5 yap)
+        let restore = state.lastVolume > 0 ? state.lastVolume : 0.5;
+        audio.volume = restore;
+        slider.value = restore;
+        updateVolFill(restore);
+        document.getElementById("volIcon").className = "fas fa-volume-up";
+    }
 }
 
 function togglePlay() {
@@ -261,6 +262,7 @@ function finalizeStationChange(direction) {
     const audio = document.getElementById("bgMusic");
     if(audio) {
         audio.src = CONFIG.stations[state.currentStation].url; audio.load();
+        audio.volume = state.lastVolume; // Sesi hatırla
         updateUI(CONFIG.stations[state.currentStation].name, "Bağlanıyor...", "#fff");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
@@ -277,8 +279,10 @@ function updateUI(name, msg, color) {
 
 function fadeInMusic() {
     const audio = document.getElementById("bgMusic");
+    // fade in yaparken son ses seviyesine kadar çık
+    const targetVol = state.lastVolume || 0.5;
     audio.volume = 0; clearInterval(timers.fade);
-    timers.fade = setInterval(() => { if (audio.volume < 0.4) audio.volume += 0.02; else clearInterval(timers.fade); }, 100);
+    timers.fade = setInterval(() => { if (audio.volume < targetVol - 0.05) audio.volume += 0.02; else { audio.volume = targetVol; clearInterval(timers.fade); } }, 100);
 }
 
 function handleConnectionError() {
@@ -315,6 +319,10 @@ function updateBackground(mode) {
 
 function updateThemeColors(isError) {
     const color = isError ? "red" : CONFIG.stations[state.currentStation].accent;
+    
+    // CSS Değişkenini güncelle (Volume çubuğu rengi için)
+    document.documentElement.style.setProperty('--theme-color', color);
+    
     document.getElementById("playBtn").style.color = color;
     document.querySelectorAll('.equalizer .bar').forEach(b => b.style.backgroundColor = color);
     document.getElementById("playerBox").style.borderColor = isError ? "red" : "rgba(255,255,255,0.15)";
@@ -382,29 +390,24 @@ function setupCitySearch() {
 }
 
 function fetchWeather(lat, lon, cityName = "Konumunuz") {
-    // API URL'sine 'hourly' parametrelerini ekledik (Sıcaklık ve Yağış Olasılığı)
     const url = `${CONFIG.weatherApi}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,relative_humidity_2m&timezone=auto&forecast_days=1`;
-    
     fetch(url)
         .then(res => res.json())
         .then(data => { 
             if(data.timezone) state.timeZone = data.timezone; 
-            updateWeatherUI(data.current, cityName, data.hourly); // hourly verisini de gönderiyoruz
+            updateWeatherUI(data.current, cityName, data.hourly); 
         })
         .catch(err => console.error("Hava durumu hatası:", err));
 }
 
 function updateWeatherUI(current, name, hourlyData) {
-    // --- Temel Bilgiler (Küçük Widget) ---
     document.getElementById("w-temp").innerText = `${current.temperature_2m !== "--" ? Math.round(current.temperature_2m) : "--"}°C`;
     document.getElementById("w-city").innerText = name;
     document.getElementById("w-wind").innerText = `${current.wind_speed_10m} km/s`;
     document.getElementById("w-hum").innerText = `%${current.relative_humidity_2m}`;
     
-    // Hava Durumu Açıklaması ve İkon
     const code = current.weather_code;
     let icon = "fa-sun", color = "#ffd700", desc = "Açık";
-    
     if (code === 0) { icon = "fa-sun"; color = "#ffd700"; desc = "Güneşli"; }
     else if (code <= 3) { icon = "fa-cloud-sun"; color = "#d4d4d4"; desc = "Parçalı Bulutlu"; }
     else if (code <= 48) { icon = "fa-smog"; color = "#aaa"; desc = "Sisli"; }
@@ -412,23 +415,16 @@ function updateWeatherUI(current, name, hourlyData) {
     else if (code <= 77) { icon = "fa-snowflake"; color = "#fff"; desc = "Karlı"; }
     else if (code > 80) { icon = "fa-bolt"; color = "#663399"; desc = "Fırtına"; }
 
-    // İkonu Güncelle
     const iconEl = document.getElementById("w-icon");
-    iconEl.className = `fas ${icon} weather-icon`; 
-    iconEl.style.color = color;
+    iconEl.className = `fas ${icon} weather-icon`; iconEl.style.color = color;
 
-    // Açıklamayı (varsa) güncelle
     const descEl = document.getElementById("w-desc");
     if(descEl) { descEl.innerText = desc; descEl.style.color = color; }
 
-    // --- DETAYLI GÖRÜNÜMÜ GÜNCELLE (Eğer hourly data geldiyse) ---
-    if(hourlyData) {
-        updateExtendedInfo(hourlyData);
-    }
+    if(hourlyData) { updateExtendedInfo(hourlyData); }
 }
 
 function updateExtendedInfo(hourly) {
-    // 1. Ekstra Kartları Doldur
     const now = new Date();
     const currentHour = now.getHours();
     
@@ -438,7 +434,6 @@ function updateExtendedInfo(hourly) {
     document.querySelector(".extra-card:last-child small").innerText = "Yağış İhtimali";
     document.querySelector(".extra-card:last-child i").className = "fas fa-umbrella";
 
-    // 2. GRAFİK OLUŞTURMA (Önümüzdeki 6 saat)
     const graphContainer = document.getElementById("hourlyGraph");
     graphContainer.innerHTML = ""; 
 
@@ -446,11 +441,7 @@ function updateExtendedInfo(hourly) {
     for(let i = 0; i < 6; i++) {
         let index = currentHour + i;
         if(index < 24) { 
-            nextHours.push({
-                time: index,
-                temp: hourly.temperature_2m[index],
-                rain: hourly.precipitation_probability[index]
-            });
+            nextHours.push({ time: index, temp: hourly.temperature_2m[index], rain: hourly.precipitation_probability[index] });
         }
     }
 
@@ -459,19 +450,14 @@ function updateExtendedInfo(hourly) {
 
     nextHours.forEach(h => {
         let heightPercent = 50;
-        if(maxTemp !== minTemp) {
-            heightPercent = ((h.temp - minTemp) / (maxTemp - minTemp)) * 80 + 10; 
-        }
+        if(maxTemp !== minTemp) { heightPercent = ((h.temp - minTemp) / (maxTemp - minTemp)) * 80 + 10; }
 
         const wrapper = document.createElement("div");
         wrapper.className = "graph-bar-wrapper";
-
         wrapper.innerHTML = `
             <span class="graph-temp">${Math.round(h.temp)}°</span>
             <div class="graph-bar" style="height: ${heightPercent}%;"></div>
-            <div class="rain-indicator" title="Yağış: %${h.rain}">
-                <div class="rain-fill" style="width: ${h.rain}%"></div>
-            </div>
+            <div class="rain-indicator" title="Yağış: %${h.rain}"><div class="rain-fill" style="width: ${h.rain}%"></div></div>
             <span class="graph-time">${h.time}:00</span>
         `;
         graphContainer.appendChild(wrapper);
@@ -482,7 +468,7 @@ function enableSearchMode(e) { e.stopPropagation(); document.getElementById("wea
 function disableSearchMode(e) { e.stopPropagation(); document.getElementById("weatherWidget").classList.remove("search-mode"); document.getElementById("cityInput").value = ""; }
 
 // =========================================
-// 7. KAR EFEKTİ (CANVAS)
+// 7. KAR EFEKTİ
 // =========================================
 function initSnow() {
     const canvas = document.getElementById("snowCanvas"); if(!canvas) return;
