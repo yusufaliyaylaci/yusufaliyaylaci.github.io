@@ -2,14 +2,14 @@
 // 1. YAPILANDIRMA VE DEĞİŞKENLER
 // =========================================
 const CONFIG = {
-stations: [
-            { 
+    stations: [
+        { 
             name: "Lofi Hip Hop", 
             url: "https://stream.zeno.fm/0r0xa792kwzuv", 
             gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
             accent: "#c31432" 
-        },    
-    // --- Yabancı & Popüler ---
+        },
+        // --- Yabancı & Popüler ---
         { 
             name: "Power FM", 
             url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", 
@@ -131,7 +131,7 @@ stations: [
             accent: "#4CA1AF" 
         }
     ],
-    // BURAYA YENİ FOTOĞRAF İSİMLERİNİ EKLEYEBİLİRSİNİZ
+    // FOTOĞRAFLAR
     photos: [
         "profil.jpg", 
         "photo1.jpg", 
@@ -278,7 +278,14 @@ function initPageIndicators() {
         const dot = document.createElement("div");
         dot.className = "indicator-dot";
         if(i === state.stage) dot.classList.add("active");
-        dot.onclick = () => { state.stage = i; changeStage(); };
+        
+        // DÜZELTME BURADA YAPILDI
+        dot.onclick = (e) => { 
+            e.stopPropagation(); // Tıklamanın arka plana geçmesini engeller
+            state.stage = i; 
+            changeStage(); 
+        };
+        
         container.appendChild(dot);
     }
 }
