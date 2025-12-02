@@ -15,7 +15,12 @@ const CONFIG = {
         "profil.jpg", 
         "photo1.jpg", 
         "photo2.jpg", 
-        "photo3.jpg"
+        "photo3.jpg",
+        "photo4.jpg", 
+        "photo5.jpg", 
+        "photo6.jpg", 
+        "photo7.jpg",
+        
     ], 
     weatherApi: "https://api.open-meteo.com/v1/forecast",
     geoApi: "https://geocoding-api.open-meteo.com/v1/search"
