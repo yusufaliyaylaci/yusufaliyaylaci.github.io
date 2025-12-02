@@ -7,7 +7,7 @@
     --text-color: white;
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.1);
-    --theme-color: #fff; /* JS ile güncellenen tema rengi */
+    --theme-color: #fff;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -79,8 +79,11 @@ body {
 @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* YENİ: LED Dönme Animasyonu */
-@keyframes spin { from { transform: rotate(0deg) scale(var(--beat-scale, 1)); } to { transform: rotate(360deg) scale(var(--beat-scale, 1)); } }
+/* YENİ: LED Dönme Animasyonu - Süreyi değişkene bağladık */
+@keyframes spin { 
+    from { transform: rotate(0deg); } 
+    to { transform: rotate(360deg); } 
+}
 
 body.bump-up:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 body.bump-down:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpDownCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -182,52 +185,47 @@ body.view-mode-weather #mainCard {
 }
 
 .radio-player {
-    /* Temel Ayarlar */
-    position: relative; /* LED efektleri için gerekli */
-    /* background: kaldırıldı, ::after içinde olacak */
+    position: relative;
     padding: 12px 25px; 
     border-radius: 50px; 
-    /* border: kaldırıldı, ::before ile yapılacak */
     display: flex; align-items: center; gap: 20px; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     width: fit-content; min-width: 280px; max-width: 400px; 
-    transition: transform 0.5s, width 0.5s, height 0.5s;
-    overflow: hidden; /* Dönen ışığın taşmasını engelle */
-    z-index: 1; /* İçerik için */
+    transition: transform 0.1s ease-out, width 0.5s, height 0.5s; /* Transform yumuşak geçiş */
+    overflow: hidden; 
+    z-index: 1;
 }
 
-/* --- YENİ: LED / SNAKE BORDER EFEKTİ --- */
+/* --- LED / SNAKE BORDER EFEKTİ --- */
 .radio-player::before {
     content: ''; position: absolute;
-    width: 200%; height: 200%; /* Çok geniş yapıyoruz ki dönünce köşeleri kaplasın */
-    background: conic-gradient(transparent, transparent, transparent, var(--theme-color));
+    width: 200%; height: 200%; 
+    background: conic-gradient(transparent 20%, var(--theme-color) 50%, transparent 80%);
     top: -50%; left: -50%;
     z-index: -2;
-    animation: spin var(--spin-speed, 3s) linear infinite; /* JS hız kontrolü */
+    animation: spin var(--spin-speed, 60s) linear infinite; /* Varsayılan 60sn, JS ile hızlanacak */
     opacity: 0; transition: opacity 0.5s;
 }
 
-/* --- YENİ: KART ARKAPLANI (İçeriği korumak için) --- */
+/* --- KART ARKAPLANI (İçeriği korumak için) --- */
 .radio-player::after {
     content: ''; position: absolute;
-    inset: 2px; /* Border kalınlığı kadar boşluk bırak */
-    background: rgba(20, 20, 20, 0.85); /* Kart rengi */
-    backdrop-filter: blur(20px);
-    border-radius: 48px; /* Dışarıya uyumlu radius */
+    inset: 2px; /* Border kalınlığı */
+    background: rgba(30, 30, 30, 0.6); /* Yarı saydam geri geldi */
+    backdrop-filter: blur(25px); /* Buzlu cam */
+    border-radius: 48px;
     z-index: -1;
 }
 
-/* Normal modda border'ı basit tutalım veya çok hafif gösterelim */
+/* Normal mod */
 body:not(.view-mode-social) .radio-player {
-    border: 1px solid rgba(255,255,255,0.15); /* Normal border */
+    border: 1px solid rgba(255,255,255,0.15); 
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(20px);
 }
 body:not(.view-mode-social) .radio-player::before,
 body:not(.view-mode-social) .radio-player::after {
-    display: none; /* Normal modda LED efekti kapalı */
-}
-body:not(.view-mode-social) .radio-player {
-    background: rgba(20, 20, 20, 0.4);
-    backdrop-filter: blur(20px);
+    display: none; 
 }
 
 /* Hover Efekti (Normal Mod) */
@@ -258,6 +256,7 @@ body:not(.view-mode-social) .radio-player:hover {
 .control-btn:hover { opacity: 1; transform: scale(1.15); }
 .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; display: flex; align-items: center; justify-content: center; }
 .play-btn:hover { background: rgba(255,255,255,0.2); }
+.radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
 .radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
 
 /* DİNAMİK SES AYARI */
@@ -278,7 +277,6 @@ body.view-mode-social .radio-wrapper {
 body.view-mode-social .radio-player {
     width: 100%; height: 420px;
     flex-direction: column; justify-content: center; gap: 30px;
-    /* Background ve Border'ı kaldırıyoruz çünkü ::after ve ::before devrede */
     background: transparent; border: none; box-shadow: none;
     padding: 40px; border-radius: 30px;
 }
@@ -288,9 +286,9 @@ body.view-mode-social .radio-player::before,
 body.view-mode-social .radio-player::after {
     display: block; opacity: 1; border-radius: 30px;
 }
-/* İçerik Arkaplanı */
+/* İçerik Arkaplanı: Yarı saydam */
 body.view-mode-social .radio-player::after {
-    background: rgba(20, 20, 20, 0.9); /* Biraz daha koyu zemin */
+    background: rgba(30, 30, 30, 0.6); /* Yarı saydam */
 }
 
 body.view-mode-social .radio-info { text-align: center; align-items: center; width: 100%; flex-grow: 0; }

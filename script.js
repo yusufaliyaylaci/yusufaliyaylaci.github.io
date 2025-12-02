@@ -496,30 +496,27 @@ function initSnow() {
                     for(let i = 0; i < 20; i++) visualSum += dataArray[i];
                     let avg = visualSum / 20;
                     
-                    // Görsel değerler
-                    const scaleAmount = 1 + (avg / 255) * 0.05; // Çok hafif büyüme
-                    
-                    // 1. Dönen LED'in büyümesi (Sadece ::before etkilenir)
-                    player.style.setProperty('--beat-scale', scaleAmount);
-                    
-                    // 2. Dönüş Hızı (Bass vurunca hızlansın)
-                    // Normalde 3s, Bass vurunca 0.5s'e kadar düşsün
-                    const speed = 3 - (avg / 255) * 2.5; 
-                    player.style.setProperty('--spin-speed', `${speed}s`);
+                    // 1. Zıplama Efekti (Scale) - Geri geldi
+                    const scaleAmount = 1 + (avg / 255) * 0.05; 
+                    player.style.transform = `scale(${scaleAmount})`;
 
-                    // 3. Parlama Efekti (Box Shadow)
+                    // 2. LED Dönüş Hızı (Bass vurunca hızlan, yoksa yavaşla)
+                    // Normalde 60s, ağır kickte 2s'e düşsün
+                    let targetSpeed = 60; // Varsayılan çok yavaş
+                    if (avg > 180) targetSpeed = 2; // Bass vurduğunda hızlan
+                    
+                    player.style.setProperty('--spin-speed', `${targetSpeed}s`);
+
+                    // 3. Parlama (Box Shadow)
                     const color = CONFIG.stations[state.currentStation].accent;
                     const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
                     const shadowSize = 20 + (avg * 0.2);
                     player.style.boxShadow = `0 10px ${shadowSize}px ${color}${shadowOpacity}`;
-                    player.style.borderColor = `rgba(255, 255, 255, ${0.1 + (avg/255)*0.5})`;
 
                 } else {
-                    // Temizle
                     const player = document.getElementById("playerBox");
-                    player.style.setProperty('--beat-scale', 1);
-                    player.style.boxShadow = "";
-                    player.style.borderColor = "";
+                    if(player.style.transform) player.style.transform = "";
+                    if(player.style.boxShadow) player.style.boxShadow = "";
                 }
             } catch(e) {}
         }
