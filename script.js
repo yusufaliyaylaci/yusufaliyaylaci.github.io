@@ -62,6 +62,7 @@ function startExperience() {
         setCircularFavicon();
         setupClickInteractions();
         setupVolumeControl();
+        initPageIndicators(); // Sayfa Noktalarını Başlat
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
@@ -134,6 +135,35 @@ function changeStage() {
 
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
+
+    updatePageIndicators(); // Noktayı güncelle
+}
+
+// YENİ: Sayfa Göstergeleri (Dots)
+function initPageIndicators() {
+    const container = document.getElementById("stageIndicators");
+    container.innerHTML = "";
+    // Toplam 5 stage var: 0, 1, 2, 3, 4
+    for(let i = 0; i <= 4; i++) {
+        const dot = document.createElement("div");
+        dot.className = "indicator-dot";
+        if(i === state.stage) dot.classList.add("active");
+        
+        // Tıklayınca o sayfaya git
+        dot.onclick = () => {
+            state.stage = i;
+            changeStage();
+        };
+        container.appendChild(dot);
+    }
+}
+
+function updatePageIndicators() {
+    const dots = document.querySelectorAll(".indicator-dot");
+    dots.forEach((dot, index) => {
+        if(index === state.stage) dot.classList.add("active");
+        else dot.classList.remove("active");
+    });
 }
 
 // =========================================
@@ -157,8 +187,10 @@ function initRadio() {
         updateUI(null, "Canlı Yayın", CONFIG.stations[state.currentStation].accent);
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
-        // Sekme Başlığı Güncelle
         document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
+        
+        // Müzik Çalarken Hızlan (5s)
+        document.documentElement.style.setProperty('--spin-speed', '5s');
     });
 
     audio.addEventListener('error', () => {
@@ -228,8 +260,10 @@ function togglePlay() {
                 updateBackground('default'); updateThemeColors(false);
                 document.getElementById("playerBox").classList.remove("playing", "active-glow");
                 document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
-                // Başlığı eski haline getir
                 document.title = "Yusuf Ali - Kişisel Blog";
+                
+                // Müzik Durunca Yavaşla (20s)
+                document.documentElement.style.setProperty('--spin-speed', '20s');
             }
         }, 100);
     }
@@ -260,8 +294,6 @@ function finalizeStationChange(direction) {
         updateUI(CONFIG.stations[state.currentStation].name, "Bağlanıyor...", "#fff");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
-        // Başlığı güncelle
-        document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
     }
 }
 
@@ -506,14 +538,7 @@ function initSnow() {
                     const scaleAmount = 1 + (avg / 255) * 0.05; 
                     player.style.transform = `scale(${scaleAmount})`;
 
-                    // 2. LED Dönüş Hızı (Bass vurunca hızlan, yoksa yavaşla)
-                    // Varsayılan 20sn (çok yavaş). Bass vurunca (avg > 170) 0.5sn'ye düşüyor (hızlanıyor)
-                    let targetSpeed = 20; 
-                    if (avg > 170) targetSpeed = 0.5; 
-                    
-                    player.style.setProperty('--spin-speed', `${targetSpeed}s`);
-
-                    // 3. Parlama (Box Shadow)
+                    // 2. Parlama (Box Shadow)
                     const color = CONFIG.stations[state.currentStation].accent;
                     const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
                     const shadowSize = 20 + (avg * 0.2);

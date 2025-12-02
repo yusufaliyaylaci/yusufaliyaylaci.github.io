@@ -8,6 +8,7 @@
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.1);
     --theme-color: #fff;
+    --spin-speed: 20s; /* Varsayılan LED Hızı (Yavaş) */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -70,17 +71,9 @@ body {
 @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
-/* YENİ: YATAY (X-EKSENİ) ZIPLAMA EFEKTLERİ */
-@keyframes bumpUpCard { 
-    0% { transform: translateY(0) scale(1.12); } 
-    50% { transform: translateX(-30px) scale(1.12); } /* Sola esne */
-    100% { transform: translateY(0) scale(1.12); } 
-}
-@keyframes bumpDownCard { 
-    0% { transform: translateY(0) scale(1.12); } 
-    50% { transform: translateX(30px) scale(1.12); } /* Sağa esne */
-    100% { transform: translateY(0) scale(1.12); } 
-}
+/* YATAY (X-EKSENİ) ZIPLAMA EFEKTLERİ */
+@keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateX(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
+@keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateX(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
 
 @keyframes bumpUpRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 30px)); } 100% { transform: translate(-50%, -50%); } }
 @keyframes bumpDownRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% + 30px)); } 100% { transform: translate(-50%, -50%); } }
@@ -90,10 +83,7 @@ body {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* LED Dönme Animasyonu */
-@keyframes spin { 
-    from { transform: rotate(0deg); } 
-    to { transform: rotate(360deg); } 
-}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 body.bump-up:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 body.bump-down:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpDownCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -116,9 +106,25 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 #overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
 .click-icon { font-size: 2rem; opacity: 0.7; animation: bounce 2s infinite; }
 
-/* =========================================
-   KART YAPISI (YATAY GEÇİŞLİ)
-========================================= */
+/* --- YENİ: SAĞ TARAF SAYFA GÖSTERGELERİ --- */
+.stage-indicators {
+    position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 15px; z-index: 100;
+}
+.indicator-dot {
+    width: 10px; height: 10px; background: rgba(255,255,255,0.2);
+    border-radius: 50%; transition: all 0.3s ease; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.indicator-dot:hover { background: rgba(255,255,255,0.5); }
+.indicator-dot.active {
+    background: var(--theme-color, white);
+    transform: scale(1.4);
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    border-color: transparent;
+}
+
+/* KART YAPISI (YATAY GEÇİŞLİ) */
 .card {
     background-color: var(--glass-bg);
     backdrop-filter: blur(20px);
@@ -142,7 +148,6 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 
 .bio-box {
     position: absolute; top: 250px; left: 0; width: 100%; padding: 0 30px;
-    /* Varsayılan: Solda gizli */
     opacity: 0; transform: translateX(-50px); 
     transition: all 0.8s ease; pointer-events: none;
 }
@@ -172,33 +177,15 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
 .social-btn:hover::before { opacity: 1; }
 
-/* --- STATE YÖNETİMİ (YATAY GEÇİŞLİ) --- */
-
-/* State 1: Album Mode (0. Sayfa) */
 .card.state-album { width: 800px; height: 600px; transform: scale(1); }
 .card.state-album .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 30px; border: none; }
-/* Bilgiler sağa kayarak kaybolsun */
-.card.state-album .info-box, 
-.card.state-album .bio-box, 
-.card.state-album .social-box { 
-    opacity: 0; pointer-events: none; transform: translateX(50px); 
-}
+.card.state-album .info-box, .card.state-album .bio-box, .card.state-album .social-box { opacity: 0; pointer-events: none; transform: translateX(50px); }
 .card.state-album .album-nav { opacity: 1; pointer-events: auto; }
 
-/* State 2: Bio Mode (1. Sayfa - Biyografi) */
 .card.state-bio { height: 400px; transform: scale(1); }
-/* Profil fotosu SAĞA kayarak kaybolsun */
-.card.state-bio .profile-img { 
-    opacity: 0; pointer-events: none; 
-    transform: translateX(150px) rotate(5deg); 
-}
+.card.state-bio .profile-img { opacity: 0; pointer-events: none; transform: translateX(150px) rotate(5deg); }
 .card.state-bio .info-box { top: 40px; transform: scale(1); }
-/* Biyografi soldan gelsin */
-.card.state-bio .bio-box { 
-    top: 130px; opacity: 1; 
-    transform: translateX(0); 
-    pointer-events: auto; 
-}
+.card.state-bio .bio-box { top: 130px; opacity: 1; transform: translateX(0); pointer-events: auto; }
 
 body.view-mode-social #mainCard,
 body.view-mode-weather #mainCard {
@@ -229,29 +216,28 @@ body.view-mode-weather #mainCard {
     z-index: 1;
 }
 
-/* --- LED / SNAKE BORDER EFEKTİ --- */
+/* LED / SNAKE BORDER EFEKTİ */
 .radio-player::before {
     content: ''; position: absolute;
     width: 200%; height: 200%; 
-    /* Kısa şerit: %45-%55 arası renkli */
     background: conic-gradient(transparent 45%, var(--theme-color) 50%, transparent 55%);
     top: -50%; left: -50%;
     z-index: -2;
+    /* Değişken --spin-speed ile kontrol edilir */
     animation: spin var(--spin-speed, 20s) linear infinite;
     opacity: 0; transition: opacity 0.5s;
 }
 
-/* --- KART ARKAPLANI (CAM EFEKTİ) --- */
+/* KART ARKAPLANI */
 .radio-player::after {
     content: ''; position: absolute;
     inset: 2px; 
-    background: rgba(30, 30, 30, 0.5); /* Şeffaflık arttırıldı */
-    backdrop-filter: blur(30px); /* Buzlu cam efekti */
+    background: rgba(30, 30, 30, 0.5); /* Şeffaf buzlu cam */
+    backdrop-filter: blur(30px);
     border-radius: 48px;
     z-index: -1;
 }
 
-/* Normal mod */
 body:not(.view-mode-social) .radio-player {
     border: 1px solid rgba(255,255,255,0.15); 
     background: rgba(20, 20, 20, 0.4);
@@ -262,7 +248,6 @@ body:not(.view-mode-social) .radio-player::after {
     display: none; 
 }
 
-/* Hover Efekti (Normal Mod) */
 body:not(.view-mode-social) .radio-player:hover {
     transform: translateY(-5px) scale(1.02);
     box-shadow: 0 15px 40px rgba(0,0,0,0.4);
@@ -282,7 +267,6 @@ body:not(.view-mode-social) .radio-player:hover {
 .radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
 .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
 
-/* KONTROLLER */
 .controls { display: flex; align-items: center; gap: 15px; position: relative; z-index: 2; }
 .main-buttons { display: flex; align-items: center; gap: 15px; }
 
@@ -293,7 +277,6 @@ body:not(.view-mode-social) .radio-player:hover {
 .radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
 .radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
 
-/* DİNAMİK SES AYARI */
 .volume-group { display: flex; align-items: center; position: relative; margin-left: 0; height: 100%; }
 .vol-slider-wrapper { width: 0; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-left: 8px; position: relative; transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; display: flex; align-items: center; opacity: 0; pointer-events: none; }
 .volume-group:hover .vol-slider-wrapper { width: 80px; opacity: 1; pointer-events: auto; }
@@ -301,7 +284,6 @@ body:not(.view-mode-social) .radio-player:hover {
 .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
 .vol-fill { height: 100%; background: var(--theme-color, #fff); border-radius: 10px; width: 50%; position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; transition: background-color 0.5s ease; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
-/* --- RADYO: TAM EKRAN (MERKEZ) MODU --- */
 body.view-mode-social .radio-wrapper {
     top: 50%; left: 50%; bottom: auto; right: auto;
     transform: translate(-50%, -50%);
@@ -315,7 +297,6 @@ body.view-mode-social .radio-player {
     padding: 40px; border-radius: 30px;
 }
 
-/* Merkez modda LED ve Cam efekti AKTİF */
 body.view-mode-social .radio-player::before,
 body.view-mode-social .radio-player::after {
     display: block; opacity: 1; border-radius: 30px;
@@ -328,14 +309,12 @@ body.view-mode-social .status-text { font-size: 1rem; }
 body.view-mode-social .equalizer { height: 40px; gap: 6px; opacity: 1; }
 body.view-mode-social .equalizer .bar { width: 6px; background-color: #fff !important; }
 
-/* Dikey Kontroller */
 body.view-mode-social .controls { flex-direction: column; gap: 25px; margin-top: 20px; justify-content: center; width: 100%; }
 body.view-mode-social .main-buttons { gap: 40px; }
 body.view-mode-social .control-btn { font-size: 1.8rem; }
 body.view-mode-social .play-btn { width: 80px; height: 80px; font-size: 2rem; background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 body.view-mode-social .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
 
-/* Merkez modda ses ayarı */
 body.view-mode-social .volume-group { justify-content: center; width: 100%; }
 body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; pointer-events: auto; }
 body.view-mode-social .volume-group:hover .vol-slider-wrapper { width: 150px !important; }
@@ -456,4 +435,6 @@ body.view-mode-social .radio-player { cursor: default; }
     body.view-mode-weather .weather-icon { font-size: 4rem; }
     body.view-mode-weather .weather-temp { font-size: 3.5rem; }
     .extra-grid { grid-template-columns: 1fr 1fr; }
+    /* Mobilde sayfa noktaları gizlenebilir veya küçültülebilir */
+    .stage-indicators { right: 10px; gap: 10px; }
 }
