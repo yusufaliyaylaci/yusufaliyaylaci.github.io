@@ -37,12 +37,13 @@ let timers = {
 let audioCtx, analyzer, dataArray;
 
 // =========================================
-// 2. BAŞLATMA
+// 2. BAŞLATMA VE AUTOPLAY
 // =========================================
 function startExperience() {
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
     
+    // Kartı göster
     const card = document.getElementById("mainCard");
     card.style.opacity = "1"; 
     card.style.transform = "translateY(0) scale(1.12)"; 
@@ -50,18 +51,26 @@ function startExperience() {
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
 
+    // Müzik Analizörünü Hazırla
     setupAudioContext();
+    
+    // Radyoyu yükle ve OYNAT
     initRadio();
     
-    setTimeout(() => { togglePlay(); }, 100);
+    setTimeout(() => {
+        togglePlay(); 
+    }, 100);
 
+    // Diğer bileşenler
     setTimeout(() => {
         initClock();
         initWeather();
         initSnow();
         setCircularFavicon();
+        
+        // YENİ: Tıklama Etkileşimlerini Başlat
         setupClickInteractions();
-        setupVolumeControl(); // Yeni: Ses kontrolü başlat
+        setupVolumeControl(); // Ses kontrolü başlat
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
@@ -82,10 +91,11 @@ function setupAudioContext() {
 }
 
 // =========================================
-// 3. ETKİLEŞİM VE SCROLL
+// 3. OLAY DİNLEYİCİLERİ (SCROLL & INPUT)
 // =========================================
 window.addEventListener('wheel', (e) => {
     if(state.isScrolling) return;
+    
     if(e.deltaY > 0) { 
         if(state.stage < 4) { state.stage++; changeStage(); lockScroll(); } 
         else { triggerBump('bump-up'); lockScroll(400); }
@@ -105,7 +115,6 @@ function setupClickInteractions() {
 
     const rPlayer = document.getElementById("playerBox");
     rPlayer.addEventListener('click', (e) => {
-        // Buton veya slider etkileşimiyse genişletme yapma
         if(e.target.closest('button') || e.target.closest('input')) return;
         if(state.stage === 3) return;
         state.stage = 3; changeStage(); e.stopPropagation(); 
@@ -122,23 +131,34 @@ function setupClickInteractions() {
 }
 
 function goDefaultPage() { state.stage = 1; changeStage(); }
-function lockScroll(duration = 1200) { state.isScrolling = true; setTimeout(() => { state.isScrolling = false; }, duration); }
-function triggerBump(className) { document.body.classList.add(className); setTimeout(() => document.body.classList.remove(className), 400); }
+
+function lockScroll(duration = 1200) {
+    state.isScrolling = true;
+    setTimeout(() => { state.isScrolling = false; }, duration);
+}
+
+function triggerBump(className) {
+    document.body.classList.add(className);
+    setTimeout(() => document.body.classList.remove(className), 400);
+}
 
 function changeStage() {
     const card = document.getElementById("mainCard");
     card.classList.remove("state-album", "state-bio", "state-social");
     card.setAttribute("data-state", state.stage);
     
-    if(state.stage === 3) document.body.classList.add('view-mode-social'); else document.body.classList.remove('view-mode-social');
-    if(state.stage === 4) document.body.classList.add('view-mode-weather'); else document.body.classList.remove('view-mode-weather');
+    if(state.stage === 3) document.body.classList.add('view-mode-social');
+    else document.body.classList.remove('view-mode-social');
+
+    if(state.stage === 4) document.body.classList.add('view-mode-weather');
+    else document.body.classList.remove('view-mode-weather');
 
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
 }
 
 // =========================================
-// 4. RADYO VE SES KONTROLÜ
+// 4. RADYO MANTIĞI
 // =========================================
 function initRadio() {
     const audio = document.getElementById("bgMusic");
@@ -146,7 +166,7 @@ function initRadio() {
     
     updateUI(CONFIG.stations[state.currentStation].name, "Hazırlanıyor...", "#aaa");
     audio.src = CONFIG.stations[state.currentStation].url;
-    audio.volume = state.lastVolume; // Kayıtlı sesi ayarla
+    audio.volume = state.lastVolume;
 
     audio.addEventListener('playing', () => {
         clearTimeout(timers.connection); 
@@ -167,23 +187,16 @@ function initRadio() {
     });
 }
 
-// YENİ: Ses Kontrol Kurulumu
 function setupVolumeControl() {
     const slider = document.getElementById("volRange");
-    const fill = document.getElementById("volFill");
     const audio = document.getElementById("bgMusic");
-
-    // Başlangıç değerleri
     slider.value = state.lastVolume;
     updateVolFill(state.lastVolume);
-
     slider.addEventListener("input", (e) => {
         const val = parseFloat(e.target.value);
         audio.volume = val;
         state.lastVolume = val;
         updateVolFill(val);
-        
-        // İkon güncelleme
         const icon = document.getElementById("volIcon");
         if(val === 0) icon.className = "fas fa-volume-mute";
         else if(val < 0.5) icon.className = "fas fa-volume-down";
@@ -200,15 +213,13 @@ function toggleMute(e) {
     if(e) e.stopPropagation();
     const audio = document.getElementById("bgMusic");
     const slider = document.getElementById("volRange");
-    
     if(audio.volume > 0) {
-        state.lastVolume = audio.volume; // Kaydet
+        state.lastVolume = audio.volume; 
         audio.volume = 0;
         slider.value = 0;
         updateVolFill(0);
         document.getElementById("volIcon").className = "fas fa-volume-mute";
     } else {
-        // Geri yükle (eğer önceden 0 ise varsayılan 0.5 yap)
         let restore = state.lastVolume > 0 ? state.lastVolume : 0.5;
         audio.volume = restore;
         slider.value = restore;
@@ -262,7 +273,7 @@ function finalizeStationChange(direction) {
     const audio = document.getElementById("bgMusic");
     if(audio) {
         audio.src = CONFIG.stations[state.currentStation].url; audio.load();
-        audio.volume = state.lastVolume; // Sesi hatırla
+        audio.volume = state.lastVolume;
         updateUI(CONFIG.stations[state.currentStation].name, "Bağlanıyor...", "#fff");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
@@ -279,7 +290,6 @@ function updateUI(name, msg, color) {
 
 function fadeInMusic() {
     const audio = document.getElementById("bgMusic");
-    // fade in yaparken son ses seviyesine kadar çık
     const targetVol = state.lastVolume || 0.5;
     audio.volume = 0; clearInterval(timers.fade);
     timers.fade = setInterval(() => { if (audio.volume < targetVol - 0.05) audio.volume += 0.02; else { audio.volume = targetVol; clearInterval(timers.fade); } }, 100);
@@ -319,10 +329,7 @@ function updateBackground(mode) {
 
 function updateThemeColors(isError) {
     const color = isError ? "red" : CONFIG.stations[state.currentStation].accent;
-    
-    // CSS Değişkenini güncelle (Volume çubuğu rengi için)
     document.documentElement.style.setProperty('--theme-color', color);
-    
     document.getElementById("playBtn").style.color = color;
     document.querySelectorAll('.equalizer .bar').forEach(b => b.style.backgroundColor = color);
     document.getElementById("playerBox").style.borderColor = isError ? "red" : "rgba(255,255,255,0.15)";

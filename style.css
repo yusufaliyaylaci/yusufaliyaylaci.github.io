@@ -7,7 +7,7 @@
     --text-color: white;
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.1);
-    --theme-color: #fff; /* Dinamik renk için değişken */
+    --theme-color: #fff;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -183,19 +183,15 @@ body.view-mode-weather #mainCard {
     padding: 12px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15);
     display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     width: fit-content; min-width: 280px; max-width: 400px; transition: all 0.5s;
-    /* Hover Efekti için geçişler */
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
 }
 
-/* --- YENİ: WIDGET HOVER EFEKTLERİ --- */
-/* Sadece normal modda (genişletilmemişken) çalışır */
 body:not(.view-mode-social) .radio-player:hover {
     transform: translateY(-5px) scale(1.02);
     box-shadow: 0 15px 40px rgba(0,0,0,0.4);
     border-color: rgba(255,255,255,0.3);
 }
 
-/* Radyo İçerik */
 .radio-info { flex-grow: 1; text-align: right; display: flex; flex-direction: column; overflow: hidden; }
 .station-name { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
 .status-container { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
@@ -209,7 +205,16 @@ body:not(.view-mode-social) .radio-player:hover {
 .radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
 .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
 
-.controls { display: flex; align-items: center; gap: 15px; }
+/* --- KONTROLLER: Normal Mod (Yatay) --- */
+.controls { 
+    display: flex; align-items: center; gap: 15px; 
+}
+
+/* Ana butonlar grubu (Geri, Oynat, İleri) */
+.main-buttons {
+    display: flex; align-items: center; gap: 15px;
+}
+
 .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; }
 .control-btn:hover { opacity: 1; transform: scale(1.15); }
 .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; display: flex; align-items: center; justify-content: center; }
@@ -217,10 +222,10 @@ body:not(.view-mode-social) .radio-player:hover {
 .radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
 .radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
 
-/* --- YENİ: DİNAMİK SES AYARI (SLIDER) --- */
+/* --- DİNAMİK SES AYARI --- */
 .volume-group {
     display: flex; align-items: center; position: relative;
-    margin-left: 10px; height: 100%;
+    margin-left: 0; height: 100%;
 }
 .vol-slider-wrapper {
     width: 0; height: 6px; 
@@ -230,7 +235,6 @@ body:not(.view-mode-social) .radio-player:hover {
     transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
     display: flex; align-items: center; opacity: 0; pointer-events: none;
 }
-/* Hover yapınca açıl */
 .volume-group:hover .vol-slider-wrapper {
     width: 80px; opacity: 1; pointer-events: auto;
 }
@@ -238,12 +242,10 @@ body:not(.view-mode-social) .radio-player:hover {
     -webkit-appearance: none; width: 100%; height: 100%; background: transparent;
     position: absolute; z-index: 2; cursor: pointer; top: 0; left: 0; margin: 0;
 }
-.vol-range::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 0; height: 0; /* Thumb gizli veya çok küçük */
-}
+.vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
 .vol-fill {
     height: 100%; 
-    background: var(--theme-color, #fff); /* DİNAMİK RENK */
+    background: var(--theme-color, #fff);
     border-radius: 10px; width: 50%;
     position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none;
     transition: background-color 0.5s ease;
@@ -258,7 +260,7 @@ body.view-mode-social .radio-wrapper {
 }
 
 body.view-mode-social .radio-player {
-    width: 100%; height: 400px;
+    width: 100%; height: 420px; /* Biraz uzattık */
     flex-direction: column; justify-content: center; gap: 30px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -272,11 +274,37 @@ body.view-mode-social .status-container { justify-content: center; width: 100%; 
 body.view-mode-social .status-text { font-size: 1rem; }
 body.view-mode-social .equalizer { height: 40px; gap: 6px; opacity: 1; }
 body.view-mode-social .equalizer .bar { width: 6px; background-color: #fff !important; }
-body.view-mode-social .controls { gap: 40px; margin-top: 20px; justify-content: center; width: 100%; }
+
+/* --- MERKEZ MODU KONTROLLER (Dikey Düzen) --- */
+body.view-mode-social .controls { 
+    flex-direction: column; /* Dikey yap */
+    gap: 25px; 
+    margin-top: 20px; 
+    justify-content: center; width: 100%; 
+}
+
+body.view-mode-social .main-buttons {
+    gap: 40px; /* Buton aralarını aç */
+}
+
 body.view-mode-social .control-btn { font-size: 1.8rem; }
 body.view-mode-social .play-btn { width: 80px; height: 80px; font-size: 2rem; background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 body.view-mode-social .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
-body.view-mode-social .volume-group { margin-left: 0; } /* Geniş modda margin sıfırla */
+
+/* Merkez modda ses ayarını ortala ve büyüt */
+body.view-mode-social .volume-group {
+    justify-content: center;
+    width: 100%;
+}
+body.view-mode-social .vol-slider-wrapper {
+    width: 150px; /* Daha geniş slider */
+    opacity: 1; /* Hep görünür olsun mu? Hover'da kalsın dersen opacity 0 kalsın */
+    pointer-events: auto;
+}
+/* Merkezde slider hep görünsün dersen:
+body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; } 
+*/
+
 
 /* =========================================
    7. HAVA DURUMU WIDGET
