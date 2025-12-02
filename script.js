@@ -3,12 +3,6 @@
 // =========================================
 const CONFIG = {
     stations: [
-        { 
-            name: "Lofi Hip Hop", 
-            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
-            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
-            accent: "#c31432" 
-        },
         // --- Popüler & Yabancı Hit ---
         { 
             name: "Power FM", 
@@ -169,6 +163,12 @@ const CONFIG = {
             url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
             gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
             accent: "#4CA1AF" 
+        },
+        { 
+            name: "Lofi Hip Hop", 
+            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
+            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
+            accent: "#c31432" 
         }
     ],
     // FOTOĞRAFLAR
@@ -211,9 +211,11 @@ let timers = {
 let audioCtx, analyzer, dataArray;
 
 // =========================================
-// 2. BAŞLATMA
+// 2. BAŞLATMA VE ELEMENT OLUŞTURMA
 // =========================================
 function startExperience() {
+    createDynamicElements(); // Butonları oluştur
+    
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
     
@@ -240,6 +242,63 @@ function startExperience() {
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
+}
+
+// Yeni butonları HTML'e enjekte eden fonksiyon
+function createDynamicElements() {
+    // 1. Fullscreen Butonu
+    if (!document.querySelector('.fullscreen-btn')) {
+        const fsBtn = document.createElement('div');
+        fsBtn.className = 'fullscreen-btn';
+        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fsBtn.onclick = toggleFullScreen;
+        document.body.appendChild(fsBtn);
+    }
+
+    // 2. Shazam/Şarkı Bul Butonu
+    const volGroup = document.getElementById('volGroup');
+    if (volGroup && !document.querySelector('.shazam-btn')) {
+        const shazamBtn = document.createElement('button');
+        shazamBtn.className = 'control-btn shazam-btn';
+        shazamBtn.innerHTML = '<i class="fas fa-search"></i>';
+        shazamBtn.title = "Çalan Şarkıyı Bul";
+        shazamBtn.onclick = findCurrentSong;
+        // Volume grubunun başına ekle
+        volGroup.parentNode.insertBefore(shazamBtn, volGroup.nextSibling);
+    }
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+        document.querySelector('.fullscreen-btn i').className = 'fas fa-compress';
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        document.querySelector('.fullscreen-btn i').className = 'fas fa-expand';
+    }
+}
+
+function findCurrentSong(e) {
+    if(e) e.stopPropagation();
+    
+    // Görsel geri bildirim
+    const btn = document.querySelector('.shazam-btn');
+    const originalIcon = btn.innerHTML;
+    
+    updateStatusUI("connecting", "Şarkı Aranıyor...");
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // 1.5 saniye bekle (dinliyor efekti) sonra Google'da ara
+    setTimeout(() => {
+        const stationName = CONFIG.stations[state.currentStation].name;
+        // Radyo adıyla birlikte "çalma listesi" veya "çalan şarkı" araması yap
+        const query = `${stationName} çalan şarkı playlist`;
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        
+        // Eski haline dön
+        btn.innerHTML = originalIcon;
+        if(state.isPlaying) updateStatusUI("live", "CANLI YAYIN");
+    }, 1500);
 }
 
 function setupAudioContext() {
@@ -348,7 +407,6 @@ function initRadio() {
     
     updateStatusUI("connecting", "Uydu Bağlantısı Kuruluyor...");
     audio.src = CONFIG.stations[state.currentStation].url;
-    // Logaritmik ses başlatma
     audio.volume = Math.pow(state.lastVolume, 2);
 
     audio.addEventListener('playing', () => {
@@ -410,23 +468,15 @@ function setupVolumeControl() {
     const slider = document.getElementById("volRange");
     const audio = document.getElementById("bgMusic");
     
-    // UI'ı başlat
     slider.value = state.lastVolume;
     updateVolFill(state.lastVolume);
 
     slider.addEventListener("input", (e) => {
-        // Kullanıcı müdahale edince FADE İPTAL!
         clearInterval(timers.fade);
-
         const val = parseFloat(e.target.value);
         state.lastVolume = val;
-        
-        // Logaritmik ses ayarı (Daha doğal hissettirir)
-        // Slider 0.5 ise Ses 0.25 olur.
         audio.volume = Math.pow(val, 2);
-        
         updateVolFill(val);
-        
         const icon = document.getElementById("volIcon");
         if(val === 0) icon.className = "fas fa-volume-mute";
         else if(val < 0.5) icon.className = "fas fa-volume-down";
@@ -441,24 +491,19 @@ function updateVolFill(val) {
 
 function toggleMute(e) {
     if(e) e.stopPropagation();
-    
-    // Mute tuşuna basınca da fade iptal
     clearInterval(timers.fade);
-
     const audio = document.getElementById("bgMusic");
     const slider = document.getElementById("volRange");
     
     if(slider.value > 0) {
-        // Sesi Kapat
-        state.lastVolume = parseFloat(slider.value); // Mevcut değeri kaydet
+        state.lastVolume = parseFloat(slider.value); 
         audio.volume = 0;
         slider.value = 0;
         updateVolFill(0);
         document.getElementById("volIcon").className = "fas fa-volume-mute";
     } else {
-        // Sesi Aç (Geri Yükle)
         let restore = state.lastVolume > 0 ? state.lastVolume : 0.5;
-        audio.volume = Math.pow(restore, 2); // Logaritmik geri yükle
+        audio.volume = Math.pow(restore, 2); 
         slider.value = restore;
         updateVolFill(restore);
         document.getElementById("volIcon").className = "fas fa-volume-up";
@@ -513,9 +558,7 @@ function finalizeStationChange(direction) {
     const audio = document.getElementById("bgMusic");
     if(audio) {
         audio.src = CONFIG.stations[state.currentStation].url; audio.load();
-        // Geçiş yaparken ses ayarını hatırla
         audio.volume = Math.pow(state.lastVolume, 2);
-        
         updateStatusUI("connecting", "Bağlanıyor...");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
@@ -528,13 +571,25 @@ function updateStatusUI(statusType, msg, customColor) {
     }
 
     const sText = document.getElementById("statusText");
-    sText.innerText = msg;
+    
+    // Emojili yapı yerine temizleme
+    sText.innerHTML = ""; 
     
     sText.classList.remove("status-connecting", "status-live", "status-retrying");
     
-    if(statusType === "connecting") sText.classList.add("status-connecting");
-    else if(statusType === "live") sText.classList.add("status-live");
-    else if(statusType === "retrying") sText.classList.add("status-retrying");
+    if(statusType === "connecting") {
+        sText.classList.add("status-connecting");
+        // Dinamik 3 nokta animasyonu ekle
+        sText.innerHTML = '<div class="connecting-dots"><span></span><span></span><span></span></div>' + msg;
+    } 
+    else if(statusType === "live") {
+        sText.classList.add("status-live");
+        sText.innerText = msg; // Canlı yayın için sadece metin (CSS ile nokta ekliyoruz)
+    }
+    else {
+        sText.innerText = msg;
+        if(statusType === "retrying") sText.classList.add("status-retrying");
+    }
     
     if(statusType === "live") {
         sText.style.color = CONFIG.stations[state.currentStation].accent;
@@ -545,7 +600,6 @@ function updateStatusUI(statusType, msg, customColor) {
 
 function fadeInMusic() {
     const audio = document.getElementById("bgMusic");
-    // Hedef ses kullanıcının seçtiği son seviyedir
     const targetVol = Math.pow(state.lastVolume, 2) || 0.25; 
     
     audio.volume = 0; 
@@ -619,10 +673,7 @@ function updatePhoto() {
     
     setTimeout(() => {
         img.src = CONFIG.photos[state.photoIndex]; 
-        
-        img.onload = () => {
-            img.classList.remove("changing");
-        };
+        img.onload = () => { img.classList.remove("changing"); };
     }, 300); 
 }
 
@@ -711,10 +762,8 @@ function updateWeatherUI(current, name, hourlyData) {
 
     const iconEl = document.getElementById("w-icon");
     iconEl.className = `fas ${icon} weather-icon`; iconEl.style.color = color;
-
     const descEl = document.getElementById("w-desc");
     if(descEl) { descEl.innerText = desc; descEl.style.color = color; }
-
     if(hourlyData) { updateExtendedInfo(hourlyData); }
 }
 
@@ -788,11 +837,9 @@ function initSnow() {
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
         if (analyzer && state.isPlaying) {
             try { 
                 analyzer.getByteFrequencyData(dataArray); 
-                
                 let bassSum = dataArray[0] + dataArray[1] + dataArray[2]; 
                 if ((bassSum / 3) > 210) state.kickImpulse = 2.0;
 
@@ -801,15 +848,12 @@ function initSnow() {
                     let visualSum = 0;
                     for(let i = 0; i < 20; i++) visualSum += dataArray[i];
                     let avg = visualSum / 20;
-                    
                     const scaleAmount = 1 + (avg / 255) * 0.05; 
                     player.style.transform = `scale(${scaleAmount})`;
-
                     const color = CONFIG.stations[state.currentStation].accent;
                     const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
                     const shadowSize = 20 + (avg * 0.2);
                     player.style.boxShadow = `0 10px ${shadowSize}px ${color}${shadowOpacity}`;
-
                 } else {
                     const player = document.getElementById("playerBox");
                     if(player.style.transform) player.style.transform = "";
@@ -817,7 +861,6 @@ function initSnow() {
                 }
             } catch(e) {}
         }
-        
         state.kickImpulse *= 0.90; 
         snowflakes.forEach(flake => { flake.update(); flake.draw(); }); 
         requestAnimationFrame(animate);

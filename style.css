@@ -72,17 +72,15 @@ body {
 @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
-/* DİKEY (Y-EKSENİ) ZIPLAMA EFEKTLERİ */
+/* DİKEY ZIPLAMA EFEKTLERİ */
 @keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
 @keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
-
 @keyframes bumpUpRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 30px)); } 100% { transform: translate(-50%, -50%); } }
 @keyframes bumpDownRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% + 30px)); } 100% { transform: translate(-50%, -50%); } }
 @keyframes bumpUpWeather { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 30px)); } 100% { transform: translate(-50%, -50%); } }
 @keyframes bumpDownWeather { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% + 30px)); } 100% { transform: translate(-50%, -50%); } }
 @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 body.bump-up:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -112,7 +110,7 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 .indicator-dot.active { background: var(--theme-color, white); transform: scale(1.4); box-shadow: 0 0 10px rgba(255,255,255,0.3); border-color: transparent; }
 
 /* =========================================
-   KART YAPISI (DÜZENLENDİ)
+   KART YAPISI
 ========================================= */
 .card {
     background-color: var(--glass-bg);
@@ -132,16 +130,13 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 }
 
 .info-box { position: absolute; top: 170px; left: 0; width: 100%; transition: all 0.8s ease; opacity: 1; z-index: 2; }
-.info-box h2 { 
-    margin-bottom: 5px; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; transition: all 0.5s ease;
-}
+.info-box h2 { margin-bottom: 5px; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; transition: all 0.5s ease; }
 .info-box .subtitle { font-size: 0.75rem; color: #ccc; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; }
 
 .bio-box {
     position: absolute; top: 250px; left: 0; width: 100%; padding: 0 40px;
     opacity: 0; transform: translateY(30px); 
-    transition: all 0.8s ease; pointer-events: none;
-    text-align: center;
+    transition: all 0.8s ease; pointer-events: none; text-align: center;
 }
 .bio-box p { font-size: 1rem; opacity: 0.9; line-height: 1.7; color: #eee; font-weight: 300; }
 
@@ -151,7 +146,6 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 }
 .nav-left { left: 20px; } .nav-right { right: 20px; }
 
-/* Sosyal Medya İkonları */
 .social-box {
     position: absolute; bottom: 50px; left: 0; width: 100%;
     display: flex; justify-content: center; gap: 12px; 
@@ -172,39 +166,20 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
 .social-btn:hover::before { opacity: 1; }
 
-/* --- STATE 1: ALBÜM MODU (0. SAYFA) --- */
-.card.state-album { 
-    width: 550px; height: 550px; transform: scale(1); 
-}
-.card.state-album .profile-img { 
-    width: 100%; height: 100%; top: 0; left: 0; 
-    transform: none; border-radius: 30px; border: none; 
-}
-.card.state-album .info-box, 
-.card.state-album .bio-box { 
-    opacity: 0; pointer-events: none; transform: translateY(30px); 
-}
-.card.state-album .social-box {
-    opacity: 1; pointer-events: auto; transform: translateY(0);
-}
+/* STATE STYLES */
+.card.state-album { width: 550px; height: 550px; transform: scale(1); }
+.card.state-album .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 30px; border: none; }
+.card.state-album .info-box, .card.state-album .bio-box { opacity: 0; pointer-events: none; transform: translateY(30px); }
+.card.state-album .social-box { opacity: 1; pointer-events: auto; transform: translateY(0); }
 .card.state-album .album-nav { opacity: 1; pointer-events: auto; }
-
-/* --- GİRİŞ EKRANI (Varsayılan / Stage 1) --- */
-.card[data-state="1"] .social-box {
-    opacity: 1; pointer-events: auto; transform: translateY(0); bottom: 40px;
-}
-
-/* --- STATE 2: BİYOGRAFİ MODU (1. SAYFA) --- */
+.card[data-state="1"] .social-box { opacity: 1; pointer-events: auto; transform: translateY(0); bottom: 40px; }
 .card.state-bio { height: 420px; transform: scale(1); }
 .card.state-bio .profile-img { opacity: 0; pointer-events: none; transform: translateY(-120px) scale(0.5); }
 .card.state-bio .info-box { top: 50px; transform: scale(1); }
 .card.state-bio .info-box h2 { font-size: 2.5rem; letter-spacing: -1px; } 
 .card.state-bio .bio-box { top: 150px; opacity: 1; transform: translateY(0); pointer-events: auto; }
-
-body.view-mode-social #mainCard,
-body.view-mode-weather #mainCard {
-    opacity: 0 !important;
-    transform: scale(0.9) translateY(-120vh) rotate(-5deg) !important; 
+body.view-mode-social #mainCard, body.view-mode-weather #mainCard {
+    opacity: 0 !important; transform: scale(0.9) translateY(-120vh) rotate(-5deg) !important; 
     pointer-events: none; filter: blur(10px); 
 }
 
@@ -218,9 +193,7 @@ body.view-mode-weather #mainCard {
 }
 
 .radio-player {
-    position: relative;
-    padding: 12px 25px; 
-    border-radius: 50px; 
+    position: relative; padding: 12px 25px; border-radius: 50px; 
     display: flex; align-items: center; gap: 20px; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     width: fit-content; min-width: 280px; max-width: 400px; 
@@ -229,11 +202,9 @@ body.view-mode-weather #mainCard {
 }
 
 .radio-player::before {
-    content: ''; position: absolute;
-    width: 200%; height: 200%; 
+    content: ''; position: absolute; width: 200%; height: 200%; 
     background: conic-gradient(transparent 45%, var(--theme-color) 50%, transparent 55%);
-    top: -50%; left: -50%; z-index: -2;
-    animation: spin var(--spin-speed, 30s) linear infinite;
+    top: -50%; left: -50%; z-index: -2; animation: spin var(--spin-speed, 30s) linear infinite;
     opacity: 0; transition: opacity 0.5s;
 }
 
@@ -288,35 +259,24 @@ body:not(.view-mode-social) .radio-player:hover {
 
 body.view-mode-social .radio-wrapper {
     top: 50%; left: 50%; bottom: auto; right: auto;
-    transform: translate(-50%, -50%);
-    width: 380px; align-items: center; z-index: 60;
+    transform: translate(-50%, -50%); width: 380px; align-items: center; z-index: 60;
 }
-
 body.view-mode-social .radio-player {
-    width: 100%; height: 420px;
-    flex-direction: column; justify-content: center; gap: 30px;
-    background: transparent; border: none; box-shadow: none;
-    padding: 40px; border-radius: 30px;
+    width: 100%; height: 420px; flex-direction: column; justify-content: center; gap: 30px;
+    background: transparent; border: none; box-shadow: none; padding: 40px; border-radius: 30px;
 }
-
-body.view-mode-social .radio-player::before,
-body.view-mode-social .radio-player::after {
-    display: block; opacity: 1; border-radius: 30px;
-}
-
+body.view-mode-social .radio-player::before, body.view-mode-social .radio-player::after { display: block; opacity: 1; border-radius: 30px; }
 body.view-mode-social .radio-info { text-align: center; align-items: center; width: 100%; flex-grow: 0; }
 body.view-mode-social .station-name { font-size: 2rem; margin-bottom: 15px; text-shadow: 0 5px 15px rgba(0,0,0,0.3); white-space: normal; }
 body.view-mode-social .status-container { justify-content: center; width: 100%; flex-direction: column; gap: 15px; }
 body.view-mode-social .status-text { font-size: 1rem; }
 body.view-mode-social .equalizer { height: 40px; gap: 6px; opacity: 1; }
 body.view-mode-social .equalizer .bar { width: 6px; background-color: #fff !important; }
-
 body.view-mode-social .controls { flex-direction: column; gap: 25px; margin-top: 20px; justify-content: center; width: 100%; }
 body.view-mode-social .main-buttons { gap: 40px; }
 body.view-mode-social .control-btn { font-size: 1.8rem; }
 body.view-mode-social .play-btn { width: 80px; height: 80px; font-size: 2rem; background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 body.view-mode-social .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
-
 body.view-mode-social .volume-group { justify-content: center; width: 100%; }
 body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; pointer-events: auto; }
 body.view-mode-social .volume-group:hover .vol-slider-wrapper { width: 150px !important; }
@@ -349,12 +309,10 @@ body:not(.view-mode-weather):not(.view-mode-social) .weather-widget:not(.search-
 .weather-temp { font-size: 1.3rem; font-weight: 700; line-height: 1; }
 .weather-city { font-size: 0.8rem; opacity: 0.7; margin-top: 3px; }
 .weather-desc { font-size: 0.75rem; margin-top: 2px; font-weight: 500; }
-
 .weather-details { margin-top: 15px; width: 100%; opacity: 0; transform: translateY(-10px); transition: all 0.4s ease 0.1s; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
 .weather-widget:hover .weather-details, .weather-widget.search-mode .weather-details { opacity: 1; transform: translateY(0); }
 .detail-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #ddd; margin-bottom: 6px; }
 .change-city-text { text-align: center; margin-top: 10px; font-size: 0.7rem; color: #00bfff; cursor: pointer; text-decoration: underline; }
-
 .city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; animation: fadeIn 0.3s ease; position: relative; }
 .weather-widget.search-mode .city-search-box { display: flex; }
 .weather-widget.search-mode .weather-details { display: none; }
@@ -366,12 +324,10 @@ body:not(.view-mode-weather):not(.view-mode-social) .weather-widget:not(.search-
 
 body.view-mode-weather .weather-widget {
     top: 50%; left: 50%; right: auto; bottom: auto;
-    transform: translate(-50%, -50%);
-    width: 800px; height: 500px; max-height: none;
+    transform: translate(-50%, -50%); width: 800px; height: 500px; max-height: none;
     background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(40px);
     border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 40px; padding: 40px;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.7);
-    display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: 1fr;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.7); display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: 1fr;
     gap: 30px; align-items: center; justify-content: start; z-index: 60;
 }
 body.view-mode-weather .weather-header {
@@ -386,7 +342,6 @@ body.view-mode-weather .weather-city { font-size: 2rem; font-weight: 300; opacit
 body.view-mode-weather .weather-desc { font-size: 1.2rem; color: #00bfff; margin-top: 5px; text-transform: capitalize; }
 body.view-mode-weather .weather-details { display: none; }
 body.view-mode-weather .change-city-text { display: none; }
-
 .extended-info { display: none; width: 100%; height: 100%; flex-direction: column; justify-content: space-between; opacity: 0; transition: opacity 0.5s ease 0.3s; }
 body.view-mode-weather .extended-info { display: flex; opacity: 1; }
 
@@ -407,9 +362,7 @@ body.view-mode-weather .extended-info { display: flex; opacity: 1; }
 .extra-card span { font-size: 1.1rem; font-weight: 600; }
 .extra-card small { font-size: 0.7rem; opacity: 0.5; }
 
-/* TIKLANABİLİRLİK (CURSOR) */
-.weather-widget { cursor: pointer; }
-.radio-player { cursor: pointer; }
+.weather-widget { cursor: pointer; } .radio-player { cursor: pointer; }
 body.view-mode-weather .weather-widget, .weather-widget.search-mode { cursor: default; }
 body.view-mode-social .radio-player { cursor: default; }
 .control-btn, .weather-header, .change-city-text, .suggestion-item, .vol-range { cursor: pointer; }
@@ -438,20 +391,45 @@ body.view-mode-social .radio-player { cursor: default; }
     body.view-mode-weather .weather-temp { font-size: 3.5rem; }
     .extra-grid { grid-template-columns: 1fr 1fr; }
     .stage-indicators { right: 10px; gap: 10px; }
+    .fullscreen-btn { display: none !important; } /* Mobilde full screen gizle */
 }
 
-/* Fotoğraf Geçiş Animasyonu İçin */
-.profile-img.changing {
-    opacity: 0 !important;
-    transform: translateX(-50%) scale(0.9) !important;
-    transition: all 0.3s ease-in-out;
-}
+.profile-img.changing { opacity: 0 !important; transform: translateX(-50%) scale(0.9) !important; transition: all 0.3s ease-in-out; }
 
 /* =========================================
-   YENİ EKLENEN: RADYO DURUM VE EFEKTLER
+   YENİ EKLENEN ÖZELLİKLER (FULLSCREEN, DOTS, SHAZAM)
 ========================================= */
 
-/* 1. Titreme (Shake) Efekti - Hata anında devreye girer */
+/* 1. Fullscreen Butonu */
+.fullscreen-btn {
+    position: fixed; top: 30px; left: 30px;
+    width: 45px; height: 45px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; justify-content: center; align-items: center;
+    color: white; font-size: 1.2rem; cursor: pointer;
+    z-index: 100; transition: all 0.3s ease; opacity: 0.7;
+}
+.fullscreen-btn:hover { background: rgba(255, 255, 255, 0.15); opacity: 1; transform: scale(1.1); }
+
+/* 2. Shazam / Şarkı Bul Butonu */
+.shazam-btn { margin-left: 10px; opacity: 0.8 !important; }
+.shazam-btn:hover { color: #00bfff; opacity: 1 !important; }
+
+/* 3. Dinamik 3 Nokta Animasyonu (Loaders) */
+.connecting-dots {
+    display: inline-flex; align-items: center; height: 12px; gap: 3px; margin-right: 6px;
+}
+.connecting-dots span {
+    width: 3px; height: 100%; background-color: #ffcc00;
+    border-radius: 2px; animation: soundWave 1s infinite ease-in-out;
+}
+.connecting-dots span:nth-child(1) { animation-delay: 0.0s; }
+.connecting-dots span:nth-child(2) { animation-delay: 0.2s; height: 60%; }
+.connecting-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes soundWave { 0%, 100% { height: 30%; } 50% { height: 100%; } }
 @keyframes shakeHard {
     0% { transform: translate(1px, 1px) rotate(0deg); }
     10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -465,56 +443,14 @@ body.view-mode-social .radio-player { cursor: default; }
     90% { transform: translate(1px, 2px) rotate(0deg); }
     100% { transform: translate(1px, -2px) rotate(-1deg); }
 }
+.shake-active { animation: shakeHard 0.5s cubic-bezier(.36,.07,.19,.97) both; }
 
-.shake-active {
-    animation: shakeHard 0.5s cubic-bezier(.36,.07,.19,.97) both;
-}
+.status-text { font-size: 0.75rem; font-weight: 500; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px; }
+.status-connecting { color: #ffcc00 !important; }
+.status-live { color: var(--theme-color) !important; text-shadow: 0 0 10px var(--theme-color); }
+.status-live::before { content: ''; display: inline-block; width: 8px; height: 8px; background-color: currentColor; border-radius: 50%; animation: blinkLive 2s infinite; }
+.status-retrying { color: #ff9800 !important; font-style: italic; }
+.status-retrying::after { content: '...'; animation: loadingDots 1.5s infinite; }
 
-/* 2. Durum Metni Animasyonları */
-.status-text {
-    font-size: 0.75rem;
-    font-weight: 500;
-    transition: color 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Bağlanıyor animasyonu (Yanıp sönme) */
-.status-connecting {
-    animation: pulseText 1.5s infinite ease-in-out;
-    color: #ffcc00 !important; /* Sarı ton */
-}
-.status-connecting::before {
-    content: '📡';
-    font-size: 0.8rem;
-}
-
-/* Canlı yayın animasyonu */
-.status-live {
-    color: var(--theme-color) !important;
-    text-shadow: 0 0 10px var(--theme-color);
-}
-.status-live::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: currentColor;
-    border-radius: 50%;
-    animation: blinkLive 2s infinite;
-}
-
-/* Yeniden Deneniyor (Hata öncesi) */
-.status-retrying {
-    color: #ff9800 !important; /* Turuncu */
-    font-style: italic;
-}
-.status-retrying::after {
-    content: '...';
-    animation: loadingDots 1.5s infinite;
-}
-
-@keyframes pulseText { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 @keyframes blinkLive { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes loadingDots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
