@@ -20,6 +20,7 @@ body {
     display: flex; justify-content: center; align-items: center;
     overflow: hidden; color: var(--text-color); position: relative;
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+    /* Mobil kaydırma sorunlarını önlemek için */
     touch-action: none; 
 }
 
@@ -117,7 +118,11 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
     border: 1px solid var(--glass-border);
     padding: 40px; border-radius: 30px;
     text-align: center; 
-    width: 340px; height: 340px;
+    
+    /* Kare ve kompakt */
+    width: 340px; 
+    height: 340px;
+    
     opacity: 0; transform: translateY(30px) scale(1.12);
     transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
     box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: hidden;
@@ -127,42 +132,17 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
     position: absolute; top: 35px; left: 50%; transform: translateX(-50%);
     width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
     border: 3px solid rgba(255,255,255,0.2); 
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* Hızlandırıldı */
     z-index: 2;
 }
 
+/* YENİ: Profil Fotoğrafı Hover Efekti */
 .card[data-state="1"] .profile-img:hover {
-    transform: translateX(-50%) scale(1.08); 
-    border-color: var(--theme-color); 
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); 
+    transform: translateX(-50%) scale(1.08); /* Hafif büyütme */
+    border-color: var(--theme-color); /* Tema renginde çerçeve */
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); /* Parlama */
     cursor: pointer;
 }
-
-/* YENİ: Fotoğraf Yükleme Efekti (Loader) */
-.photo-loader {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    display: flex; justify-content: center; align-items: center;
-    background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);
-    z-index: 3; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-    border-radius: 30px;
-}
-.photo-loader.active { opacity: 1; pointer-events: auto; }
-.loader-spinner {
-    width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3);
-    border-top: 4px solid var(--theme-color); border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-/* YENİ: Dinamik Fotoğraf Geçiş Animasyonları */
-.slide-left { animation: slideOutLeft 0.4s forwards; }
-.slide-right { animation: slideOutRight 0.4s forwards; }
-.slide-in-left { animation: slideInLeft 0.4s forwards; }
-.slide-in-right { animation: slideInRight 0.4s forwards; }
-
-@keyframes slideOutLeft { to { transform: translateX(-50%) translateX(-50px); opacity: 0; } }
-@keyframes slideOutRight { to { transform: translateX(-50%) translateX(50px); opacity: 0; } }
-@keyframes slideInLeft { from { transform: translateX(-50%) translateX(-50px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
-@keyframes slideInRight { from { transform: translateX(-50%) translateX(50px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
 
 .info-box { position: absolute; top: 170px; left: 0; width: 100%; transition: all 0.8s ease; opacity: 1; z-index: 2; }
 .info-box h2 { margin-bottom: 5px; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; transition: all 0.5s ease; }
@@ -178,9 +158,7 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 .album-nav {
     position: absolute; top: 50%; transform: translateY(-50%);
     font-size: 2rem; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: 0.5s; z-index: 20;
-    text-shadow: 0 0 15px rgba(0,0,0,0.8);
 }
-.album-nav:hover { transform: translateY(-50%) scale(1.2); color: var(--theme-color); }
 .nav-left { left: 20px; } .nav-right { right: 20px; }
 
 .social-box {
@@ -416,7 +394,14 @@ body.view-mode-social .radio-player { cursor: default; }
     .big-clock-num { font-size: 35vw; opacity: 0.03; }
     #date-display { bottom: 100px; }
     
-    .card { width: 85vw; height: auto; aspect-ratio: 1/1; min-height: 320px; }
+    /* GÜNCELLENMİŞ MOBİL KART */
+    .card { 
+        width: 85vw; /* %90 yerine %85 daha iyi */
+        height: auto; 
+        aspect-ratio: 1/1; /* Kareye yakın olsun */
+        min-height: 320px;
+    }
+    
     .card.state-album { width: 100vw; height: 50vh; }
     body.view-mode-social .radio-wrapper { width: 90vw; }
     body.view-mode-social .radio-player { height: auto; padding: 20px; gap: 20px; }
@@ -438,6 +423,7 @@ body.view-mode-social .radio-player { cursor: default; }
    YENİ EKLENEN: FULLSCREEN, DOTS, POPUP
 ========================================= */
 
+/* 1. Fullscreen Butonu */
 .fullscreen-btn {
     position: fixed; top: 30px; left: 30px;
     width: 45px; height: 45px; border-radius: 12px;
@@ -450,6 +436,7 @@ body.view-mode-social .radio-player { cursor: default; }
 }
 .fullscreen-btn:hover { background: rgba(255, 255, 255, 0.15); opacity: 1; transform: scale(1.1); }
 
+/* 2. Dinamik 3 Nokta Animasyonu */
 .connecting-dots {
     display: inline-flex; align-items: center; height: 12px; gap: 3px; margin-right: 6px;
 }
@@ -461,24 +448,59 @@ body.view-mode-social .radio-player { cursor: default; }
 .connecting-dots span:nth-child(2) { animation-delay: 0.2s; height: 60%; }
 .connecting-dots span:nth-child(3) { animation-delay: 0.4s; }
 
+/* 3. GÜNCELLENMİŞ ŞARKI POPUP (KART ARKASI) */
 .song-popup {
-    position: absolute; top: 10px; left: 50%; transform: translateX(-50%) scale(0.9);
-    width: 90%; padding: 12px 15px; z-index: -1; 
-    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 15px;
+    position: absolute;
+    top: 10px; /* Başlangıçta kartın arkasında, üst hizasında gizli */
+    left: 50%;
+    transform: translateX(-50%) scale(0.9); /* Ortala ve biraz küçük başla */
+    width: 90%;
+    padding: 12px 15px;
+    
+    /* Kartın arkasında durması için z-index ayarı */
+    z-index: -1; 
+    
+    /* Görünüm ayarları */
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 15px;
     box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
-    opacity: 0; transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    display: flex; align-items: center; gap: 12px; pointer-events: none;
+    
+    /* Animasyon geçişleri */
+    opacity: 0;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    /* İçerik düzeni */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none; /* Tıklamayı engelle */
 }
-.song-popup.active { top: -85px; opacity: 1; transform: translateX(-50%) scale(1); }
-@media (max-width: 480px) { .song-popup.active { top: -75px; width: 85%; } }
+
+/* Aktif olduğunda yukarı fırlar */
+.song-popup.active {
+    top: -85px; /* Kartın üzerine çıkacağı mesafe */
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+/* Mobilde biraz daha az yukarı çıksın */
+@media (max-width: 480px) {
+    .song-popup.active {
+        top: -75px;
+        width: 85%;
+    }
+}
 
 .popup-icon {
     width: 35px; height: 35px; border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     display: flex; justify-content: center; align-items: center;
-    font-size: 1rem; color: var(--theme-color); flex-shrink: 0;
+    font-size: 1rem; color: var(--theme-color);
+    flex-shrink: 0;
 }
+
 .popup-content { text-align: left; overflow: hidden; }
 .popup-title { font-size: 0.65rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; white-space: nowrap; }
 .popup-song { font-size: 0.85rem; font-weight: 600; color: white; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
