@@ -10,7 +10,13 @@ const CONFIG = {
         { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)", accent: "#f093fb" },
         { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", accent: "#e52d27" }
     ],
-    photos: ["profil.jpg", "profil.jpg"], 
+    // BURAYA YENİ FOTOĞRAF İSİMLERİNİ EKLEYEBİLİRSİNİZ
+    photos: [
+        "profil.jpg", 
+        "photo1.jpg", 
+        "photo2.jpg", 
+        "photo3.jpg"
+    ], 
     weatherApi: "https://api.open-meteo.com/v1/forecast",
     geoApi: "https://geocoding-api.open-meteo.com/v1/search"
 };
