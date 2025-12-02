@@ -352,56 +352,21 @@ function updateThemeColors(isError) {
     document.getElementById("playerBox").style.borderColor = isError ? "red" : "rgba(255,255,255,0.15)";
 }
 
-// İleri git (Yön: 'next')
-function nextPhoto() { 
-    state.photoIndex = (state.photoIndex + 1) % CONFIG.photos.length; 
-    updatePhoto('next'); 
-}
+function nextPhoto() { state.photoIndex = (state.photoIndex + 1) % CONFIG.photos.length; updatePhoto(); }
+function prevPhoto() { state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.length) % CONFIG.photos.length; updatePhoto(); }
 
-// Geri git (Yön: 'prev')
-function prevPhoto() { 
-    state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.length) % CONFIG.photos.length; 
-    updatePhoto('prev'); 
-}
-
-// GÜNCELLENMİŞ FOTOĞRAF GEÇİŞ FONKSİYONU
-function updatePhoto(direction) { 
+// YENİLENMİŞ FOTOĞRAF GÜNCELLEME FONKSİYONU
+function updatePhoto() { 
     const img = document.getElementById("profileImg");
-    const card = document.getElementById("mainCard");
+    img.classList.add("changing"); // Görünmez yap
     
-    // Varsayılan yön (ilk açılış için)
-    if (!direction) direction = 'next';
-
-    // 1. ESKİ FOTOĞRAFI GÖNDER (Slide Out)
-    // Eğer 'next' ise sola kaybol, 'prev' ise sağa kaybol
-    const exitClass = direction === 'next' ? 'exit-left' : 'exit-right';
-    img.className = `profile-img ${exitClass}`;
-
-    // 2. KART ÇERÇEVESİNE YÜKLEME ANİMASYONUNU EKLE
-    card.classList.add("loading-active");
-
-    // 3. ANİMASYON SÜRESİ KADAR BEKLE (400ms)
     setTimeout(() => {
-        // Yeni resim kaynağını ayarla
-        img.src = CONFIG.photos[state.photoIndex];
-
-        // 4. YENİ FOTOĞRAFI HAZIRLA (Görünmeden kenara taşı)
-        // Transition'ı kapatıp anında başlangıç konumuna (sağ veya sol) atıyoruz
-        const enterClass = direction === 'next' ? 'enter-right' : 'enter-left';
-        img.className = `profile-img preparing ${enterClass}`;
-
-        // Resim Yüklendiğinde
+        img.src = CONFIG.photos[state.photoIndex]; // Fotoğrafı değiştir
+        
         img.onload = () => {
-            // Yükleme çerçevesini kaldır
-            card.classList.remove("loading-active");
-
-            // Tarayıcıya reflow yaptır (Animasyonun tetiklenmesi için gerekli hack)
-            void img.offsetWidth;
-
-            // 5. YENİ FOTOĞRAFI SAHNEYE AL (Slide In)
-            img.className = "profile-img active-slide";
+            img.classList.remove("changing"); // Görünür yap
         };
-    }, 400); // CSS transition süresiyle eşleşmeli
+    }, 300); // CSS transition süresiyle (0.3s) eşleşmeli
 }
 
 function initClock() {
