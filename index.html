@@ -69,21 +69,21 @@
         @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
 
         /* --- GLOBAL ESNEME (BOUNCING) ANİMASYONLARI --- */
-        
         /* Normal Kart */
         @keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
         @keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
 
-        /* DASHBOARD GRUP ESNEMESİ */
-        /* Radyo (Merkez) */
-        @keyframes bumpUpRadio { 0% { transform: translate(50%, -50%); } 50% { transform: translate(50%, -80px); } 100% { transform: translate(50%, -50%); } }
-        @keyframes bumpDownRadio { 0% { transform: translate(50%, -50%); } 50% { transform: translate(50%, -20px); } 100% { transform: translate(50%, -50%); } }
+        /* DASHBOARD - RADYO (Merkez) */
+        @keyframes bumpUpRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 30px)); } 100% { transform: translate(-50%, -50%); } }
+        @keyframes bumpDownRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% + 30px)); } 100% { transform: translate(-50%, -50%); } }
 
-        /* Hava Durumu (Üst - Margin ile bağlı olduğu için sadece Y translate yeterli) */
-        @keyframes bumpUpWeather { 0% { transform: translate(50%, 0); } 50% { transform: translate(50%, -30px); } 100% { transform: translate(50%, 0); } }
-        @keyframes bumpDownWeather { 0% { transform: translate(50%, 0); } 50% { transform: translate(50%, 30px); } 100% { transform: translate(50%, 0); } }
+        /* DASHBOARD - HAVA DURUMU (Üst) */
+        /* top: 50% - 190px (margin) -> transform Y -100% (own height) */
+        @keyframes bumpUpWeather { 0% { transform: translate(-50%, -100%); } 50% { transform: translate(-50%, calc(-100% - 30px)); } 100% { transform: translate(-50%, -100%); } }
+        @keyframes bumpDownWeather { 0% { transform: translate(-50%, -100%); } 50% { transform: translate(-50%, calc(-100% + 30px)); } 100% { transform: translate(-50%, -100%); } }
 
-        /* İkonlar (Alt - Visualizer) */
+        /* DASHBOARD - İKONLAR (Alt) */
+        /* top: 50% + 190px (margin) -> transform Y 0 */
         @keyframes bumpUpVis { 0% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -30px); } 100% { transform: translate(-50%, 0); } }
         @keyframes bumpDownVis { 0% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 30px); } 100% { transform: translate(-50%, 0); } }
 
@@ -154,7 +154,7 @@
         }
         .bio-box p { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; color: #ddd; }
         
-        /* Sosyal Medya (Normal) */
+        /* Sosyal Medya (Normal Mod) */
         .social-box {
             position: absolute; bottom: 50px; left: 0; width: 100%;
             display: flex; justify-content: center; gap: 12px; transition: all 0.8s ease;
@@ -199,9 +199,13 @@
 
         /* --- VISUALIZER MODU (Radyonun ALTINA KENETLİ) --- */
         .card.state-social .social-box { 
-            bottom: auto; top: 50%; left: 50%; 
-            margin-top: 190px; /* Radyo Yarım Boy (380/2) = 190px tam sınır */
+            /* MUTLAK KONUM: Ekranın Ortası */
+            top: 50%; left: 50%; bottom: auto; right: auto;
+            /* Radyo Yarı Boy (190px) kadar aşağı it */
+            margin-top: 190px;
+            /* X ekseninde ortala */
             transform: translate(-50%, 0); 
+            
             gap: 0; width: 360px; height: auto;
             align-items: flex-start; z-index: 55;
         }
@@ -223,9 +227,7 @@
         .card.state-social .social-btn:nth-child(2) { animation-delay: 0.4s; }
         .card.state-social .social-btn:nth-child(3) { animation-delay: 0.8s; }
         
-        .card.state-social .social-btn:hover { 
-            background: rgba(255,255,255,0.2); height: 90px; animation-play-state: paused; 
-        }
+        .card.state-social .social-btn:hover { background: rgba(255,255,255,0.2); height: 90px; animation-play-state: paused; }
         .card.state-social .social-text { display: none; }
 
         /* =========================================
@@ -239,10 +241,11 @@
             transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
         }
         
+        /* Dashboard Modu - MUTLAK MERKEZ */
         body.view-mode-social .radio-wrapper {
-            bottom: 50%; right: 50%; 
-            transform: translate(50%, -50%); /* Tam Merkez */
-            align-items: center; width: 360px; z-index: 50;
+            top: 50%; left: 50%; bottom: auto; right: auto;
+            transform: translate(-50%, -50%); 
+            align-items: center; width: 360px; z-index: 50; margin: 0;
         }
 
         .radio-player {
@@ -252,15 +255,14 @@
             width: fit-content; min-width: 280px; max-width: 400px; transition: all 0.5s;
         }
         
-        /* Dashboard Radyo Stili */
         body.view-mode-social .radio-player {
             width: 360px; height: 380px; 
-            /* Köşeler Düzleşiyor (Bitişiklik İçin) */
+            /* Üst ve Alt Düzleşiyor (Bitişiklik İçin) */
             border-radius: 4px; 
             flex-direction: column; justify-content: center;
             background: rgba(255, 255, 255, 0.03); /* Cam */
             padding: 30px; gap: 30px;
-            /* Alt ve Üst Sınırlar Açık */
+            /* Kenarlık çizgilerini ayarlayalım */
             border-bottom: none; border-top: none; 
         }
 
@@ -305,14 +307,15 @@
             max-height: 70px; min-width: 160px;
         }
 
-        /* Dashboard Modu (Radyonun Tepesine) */
+        /* Dashboard Modu - MUTLAK MERKEZ */
         body.view-mode-social .weather-widget {
-            bottom: 50%; right: 50%; top: auto; /* Top iptal, bottom referanslı */
-            margin-bottom: 190px; /* Radyo Yarım Boy (380/2) = 190px tam sınır */
-            transform: translate(50%, 0); 
+            top: 50%; left: 50%; bottom: auto; right: auto;
+            /* Radyo Yarı Boy (190px) kadar yukarı it */
+            margin-top: -190px;
+            /* Y Ekseni: -100% (Kendi boyu kadar yukarı) */
+            transform: translate(-50%, -100%); 
             
             width: 360px; max-height: 100px;
-            /* Cam Efekti - Diğerleriyle aynı */
             background: rgba(255, 255, 255, 0.03); 
             /* Alt köşe düz (Radyoya yapışık), Üst Oval */
             border-radius: 30px 30px 4px 4px;
