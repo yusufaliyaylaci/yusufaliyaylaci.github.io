@@ -92,7 +92,8 @@ window.addEventListener('wheel', (e) => {
     if(state.isScrolling) return;
     
     if(e.deltaY > 0) { 
-        if(state.stage < 3) { state.stage++; changeStage(); lockScroll(); } 
+        // LİMİTİ 4'E ÇIKARDIK (Hava Durumu Modu için)
+        if(state.stage < 4) { state.stage++; changeStage(); lockScroll(); } 
         else { triggerBump('bump-up'); lockScroll(400); }
     } else { 
         if(state.stage > 0) { state.stage--; changeStage(); lockScroll(); } 
@@ -115,14 +116,16 @@ function changeStage() {
     card.classList.remove("state-album", "state-bio", "state-social");
     card.setAttribute("data-state", state.stage);
     
-    // CSS bu class'ı dinleyerek radyo ve kart görünümünü değiştirecek
+    // RADYO MODU (STAGE 3)
     if(state.stage === 3) document.body.classList.add('view-mode-social');
     else document.body.classList.remove('view-mode-social');
 
+    // HAVA DURUMU MODU (STAGE 4 - YENİ)
+    if(state.stage === 4) document.body.classList.add('view-mode-weather');
+    else document.body.classList.remove('view-mode-weather');
+
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
-    // state-social class'ını artık karta eklemeye gerek yok çünkü kart gizleniyor,
-    // ama HTML attribute olarak kalmasında sakınca yok.
 }
 
 // =========================================
