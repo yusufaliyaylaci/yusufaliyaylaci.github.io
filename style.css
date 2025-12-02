@@ -349,10 +349,6 @@ body.view-mode-social .control-btn { font-size: 1.8rem; }
 body.view-mode-social .play-btn { width: 80px; height: 80px; font-size: 2rem; background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 body.view-mode-social .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
 
-body.view-mode-social .volume-group { justify-content: center; width: 100%; }
-body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; pointer-events: auto; }
-body.view-mode-social .volume-group:hover .vol-slider-wrapper { width: 150px !important; }
-
 /* =========================================
    7. HAVA DURUMU WIDGET
 ========================================= */
@@ -472,9 +468,69 @@ body.view-mode-social .radio-player { cursor: default; }
     .stage-indicators { right: 10px; gap: 10px; }
 }
 
-/* Fotoğraf Geçiş Animasyonu İçin */
-.profile-img.changing {
+/* =========================================
+   ALBÜM ANİMASYONLARI VE YÜKLEME EFEKTİ
+========================================= */
+
+/* --- 1. Yükleme (Loading) LED Efekti --- */
+/* Kart yükleme moduna girdiğinde devreye girer */
+.card.loading-active {
+    border-color: transparent !important; /* Kendi kenarlığını gizle */
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1); /* Hafif dış parlama */
+}
+
+/* Dönen LED Işık (Arka Katman) */
+.card.loading-active::before {
+    content: ''; position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    /* Beyaz ışık gradyanı */
+    background: conic-gradient(transparent 30%, #ffffff 50%, transparent 70%);
+    animation: spin 1.5s linear infinite; /* Hızlı dönüş */
+    z-index: 1; /* İçeriğin arkasında */
+}
+
+/* İç Maske (Ortayı kapatıp sadece kenarı gösterir) */
+.card.loading-active::after {
+    content: ''; position: absolute;
+    inset: 3px; /* Kenarlık kalınlığı */
+    background: rgba(20, 20, 20, 0.9); /* Ortayı koyulaştır */
+    border-radius: 27px; /* Kartın radiusuna uyumlu */
+    z-index: 1;
+}
+
+/* İçeriklerin maskenin üstünde kalmasını sağla */
+.card > * { position: relative; z-index: 5; }
+
+/* --- 2. Fotoğraf Kaydırma (Slide) Efektleri --- */
+.profile-img {
+    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    backface-visibility: hidden;
+}
+
+/* Çıkış Efektleri (Eski Foto) */
+.profile-img.exit-left {
+    transform: translateX(-150%) scale(0.8) !important;
     opacity: 0 !important;
-    transform: translateX(-50%) scale(0.9) !important;
-    transition: all 0.3s ease-in-out;
+}
+.profile-img.exit-right {
+    transform: translateX(150%) scale(0.8) !important;
+    opacity: 0 !important;
+}
+
+/* Hazırlık Aşaması (Yeni fotoyu kenara ışınla - animasyonsuz) */
+.profile-img.preparing {
+    transition: none !important;
+    opacity: 0 !important;
+}
+.profile-img.enter-right {
+    transform: translateX(150%) scale(0.8) !important;
+}
+.profile-img.enter-left {
+    transform: translateX(-150%) scale(0.8) !important;
+}
+
+/* Giriş Efekti (Yeni Foto Sahneye) */
+.profile-img.active-slide {
+    transform: translateX(0) scale(1) !important;
+    opacity: 1 !important;
 }
