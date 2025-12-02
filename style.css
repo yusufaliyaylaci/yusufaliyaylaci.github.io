@@ -108,18 +108,25 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 .indicator-dot.active { background: var(--theme-color, white); transform: scale(1.4); box-shadow: 0 0 10px rgba(255,255,255,0.3); border-color: transparent; }
 
 /* =========================================
-   KART YAPISI
+   KART YAPISI (GÜNCELLENDİ)
 ========================================= */
 .card {
     background-color: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     padding: 40px; border-radius: 30px;
-    text-align: center; width: 360px; height: 380px;
+    text-align: center; 
+    
+    /* GÜNCELLEME BURADA: Kare ve biraz daha küçük */
+    width: 340px; 
+    height: 340px;
+    
     opacity: 0; transform: translateY(30px) scale(1.12);
     transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
     box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: hidden;
 }
+
+/* NOT: Diğer durumlar (album, bio) kendi boyutlarını zaten eziyor, onlara dokunmana gerek yok */
 
 .profile-img {
     position: absolute; top: 35px; left: 50%; transform: translateX(-50%);

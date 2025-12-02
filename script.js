@@ -181,7 +181,6 @@ const CONFIG = {
         "photo5.jpg", 
         "photo6.jpg", 
         "photo7.jpg",
-        
     ], 
     weatherApi: "https://api.open-meteo.com/v1/forecast",
     geoApi: "https://geocoding-api.open-meteo.com/v1/search"
@@ -260,8 +259,7 @@ function createDynamicElements() {
         document.body.appendChild(fsBtn);
     }
 
-    // 2. Şarkı Popup Elementi - DÜZELTME: radio-wrapper içine ekliyoruz
-    // Böylece kartın arkasında (z-index olarak altta) kalabilir.
+    // 2. Şarkı Popup Elementi - GÜNCELLENDİ: radio-wrapper içine ekliyoruz
     const wrapper = document.querySelector('.radio-wrapper');
     if (wrapper && !document.querySelector('.song-popup')) {
         const popup = document.createElement('div');
@@ -317,26 +315,56 @@ window.addEventListener('wheel', (e) => {
 });
 
 function setupClickInteractions() {
+    // 1. Profil Resmine Tıklama
+    const profileImg = document.getElementById("profileImg");
+    if(profileImg) {
+        profileImg.style.cursor = "pointer"; 
+        profileImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(state.stage === 1) {
+                state.stage = 0; // Albüm moduna geç
+                changeStage();
+            }
+        });
+    }
+
+    // 2. Hava Durumu Widget Tıklama
     const wWidget = document.getElementById("weatherWidget");
-    wWidget.addEventListener('click', (e) => {
-        if(wWidget.classList.contains('search-mode')) return;
-        if(state.stage === 4) return;
-        state.stage = 4; changeStage(); e.stopPropagation();
-    });
+    if(wWidget) {
+        wWidget.addEventListener('click', (e) => {
+            if(wWidget.classList.contains('search-mode')) return;
+            if(state.stage === 4) return;
+            state.stage = 4; changeStage(); e.stopPropagation();
+        });
+    }
 
+    // 3. Radyo Player Tıklama
     const rPlayer = document.getElementById("playerBox");
-    rPlayer.addEventListener('click', (e) => {
-        if(e.target.closest('button') || e.target.closest('input')) return;
-        if(state.stage === 3) return;
-        state.stage = 3; changeStage(); e.stopPropagation(); 
-    });
+    if(rPlayer) {
+        rPlayer.addEventListener('click', (e) => {
+            if(e.target.closest('button') || e.target.closest('input')) return;
+            if(state.stage === 3) return;
+            state.stage = 3; changeStage(); e.stopPropagation(); 
+        });
+    }
 
+    // 4. Boşluğa Tıklama (Geri Dönüş Mantığı)
     document.addEventListener('click', (e) => {
+        // Radyo veya Hava Durumu açıkken
         if(state.stage === 3 || state.stage === 4) {
             const insideRadio = e.target.closest('.radio-player');
             const insideWeather = e.target.closest('.weather-widget');
+            
             if(state.stage === 3 && !insideRadio) goDefaultPage();
             if(state.stage === 4 && !insideWeather) goDefaultPage();
+        }
+        
+        // Albüm (Stage 0) açıkken
+        if(state.stage === 0) {
+            const insideCard = e.target.closest('.card');
+            if(!insideCard) {
+                goDefaultPage();
+            }
         }
     });
 }
@@ -449,7 +477,7 @@ function startSongDetectionLoop() {
         }
     }, 30000); 
 
-    // İlk açılışta 3.5 saniye sonra tetikle (hemen pat diye çıkmasın)
+    // İlk açılışta 3.5 saniye sonra tetikle
     setTimeout(() => {
         if(state.stage === 3 && state.isPlaying) triggerPopupSequence();
     }, 3500);
@@ -457,12 +485,10 @@ function startSongDetectionLoop() {
 
 // Popup sürecini iptal eden fonksiyon
 function stopPopupSequence() {
-    // Tüm zamanlayıcıları temizle
     clearTimeout(timers.popupSearch);
     clearTimeout(timers.popupResult);
     clearTimeout(timers.popupClose);
     
-    // Popup'ı kapat
     const popup = document.getElementById('songPopup');
     if(popup) {
         popup.classList.remove('active');
@@ -470,8 +496,7 @@ function stopPopupSequence() {
 }
 
 function triggerPopupSequence() {
-    // Önceki işlem varsa temizle
-    stopPopupSequence();
+    stopPopupSequence(); // Öncekini temizle
 
     const popup = document.getElementById('songPopup');
     if(!popup) return;
@@ -483,23 +508,19 @@ function triggerPopupSequence() {
     // --- AŞAMA 1: ARAMA EFEKTİ ---
     popup.classList.add('active'); // Yukarı fırlar
     
-    // "Dinleniyor..." modunu ayarla
     title.innerText = "Ses Analizi";
     title.style.color = "#aaa";
     song.innerHTML = "Frekans Taranıyor...";
     song.style.color = "white";
     
-    // Dönme efekti ekle
     icon.innerHTML = '<i class="fas fa-compact-disc fa-spin"></i>';
     icon.style.color = "white";
 
     // --- AŞAMA 2: BULMA VE GÖSTERME (3 Saniye Sonra) ---
     timers.popupSearch = setTimeout(() => {
-        // Radyo istasyonunun adını al
         const stationName = CONFIG.stations[state.currentStation].name;
         
-        // Metadata kontrolü (Tarayıcı şarkı verisi yakalayabildi mi?)
-        let displayTitle = "Müzik Yayını"; // Varsayılanı değiştirdik
+        let displayTitle = "Müzik Yayını"; 
         let displayArtist = stationName;
         let foundData = false;
 
@@ -513,11 +534,9 @@ function triggerPopupSequence() {
              }
         }
 
-        // Başlık kısmını güncelle
         title.innerText = foundData ? "Şarkı Bulundu" : "Şu An Yayında";
-        title.style.color = foundData ? "#4caf50" : "var(--theme-color)"; // Bulunduysa yeşil yap
+        title.style.color = foundData ? "#4caf50" : "var(--theme-color)"; 
 
-        // Şarkı ve Sanatçı bilgisini bas
         song.innerHTML = `
             <span style="color:var(--theme-color); font-size:0.85em; display:block; margin-bottom:2px;">
                 ${displayArtist}
@@ -525,16 +544,15 @@ function triggerPopupSequence() {
             ${displayTitle}
         `;
 
-        // İkonu güncelle (Müzik notası)
         icon.innerHTML = '<i class="fas fa-music"></i>';
         icon.style.color = "var(--theme-color)";
 
-        // --- AŞAMA 3: KAPANIŞ (Toplam 8 Saniye Sonra Aşağı İner) ---
+        // --- AŞAMA 3: KAPANIŞ (Toplam 8 Saniye Sonra) ---
         timers.popupClose = setTimeout(() => {
             popup.classList.remove('active');
-        }, 5000); // Sonuç 5 saniye ekranda kalsın
+        }, 5000);
 
-    }, 3000); // 3 saniye "aranıyor" animasyonu sürsün
+    }, 3000); 
 }
 
 function attemptReconnect() {
@@ -553,7 +571,7 @@ function attemptReconnect() {
     }, 5000);
 
     audio.load();
-    audio.play().catch(e => console.log("Otomatik oynatma engellendi veya hata devam ediyor."));
+    audio.play().catch(e => console.log("Otomatik oynatma engellendi."));
 }
 
 function setupVolumeControl() {
@@ -631,9 +649,7 @@ function togglePlay() {
 function triggerChangeStation(direction) {
     if(state.isSwitching) return; 
     
-    // --- YENİ: Radyo değiştiği an aramayı ve popup'ı öldür ---
-    stopPopupSequence();
-    // ---------------------------------------------------------
+    stopPopupSequence(); // Radyo değişince aramayı ve popup'ı iptal et
 
     state.isSwitching = true; 
     clearTimeout(timers.connection);
