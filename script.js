@@ -3,17 +3,78 @@
 // =========================================
 const CONFIG = {
     stations: [
-        { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
-        { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", accent: "#8E2DE2" },
-        { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #1cb5e0, #000046, #1cb5e0, #000046)", accent: "#1cb5e0" },
-        { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM_SC", gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", accent: "#71b280" },
-        { name: "Virgin Radio", url: "https://karnaval.mncdn.com/virginradio/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #AA076B, #61045F, #AA076B, #61045F)", accent: "#f093fb" },
-        { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", accent: "#e52d27" },
-        { name: "Metro FM", url: "https://karnaval.mncdn.com/metrofm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #11998e, #38ef7d, #11998e, #38ef7d)", accent: "#38ef7d" },
-        { name: "Süper FM", url: "https://karnaval.mncdn.com/superfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #FF416C, #FF4B2B, #FF416C, #FF4B2B)", accent: "#FF4B2B" },
-        { name: "Radyo Fenomen", url: "https://listen.radyofenomen.com/fenomen/128/icecast.audio", gradient: "linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045, #833ab4)", accent: "#fd1d1d" },
-        { name: "Joy Türk", url: "https://karnaval.mncdn.com/joyturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #DA22FF, #9733EE, #DA22FF, #9733EE)", accent: "#DA22FF" },
-        { name: "Kafa Radyo", url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #2C3E50, #000000, #2C3E50, #4CA1AF)", accent: "#4CA1AF" }
+        { 
+            name: "Lofi Hip Hop", 
+            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
+            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
+            accent: "#c31432" 
+        },
+        { 
+            name: "Power FM", 
+            url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #000428, #004e92, #000428, #004e92)", 
+            accent: "#004e92" 
+        },
+        { 
+            name: "Virgin Radio", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/VIRGIN_RADIO.mp3", 
+            gradient: "linear-gradient(45deg, #870000, #190a05, #870000, #190a05)", 
+            accent: "#d32f2f" 
+        },
+        { 
+            name: "Metro FM", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3", 
+            gradient: "linear-gradient(45deg, #11998e, #38ef7d, #11998e, #38ef7d)", 
+            accent: "#38ef7d" 
+        },
+        { 
+            name: "Süper FM", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3", 
+            gradient: "linear-gradient(45deg, #FF416C, #FF4B2B, #FF416C, #FF4B2B)", 
+            accent: "#FF4B2B" 
+        },
+        { 
+            name: "Joy FM", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3", 
+            gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", 
+            accent: "#71b280" 
+        },
+        { 
+            name: "Number 1 FM", 
+            url: "https://n10101m.mediatriple.net/numberone", 
+            gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", 
+            accent: "#8E2DE2" 
+        },
+        { 
+            name: "Radyo Fenomen", 
+            url: "https://listen.radyofenomen.com/fenomen/128/icecast.audio", 
+            gradient: "linear-gradient(45deg, #fc4a1a, #f7b733, #fc4a1a, #f7b733)", 
+            accent: "#f7b733" 
+        },
+        { 
+            name: "Show Radyo", 
+            url: "https://windows.showradyo.com.tr/;", 
+            gradient: "linear-gradient(45deg, #8360c3, #2ebf91, #8360c3, #2ebf91)", 
+            accent: "#8360c3" 
+        },
+        { 
+            name: "Power Türk", 
+            url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", 
+            accent: "#e52d27" 
+        },
+        { 
+            name: "Kafa Radyo", 
+            url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
+            accent: "#4CA1AF" 
+        },
+        { 
+            name: "Joy Türk", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK.mp3", 
+            gradient: "linear-gradient(45deg, #DA22FF, #9733EE, #DA22FF, #9733EE)", 
+            accent: "#DA22FF" 
+        }
     ],
     // BURAYA YENİ FOTOĞRAF İSİMLERİNİ EKLEYEBİLİRSİNİZ
     photos: [
