@@ -3,7 +3,13 @@
 // =========================================
 const CONFIG = {
     stations: [
-        // --- Yabancı & Popüler ---
+        { 
+            name: "Lofi Hip Hop", 
+            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
+            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
+            accent: "#c31432" 
+        },
+        // --- Popüler & Yabancı Hit ---
         { 
             name: "Power FM", 
             url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", 
@@ -34,20 +40,8 @@ const CONFIG = {
             gradient: "linear-gradient(45deg, #e53935, #e35d5b, #e53935, #e35d5b)", 
             accent: "#e53935" 
         },
-        { 
-            name: "Power Dance", 
-            url: "https://listen.powerapp.com.tr/powerdance/mpeg/icecast.audio", 
-            gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", 
-            accent: "#f5af19" 
-        },
-        { 
-            name: "Power Gold", 
-            url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", 
-            gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", 
-            accent: "#d4af37" 
-        },
 
-        // --- Türkçe Pop & Hareketli ---
+        // --- Türkçe Pop ---
         { 
             name: "Power Türk", 
             url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", 
@@ -78,14 +72,8 @@ const CONFIG = {
             gradient: "linear-gradient(45deg, #8360c3, #2ebf91, #8360c3, #2ebf91)", 
             accent: "#8360c3" 
         },
-        { 
-            name: "Radyo Viva", 
-            url: "https://windows.radyoviva.com.tr/;", 
-            gradient: "linear-gradient(45deg, #ff9966, #ff5e62, #ff9966, #ff5e62)", 
-            accent: "#ff5e62" 
-        },
 
-        // --- Slow & Romantik & Akustik ---
+        // --- Slow & Romantik & Jazz ---
         { 
             name: "Joy FM", 
             url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3", 
@@ -105,13 +93,65 @@ const CONFIG = {
             accent: "#b0bec5" 
         },
         { 
+            name: "Joy Jazz", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_JAZZ.mp3", 
+            gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", 
+            accent: "#d7ccc8" 
+        },
+        { 
             name: "Number 1 Slow", 
             url: "https://n10101m.mediatriple.net/numberoneslow", 
             gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", 
             accent: "#78909c" 
         },
 
-        // --- Nostalji & Özel ---
+        // --- Dünya Müzikleri & Konsept ---
+        { 
+            name: "Radyo Voyage", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADYO_VOYAGE.mp3", 
+            gradient: "linear-gradient(45deg, #000000, #0f9b0f, #000000, #0f9b0f)", 
+            accent: "#00e676" 
+        },
+        { 
+            name: "Power XL", 
+            url: "https://listen.powerapp.com.tr/powerxl/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #3E5151, #DECBA4, #3E5151, #DECBA4)", 
+            accent: "#DECBA4" 
+        },
+        { 
+            name: "Power Italy", 
+            url: "https://listen.powerapp.com.tr/poweritaly/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #009246, #ffffff, #ce2b37, #009246)", 
+            accent: "#009246" 
+        },
+        { 
+            name: "Power Salsa", 
+            url: "https://listen.powerapp.com.tr/powersalsa/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", 
+            accent: "#ff5722" 
+        },
+
+        // --- Rap & Dance & Gençlik ---
+        { 
+            name: "Fenomen Rap", 
+            url: "https://listen.radyofenomen.com/fenomenrap/128/icecast.audio", 
+            gradient: "linear-gradient(45deg, #000000, #434343, #000000, #434343)", 
+            accent: "#ffffff" 
+        },
+        { 
+            name: "Power Dance", 
+            url: "https://listen.powerapp.com.tr/powerdance/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", 
+            accent: "#f5af19" 
+        },
+        { 
+            name: "Number 1 Deep", 
+            url: "https://n10101m.mediatriple.net/numberonedeephouse", 
+            gradient: "linear-gradient(45deg, #2b5876, #4e4376, #2b5876, #4e4376)", 
+            accent: "#4e4376" 
+        },
+
+        // --- Nostalji ---
         { 
             name: "Retro Türk", 
             url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RETROTURK.mp3", 
@@ -119,16 +159,16 @@ const CONFIG = {
             accent: "#f05053" 
         },
         { 
+            name: "Power Gold", 
+            url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", 
+            accent: "#d4af37" 
+        },
+        { 
             name: "Kafa Radyo", 
             url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
             gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
             accent: "#4CA1AF" 
-        },
-        { 
-            name: "Lofi Hip Hop", 
-            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
-            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
-            accent: "#c31432" 
         }
     ],
     // FOTOĞRAFLAR
@@ -308,7 +348,8 @@ function initRadio() {
     
     updateStatusUI("connecting", "Uydu Bağlantısı Kuruluyor...");
     audio.src = CONFIG.stations[state.currentStation].url;
-    audio.volume = state.lastVolume;
+    // Logaritmik ses başlatma
+    audio.volume = Math.pow(state.lastVolume, 2);
 
     audio.addEventListener('playing', () => {
         clearTimeout(timers.connection);
@@ -368,13 +409,24 @@ function attemptReconnect() {
 function setupVolumeControl() {
     const slider = document.getElementById("volRange");
     const audio = document.getElementById("bgMusic");
+    
+    // UI'ı başlat
     slider.value = state.lastVolume;
     updateVolFill(state.lastVolume);
+
     slider.addEventListener("input", (e) => {
+        // Kullanıcı müdahale edince FADE İPTAL!
+        clearInterval(timers.fade);
+
         const val = parseFloat(e.target.value);
-        audio.volume = val;
         state.lastVolume = val;
+        
+        // Logaritmik ses ayarı (Daha doğal hissettirir)
+        // Slider 0.5 ise Ses 0.25 olur.
+        audio.volume = Math.pow(val, 2);
+        
         updateVolFill(val);
+        
         const icon = document.getElementById("volIcon");
         if(val === 0) icon.className = "fas fa-volume-mute";
         else if(val < 0.5) icon.className = "fas fa-volume-down";
@@ -389,17 +441,24 @@ function updateVolFill(val) {
 
 function toggleMute(e) {
     if(e) e.stopPropagation();
+    
+    // Mute tuşuna basınca da fade iptal
+    clearInterval(timers.fade);
+
     const audio = document.getElementById("bgMusic");
     const slider = document.getElementById("volRange");
-    if(audio.volume > 0) {
-        state.lastVolume = audio.volume; 
+    
+    if(slider.value > 0) {
+        // Sesi Kapat
+        state.lastVolume = parseFloat(slider.value); // Mevcut değeri kaydet
         audio.volume = 0;
         slider.value = 0;
         updateVolFill(0);
         document.getElementById("volIcon").className = "fas fa-volume-mute";
     } else {
+        // Sesi Aç (Geri Yükle)
         let restore = state.lastVolume > 0 ? state.lastVolume : 0.5;
-        audio.volume = restore;
+        audio.volume = Math.pow(restore, 2); // Logaritmik geri yükle
         slider.value = restore;
         updateVolFill(restore);
         document.getElementById("volIcon").className = "fas fa-volume-up";
@@ -454,7 +513,9 @@ function finalizeStationChange(direction) {
     const audio = document.getElementById("bgMusic");
     if(audio) {
         audio.src = CONFIG.stations[state.currentStation].url; audio.load();
-        audio.volume = state.lastVolume;
+        // Geçiş yaparken ses ayarını hatırla
+        audio.volume = Math.pow(state.lastVolume, 2);
+        
         updateStatusUI("connecting", "Bağlanıyor...");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
@@ -484,9 +545,20 @@ function updateStatusUI(statusType, msg, customColor) {
 
 function fadeInMusic() {
     const audio = document.getElementById("bgMusic");
-    const targetVol = state.lastVolume || 0.5;
-    audio.volume = 0; clearInterval(timers.fade);
-    timers.fade = setInterval(() => { if (audio.volume < targetVol - 0.05) audio.volume += 0.02; else { audio.volume = targetVol; clearInterval(timers.fade); } }, 100);
+    // Hedef ses kullanıcının seçtiği son seviyedir
+    const targetVol = Math.pow(state.lastVolume, 2) || 0.25; 
+    
+    audio.volume = 0; 
+    clearInterval(timers.fade);
+    
+    timers.fade = setInterval(() => { 
+        if (audio.volume < targetVol - 0.02) {
+            audio.volume += 0.02; 
+        } else { 
+            audio.volume = targetVol; 
+            clearInterval(timers.fade); 
+        } 
+    }, 100);
 }
 
 function handleConnectionError() {
