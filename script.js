@@ -3,6 +3,12 @@
 // =========================================
 const CONFIG = {
     stations: [
+        { 
+            name: "Lofi Hip Hop", 
+            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
+            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
+            accent: "#c31432" 
+        },
         // --- Popüler & Yabancı Hit ---
         { 
             name: "Power FM", 
@@ -163,12 +169,6 @@ const CONFIG = {
             url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
             gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
             accent: "#4CA1AF" 
-        },
-        { 
-            name: "Lofi Hip Hop", 
-            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
-            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
-            accent: "#c31432" 
         }
     ],
     // FOTOĞRAFLAR
@@ -234,6 +234,9 @@ function startExperience() {
     setupAudioContext();
     initRadio();
     
+    // YENİ: Dokunmatik (Swipe) Kontrolleri Başlat
+    initTouchInteractions();
+    
     setTimeout(() => { togglePlay(); }, 100);
 
     setTimeout(() => {
@@ -259,7 +262,7 @@ function createDynamicElements() {
         document.body.appendChild(fsBtn);
     }
 
-    // 2. Şarkı Popup Elementi - GÜNCELLENDİ: radio-wrapper içine ekliyoruz
+    // 2. Şarkı Popup Elementi
     const wrapper = document.querySelector('.radio-wrapper');
     if (wrapper && !document.querySelector('.song-popup')) {
         const popup = document.createElement('div');
@@ -301,7 +304,7 @@ function setupAudioContext() {
 }
 
 // =========================================
-// 3. ETKİLEŞİM VE SCROLL
+// 3. ETKİLEŞİM VE SCROLL (MOBİL EKLENDİ)
 // =========================================
 window.addEventListener('wheel', (e) => {
     if(state.isScrolling) return;
@@ -313,6 +316,37 @@ window.addEventListener('wheel', (e) => {
         else { triggerBump('bump-down'); lockScroll(400); }
     }
 });
+
+// YENİ: Dokunmatik Kaydırma (Swipe) Algılama
+function initTouchInteractions() {
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        touchStartY = e.changedTouches[0].screenY;
+    }, {passive: false});
+
+    document.addEventListener('touchend', (e) => {
+        if(state.isScrolling) return;
+        
+        touchEndY = e.changedTouches[0].screenY;
+        const diff = touchStartY - touchEndY;
+
+        // Eşik değeri (50px kaydırma yeterli)
+        if(Math.abs(diff) > 50) {
+            // Yukarı Kaydırma (Sonraki Sayfa)
+            if(diff > 0) {
+                 if(state.stage < 4) { state.stage++; changeStage(); lockScroll(); } 
+                 else { triggerBump('bump-up'); lockScroll(400); }
+            } 
+            // Aşağı Kaydırma (Önceki Sayfa)
+            else {
+                 if(state.stage > 0) { state.stage--; changeStage(); lockScroll(); } 
+                 else { triggerBump('bump-down'); lockScroll(400); }
+            }
+        }
+    }, {passive: false});
+}
 
 function setupClickInteractions() {
     // 1. Profil Resmine Tıklama
@@ -395,7 +429,7 @@ function changeStage() {
 function initPageIndicators() {
     const container = document.getElementById("stageIndicators");
     container.innerHTML = "";
-    for(let i = 0; i <= 4; i++) {
+    for(let i = 4; i >= 0; i--) {
         const dot = document.createElement("div");
         dot.className = "indicator-dot";
         if(i === state.stage) dot.classList.add("active");
@@ -408,15 +442,39 @@ function initPageIndicators() {
         
         container.appendChild(dot);
     }
+    // Ters sıralama yaptık ki yukarıdaki indicator 4. sayfayı temsil etsin
 }
 
 function updatePageIndicators() {
     const dots = document.querySelectorAll(".indicator-dot");
+    // İndisleri eşlemek için loop
+    // HTML'e append sırasına göre index 0 en üstte olacak (ki biz 4'ü en üste istiyorsak...)
+    // Basit çözüm: Mevcut yapı yeterli, sadece active class güncellemesi.
     dots.forEach((dot, index) => {
-        if(index === state.stage) dot.classList.add("active");
-        else dot.classList.remove("active");
+        // Dot'lar tersten eklendiği için index mantığını kontrol etmeyelim, 
+        // tıklama eventi zaten doğru stage'i set ediyor.
+        // Görsel güncelleme:
+        // Bu kısım biraz karışık olabilir, en temizi silip baştan oluşturmaktır changeStage içinde.
+        // Ama performans için sadece class update:
+        
+        // Düzeltme: initPageIndicators'da zaten onclick'e stage i veriyoruz.
+        // Ancak update kısmında hangi dot'un hangi stage olduğunu bilmemiz lazım.
+        // Basitlik adına initPageIndicators'ı her stage değişiminde çağırmak yerine
+        // Dotlara data-stage attribute ekleyip ona göre active yapalım.
     });
+    
+    // Daha temiz yöntem:
+    const container = document.getElementById("stageIndicators");
+    container.innerHTML = "";
+    for(let i = 4; i >= 0; i--) { // 4 en üstte, 0 en altta
+        const dot = document.createElement("div");
+        dot.className = "indicator-dot";
+        if(i === state.stage) dot.classList.add("active");
+        dot.onclick = (e) => { e.stopPropagation(); state.stage = i; changeStage(); };
+        container.appendChild(dot);
+    }
 }
+
 
 // =========================================
 // 4. RADYO VE SES KONTROLÜ
