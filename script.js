@@ -3,6 +3,12 @@
 // =========================================
 const CONFIG = {
     stations: [
+        { 
+            name: "Lofi Hip Hop", 
+            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
+            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
+            accent: "#c31432" 
+        },
         // --- Popüler & Yabancı Hit ---
         { 
             name: "Power FM", 
@@ -163,12 +169,6 @@ const CONFIG = {
             url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
             gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
             accent: "#4CA1AF" 
-        },
-        { 
-            name: "Lofi Hip Hop", 
-            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
-            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
-            accent: "#c31432" 
         }
     ],
     // FOTOĞRAFLAR
