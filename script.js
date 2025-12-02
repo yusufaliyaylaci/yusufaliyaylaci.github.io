@@ -206,7 +206,7 @@ let timers = {
     connection: null,
     debounce: null,
     retry: null,
-    detection: null // YENİ
+    detection: null
 };
 
 let audioCtx, analyzer, dataArray;
@@ -215,8 +215,6 @@ let audioCtx, analyzer, dataArray;
 // 2. BAŞLATMA VE ELEMENT OLUŞTURMA
 // =========================================
 function startExperience() {
-    createDynamicElements(); // Butonları ve Popup'ı oluştur
-    
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
     
@@ -226,6 +224,9 @@ function startExperience() {
     
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
+
+    // Elementleri oluştur
+    createDynamicElements(); 
 
     setupAudioContext();
     initRadio();
@@ -255,7 +256,7 @@ function createDynamicElements() {
         document.body.appendChild(fsBtn);
     }
 
-    // 2. Şarkı Popup Elementi (Radio Player'ın içine)
+    // 2. Şarkı Popup Elementi - DÜZELTME: PlayerBox içine ekliyoruz
     const playerBox = document.getElementById('playerBox');
     if (playerBox && !document.querySelector('.song-popup')) {
         const popup = document.createElement('div');
@@ -268,8 +269,8 @@ function createDynamicElements() {
                 <div class="popup-song" id="popupSong">---</div>
             </div>
         `;
-        // Kartın içine ekle (playerBox'ın değil, mainCard'ın)
-        document.getElementById('mainCard').appendChild(popup);
+        // HATA BURADAYDI: Eskiden 'mainCard'a ekliyorduk, şimdi 'playerBox'a.
+        playerBox.appendChild(popup);
     }
 }
 
@@ -351,7 +352,7 @@ function changeStage() {
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
 
-    // Pop-up sadece radyo modunda görünür
+    // Radyo modu değilse popup'ı kapat
     if(state.stage !== 3) {
         document.getElementById('songPopup')?.classList.remove('active');
     }
@@ -408,7 +409,7 @@ function initRadio() {
         updateThemeColors(false);
         
         updateStatusUI("live", "CANLI YAYIN");
-        startSongDetectionLoop(); // Şarkı bulma döngüsünü başlat
+        startSongDetectionLoop(); // TESPİT DÖNGÜSÜNÜ BAŞLAT
         
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playerBox").classList.remove("player-error");
@@ -433,48 +434,53 @@ function initRadio() {
     });
 }
 
-// --- OTOMATİK ŞARKI BULMA SİMÜLASYONU ---
+// --- AKILLI ŞARKI POPUP SİSTEMİ ---
 function startSongDetectionLoop() {
     clearInterval(timers.detection);
-    // Her 30 saniyede bir sistemi tetikle
+    
+    // Her 30 saniyede bir tetikle
     timers.detection = setInterval(() => {
-        // Sadece radyo açıksa (Stage 3) ve çalıyorsa çalışsın
         if(state.stage === 3 && state.isPlaying && !state.isSwitching) {
             triggerPopupSequence();
         }
     }, 30000); 
 
-    // İlk açılışta da tetikle (5 sn sonra)
+    // İlk açılışta 3.5 saniye sonra tetikle (hemen pat diye çıkmasın)
     setTimeout(() => {
         if(state.stage === 3 && state.isPlaying) triggerPopupSequence();
-    }, 5000);
+    }, 3500);
 }
 
 function triggerPopupSequence() {
     const popup = document.getElementById('songPopup');
+    if(!popup) return;
+
     const title = document.getElementById('popupTitle');
     const song = document.getElementById('popupSong');
     const icon = document.querySelector('.popup-icon');
 
-    // 1. Aşama: Dinleme Modu
+    // 1. Aşama: Dinleme Efekti
     popup.classList.add('active');
     title.innerText = "Dinleniyor...";
-    song.innerText = "Analiz Ediliyor";
+    song.innerText = "Yayın Analiz Ediliyor";
     icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-    // 2. Aşama: Şarkı Bulundu (2.5 sn sonra)
+    // 2. Aşama: Sonuç Gösterme (2.5 sn sonra)
     setTimeout(() => {
-        // Tarayıcıdan metadata almaya çalış, yoksa radyo adını yaz
-        let detectedSong = "Radyo Yayını";
-        let detectedArtist = CONFIG.stations[state.currentStation].name;
+        // Radyo adını ve "Canlı" bilgisini göster (Daha gerçekçi durur)
+        const stationName = CONFIG.stations[state.currentStation].name;
+        
+        // Metadata varsa (çok nadir) onu kullan, yoksa fallback kullan
+        let displayTitle = "CANLI PERFORMANS";
+        let displaySubtitle = `${stationName} Yayını`;
 
-        if('mediaSession' in navigator && navigator.mediaSession.metadata) {
-            if(navigator.mediaSession.metadata.title) detectedSong = navigator.mediaSession.metadata.title;
-            if(navigator.mediaSession.metadata.artist) detectedArtist = navigator.mediaSession.metadata.artist;
+        if('mediaSession' in navigator && navigator.mediaSession.metadata && navigator.mediaSession.metadata.title) {
+             displayTitle = navigator.mediaSession.metadata.title;
+             displaySubtitle = navigator.mediaSession.metadata.artist || stationName;
         }
 
-        title.innerText = "Şu An Çalıyor";
-        song.innerHTML = `<span style="color:var(--theme-color)">${detectedArtist}</span><br>${detectedSong}`;
+        title.innerText = "Şu An Yayında";
+        song.innerHTML = `<span style="color:var(--theme-color)">${displaySubtitle}</span><br>${displayTitle}`;
         icon.innerHTML = '<i class="fas fa-music"></i>';
 
         // 3. Aşama: Kapanış (5 sn sonra)
@@ -611,20 +617,17 @@ function updateStatusUI(statusType, msg, customColor) {
     }
 
     const sText = document.getElementById("statusText");
-    
-    // Emojili yapı yerine temizleme
     sText.innerHTML = ""; 
     
     sText.classList.remove("status-connecting", "status-live", "status-retrying");
     
     if(statusType === "connecting") {
         sText.classList.add("status-connecting");
-        // Dinamik 3 nokta animasyonu ekle
         sText.innerHTML = '<div class="connecting-dots"><span></span><span></span><span></span></div>' + msg;
     } 
     else if(statusType === "live") {
         sText.classList.add("status-live");
-        sText.innerText = msg; // Canlı yayın için sadece metin (CSS ile nokta ekliyoruz)
+        sText.innerText = msg; 
     }
     else {
         sText.innerText = msg;
@@ -877,9 +880,11 @@ function initSnow() {
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         if (analyzer && state.isPlaying) {
             try { 
                 analyzer.getByteFrequencyData(dataArray); 
+                
                 let bassSum = dataArray[0] + dataArray[1] + dataArray[2]; 
                 if ((bassSum / 3) > 210) state.kickImpulse = 2.0;
 
@@ -888,12 +893,15 @@ function initSnow() {
                     let visualSum = 0;
                     for(let i = 0; i < 20; i++) visualSum += dataArray[i];
                     let avg = visualSum / 20;
+                    
                     const scaleAmount = 1 + (avg / 255) * 0.05; 
                     player.style.transform = `scale(${scaleAmount})`;
+
                     const color = CONFIG.stations[state.currentStation].accent;
                     const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
                     const shadowSize = 20 + (avg * 0.2);
                     player.style.boxShadow = `0 10px ${shadowSize}px ${color}${shadowOpacity}`;
+
                 } else {
                     const player = document.getElementById("playerBox");
                     if(player.style.transform) player.style.transform = "";
@@ -901,6 +909,7 @@ function initSnow() {
                 }
             } catch(e) {}
         }
+        
         state.kickImpulse *= 0.90; 
         snowflakes.forEach(flake => { flake.update(); flake.draw(); }); 
         requestAnimationFrame(animate);
