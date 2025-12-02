@@ -2,13 +2,14 @@
 // 1. YAPILANDIRMA VE DEĞİŞKENLER
 // =========================================
 const CONFIG = {
-    stations: [
-        { 
+stations: [
+            { 
             name: "Lofi Hip Hop", 
             url: "https://stream.zeno.fm/0r0xa792kwzuv", 
             gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
             accent: "#c31432" 
-        },
+        },    
+    // --- Yabancı & Popüler ---
         { 
             name: "Power FM", 
             url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", 
@@ -28,28 +29,54 @@ const CONFIG = {
             accent: "#38ef7d" 
         },
         { 
-            name: "Süper FM", 
-            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3", 
-            gradient: "linear-gradient(45deg, #FF416C, #FF4B2B, #FF416C, #FF4B2B)", 
-            accent: "#FF4B2B" 
-        },
-        { 
-            name: "Joy FM", 
-            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3", 
-            gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", 
-            accent: "#71b280" 
-        },
-        { 
             name: "Number 1 FM", 
             url: "https://n10101m.mediatriple.net/numberone", 
             gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", 
             accent: "#8E2DE2" 
         },
         { 
-            name: "Radyo Fenomen", 
-            url: "https://listen.radyofenomen.com/fenomen/128/icecast.audio", 
-            gradient: "linear-gradient(45deg, #fc4a1a, #f7b733, #fc4a1a, #f7b733)", 
-            accent: "#f7b733" 
+            name: "Power Pop", 
+            url: "https://listen.powerapp.com.tr/powerpop/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #e53935, #e35d5b, #e53935, #e35d5b)", 
+            accent: "#e53935" 
+        },
+        { 
+            name: "Power Dance", 
+            url: "https://listen.powerapp.com.tr/powerdance/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", 
+            accent: "#f5af19" 
+        },
+        { 
+            name: "Power Gold", 
+            url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", 
+            accent: "#d4af37" 
+        },
+
+        // --- Türkçe Pop & Hareketli ---
+        { 
+            name: "Power Türk", 
+            url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", 
+            accent: "#e52d27" 
+        },
+        { 
+            name: "Süper FM", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3", 
+            gradient: "linear-gradient(45deg, #FF416C, #FF4B2B, #FF416C, #FF4B2B)", 
+            accent: "#FF4B2B" 
+        },
+        { 
+            name: "Joy Türk", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK.mp3", 
+            gradient: "linear-gradient(45deg, #DA22FF, #9733EE, #DA22FF, #9733EE)", 
+            accent: "#DA22FF" 
+        },
+        { 
+            name: "Number 1 Türk", 
+            url: "https://n10101m.mediatriple.net/numberoneturk", 
+            gradient: "linear-gradient(45deg, #00c6ff, #0072ff, #00c6ff, #0072ff)", 
+            accent: "#00c6ff" 
         },
         { 
             name: "Show Radyo", 
@@ -58,22 +85,50 @@ const CONFIG = {
             accent: "#8360c3" 
         },
         { 
-            name: "Power Türk", 
-            url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", 
-            gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", 
-            accent: "#e52d27" 
+            name: "Radyo Viva", 
+            url: "https://windows.radyoviva.com.tr/;", 
+            gradient: "linear-gradient(45deg, #ff9966, #ff5e62, #ff9966, #ff5e62)", 
+            accent: "#ff5e62" 
+        },
+
+        // --- Slow & Romantik & Akustik ---
+        { 
+            name: "Joy FM", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3", 
+            gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", 
+            accent: "#71b280" 
+        },
+        { 
+            name: "Power Love", 
+            url: "https://listen.powerapp.com.tr/powerlove/mpeg/icecast.audio", 
+            gradient: "linear-gradient(45deg, #ff9a9e, #fecfef, #ff9a9e, #fecfef)", 
+            accent: "#ff9a9e" 
+        },
+        { 
+            name: "Joy Türk Akustik", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOYTURK_AKUSTIK.mp3", 
+            gradient: "linear-gradient(45deg, #8e9eab, #eef2f3, #8e9eab, #eef2f3)", 
+            accent: "#b0bec5" 
+        },
+        { 
+            name: "Number 1 Slow", 
+            url: "https://n10101m.mediatriple.net/numberoneslow", 
+            gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", 
+            accent: "#78909c" 
+        },
+
+        // --- Nostalji & Özel ---
+        { 
+            name: "Retro Türk", 
+            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RETROTURK.mp3", 
+            gradient: "linear-gradient(45deg, #e1eec3, #f05053, #e1eec3, #f05053)", 
+            accent: "#f05053" 
         },
         { 
             name: "Kafa Radyo", 
             url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
             gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
             accent: "#4CA1AF" 
-        },
-        { 
-            name: "Joy Türk", 
-            url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK.mp3", 
-            gradient: "linear-gradient(45deg, #DA22FF, #9733EE, #DA22FF, #9733EE)", 
-            accent: "#DA22FF" 
         }
     ],
     // BURAYA YENİ FOTOĞRAF İSİMLERİNİ EKLEYEBİLİRSİNİZ
