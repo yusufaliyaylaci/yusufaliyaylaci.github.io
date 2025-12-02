@@ -173,11 +173,12 @@ body.bump-down.view-mode-social .radio-wrapper { animation: bumpDownRadio 0.4s; 
 .card.state-bio .info-box { top: 40px; transform: scale(1); }
 .card.state-bio .bio-box { top: 130px; opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-/* State 3: Radio Mode (Eski Social Mode) - Ana Kart Gizleme */
+/* State 3: Radio Mode - Ana Kart Gizleme ve YUKARI UÇURMA */
 body.view-mode-social #mainCard {
-    opacity: 0;
-    transform: scale(0.8) translateY(-50px);
+    opacity: 0 !important; /* !important ile JS'in stilini eziyoruz */
+    transform: scale(0.9) translateY(-120vh) rotate(-5deg) !important; /* Ekranın tepesinden dışarı atıyoruz */
     pointer-events: none;
+    filter: blur(10px); /* Giderken bulanıklaşma efekti */
 }
 
 /* =========================================
