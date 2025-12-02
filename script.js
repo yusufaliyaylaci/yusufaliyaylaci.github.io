@@ -206,7 +206,11 @@ let timers = {
     connection: null,
     debounce: null,
     retry: null,
-    detection: null
+    detection: null,
+    // Yeni eklenenler (Popup yönetimi için)
+    popupSearch: null,
+    popupResult: null,
+    popupClose: null
 };
 
 let audioCtx, analyzer, dataArray;
@@ -256,9 +260,10 @@ function createDynamicElements() {
         document.body.appendChild(fsBtn);
     }
 
-    // 2. Şarkı Popup Elementi - DÜZELTME: PlayerBox içine ekliyoruz
-    const playerBox = document.getElementById('playerBox');
-    if (playerBox && !document.querySelector('.song-popup')) {
+    // 2. Şarkı Popup Elementi - DÜZELTME: radio-wrapper içine ekliyoruz
+    // Böylece kartın arkasında (z-index olarak altta) kalabilir.
+    const wrapper = document.querySelector('.radio-wrapper');
+    if (wrapper && !document.querySelector('.song-popup')) {
         const popup = document.createElement('div');
         popup.className = 'song-popup';
         popup.id = 'songPopup';
@@ -269,8 +274,7 @@ function createDynamicElements() {
                 <div class="popup-song" id="popupSong">---</div>
             </div>
         `;
-        // HATA BURADAYDI: Eskiden 'mainCard'a ekliyorduk, şimdi 'playerBox'a.
-        playerBox.appendChild(popup);
+        wrapper.appendChild(popup); 
     }
 }
 
@@ -354,7 +358,7 @@ function changeStage() {
 
     // Radyo modu değilse popup'ı kapat
     if(state.stage !== 3) {
-        document.getElementById('songPopup')?.classList.remove('active');
+        stopPopupSequence();
     }
 
     updatePageIndicators();
@@ -451,7 +455,24 @@ function startSongDetectionLoop() {
     }, 3500);
 }
 
+// Popup sürecini iptal eden fonksiyon
+function stopPopupSequence() {
+    // Tüm zamanlayıcıları temizle
+    clearTimeout(timers.popupSearch);
+    clearTimeout(timers.popupResult);
+    clearTimeout(timers.popupClose);
+    
+    // Popup'ı kapat
+    const popup = document.getElementById('songPopup');
+    if(popup) {
+        popup.classList.remove('active');
+    }
+}
+
 function triggerPopupSequence() {
+    // Önceki işlem varsa temizle
+    stopPopupSequence();
+
     const popup = document.getElementById('songPopup');
     if(!popup) return;
 
@@ -459,8 +480,8 @@ function triggerPopupSequence() {
     const song = document.getElementById('popupSong');
     const icon = document.querySelector('.popup-icon');
 
-    // --- AŞAMA 1: ARAMA EFEKTİ (Yukarıdan İner) ---
-    popup.classList.add('active');
+    // --- AŞAMA 1: ARAMA EFEKTİ ---
+    popup.classList.add('active'); // Yukarı fırlar
     
     // "Dinleniyor..." modunu ayarla
     title.innerText = "Ses Analizi";
@@ -473,12 +494,12 @@ function triggerPopupSequence() {
     icon.style.color = "white";
 
     // --- AŞAMA 2: BULMA VE GÖSTERME (3 Saniye Sonra) ---
-    setTimeout(() => {
+    timers.popupSearch = setTimeout(() => {
         // Radyo istasyonunun adını al
         const stationName = CONFIG.stations[state.currentStation].name;
         
         // Metadata kontrolü (Tarayıcı şarkı verisi yakalayabildi mi?)
-        let displayTitle = "Canlı Yayın";
+        let displayTitle = "Müzik Yayını"; // Varsayılanı değiştirdik
         let displayArtist = stationName;
         let foundData = false;
 
@@ -508,8 +529,8 @@ function triggerPopupSequence() {
         icon.innerHTML = '<i class="fas fa-music"></i>';
         icon.style.color = "var(--theme-color)";
 
-        // --- AŞAMA 3: KAPANIŞ (Toplam 8 Saniye Sonra Yukarı Çıkar) ---
-        setTimeout(() => {
+        // --- AŞAMA 3: KAPANIŞ (Toplam 8 Saniye Sonra Aşağı İner) ---
+        timers.popupClose = setTimeout(() => {
             popup.classList.remove('active');
         }, 5000); // Sonuç 5 saniye ekranda kalsın
 
@@ -609,6 +630,11 @@ function togglePlay() {
 
 function triggerChangeStation(direction) {
     if(state.isSwitching) return; 
+    
+    // --- YENİ: Radyo değiştiği an aramayı ve popup'ı öldür ---
+    stopPopupSequence();
+    // ---------------------------------------------------------
+
     state.isSwitching = true; 
     clearTimeout(timers.connection);
     clearTimeout(timers.retry);
