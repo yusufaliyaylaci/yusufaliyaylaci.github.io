@@ -39,14 +39,39 @@
             <div class="weather-main-info">
                 <span class="weather-temp" id="w-temp">--°</span>
                 <span class="weather-city" id="w-city">Konum...</span>
+                <span class="weather-desc" id="w-desc">Açık</span>
             </div>
             <i class="fas fa-location-arrow weather-icon" id="w-icon"></i>
         </div>
+        
         <div class="weather-details" id="weatherDetails">
             <div class="detail-item"><span>Rüzgar:</span><span id="w-wind">-- km/s</span></div>
             <div class="detail-item"><span>Nem:</span><span id="w-hum">--%</span></div>
             <div class="change-city-text" onclick="enableSearchMode(event)">Şehir değiştir</div>
         </div>
+
+        <div class="extended-info" id="extendedInfo">
+            <div class="graph-container">
+                <h3>Saatlik Tahmin & Yağış</h3>
+                <div class="hourly-graph" id="hourlyGraph">
+                    </div>
+            </div>
+            <div class="extra-grid">
+                <div class="extra-card">
+                    <i class="fas fa-tint"></i>
+                    <div><span id="ex-hum">--%</span><small>Nem</small></div>
+                </div>
+                <div class="extra-card">
+                    <i class="fas fa-wind"></i>
+                    <div><span id="ex-wind">--</span><small>Rüzgar</small></div>
+                </div>
+                <div class="extra-card">
+                    <i class="fas fa-sun"></i>
+                    <div><span id="ex-uv">--</span><small>UV İndeksi</small></div>
+                </div>
+            </div>
+        </div>
+
         <div class="city-search-box" id="citySearchBox">
             <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Ara:</div>
             <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off">
