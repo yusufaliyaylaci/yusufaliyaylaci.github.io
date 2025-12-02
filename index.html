@@ -6,7 +6,6 @@
     <title>Yusuf Ali - Kişisel Blog</title>
     
     <link rel="icon" href="profil.jpg" id="dynamicFavicon">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
@@ -26,7 +25,6 @@
         /* =========================================
            2. ARKA PLAN VE EFEKTLER
         ========================================= */
-        /* Gradyan Arka Planlar */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: 400% 400%;
@@ -37,7 +35,6 @@
         #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* Arka Plan Saati */
         .big-clock-num {
             position: absolute; top: 50%; transform: translateY(-50%);
             font-size: 30vw; font-weight: 800; color: rgba(255, 255, 255, 0.06);
@@ -47,7 +44,6 @@
         #clock-hour { left: 2%; text-align: left; }
         #clock-minute { right: 2%; text-align: right; }
 
-        /* Tarih Göstergesi */
         #date-display {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
             font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
@@ -55,10 +51,8 @@
             font-weight: 300; pointer-events: none;
         }
 
-        /* Kar Efekti */
         #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
-        /* Hata Efektleri (Kırmızı yanıp sönme) */
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, transparent 40%, rgba(200, 0, 0, 0.4) 100%);
@@ -104,26 +98,22 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: hidden;
         }
 
-        /* Profil Resmi */
         .profile-img {
             position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
             width: 140px; height: 140px; border-radius: 50%; object-fit: cover;
             border: 3px solid rgba(255,255,255,0.2); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2;
         }
         
-        /* Metin Alanları */
         .info-box { position: absolute; top: 210px; left: 0; width: 100%; transition: all 1s ease; opacity: 1; }
         .info-box h2 { margin-bottom: 5px; font-weight: 600; font-size: 1.8rem; }
         .info-box .subtitle { font-size: 0.8rem; color: #ccc; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* Biyografi Alanı */
         .bio-box {
             position: absolute; top: 280px; left: 0; width: 100%; padding: 0 30px;
             opacity: 0; transform: translateY(30px); transition: all 1s ease;
         }
         .bio-box p { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; color: #ddd; }
 
-        /* Sosyal Medya İkonları */
         .social-box {
             position: absolute; bottom: 40px; left: 0; width: 100%;
             display: flex; justify-content: center; gap: 15px; transition: all 1s ease;
@@ -142,26 +132,22 @@
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
         .social-btn:hover::before { opacity: 1; }
 
-        /* Albüm Kontrolleri */
         .album-nav {
             position: absolute; top: 50%; transform: translateY(-50%);
             font-size: 2rem; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: 0.5s; z-index: 20;
         }
         .nav-left { left: 20px; } .nav-right { right: 20px; }
 
-        /* --- KART DURUMLARI (SCROLL STATES) --- */
-        /* State 0: Albüm */
+        /* --- KART DURUMLARI --- */
         .card.state-album { width: 800px; height: 600px; }
         .card.state-album .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 30px; border: none; }
         .card.state-album .info-box, .card.state-album .bio-box, .card.state-album .social-box { opacity: 0; pointer-events: none; }
         .card.state-album .album-nav { opacity: 1; pointer-events: auto; }
 
-        /* State 2: Biyografi */
         .card.state-bio .profile-img { width: 80px; height: 80px; top: 30px; opacity: 0.7; }
         .card.state-bio .info-box { top: 120px; transform: scale(0.9); }
         .card.state-bio .bio-box { opacity: 1; transform: translateY(0); top: 200px; }
 
-        /* State 3: Sosyal Medya */
         .card.state-social { width: 500px; height: 500px; }
         .card.state-social .profile-img { width: 60px; height: 60px; top: 20px; opacity: 0.4; }
         .card.state-social .info-box { top: 90px; opacity: 0.4; }
@@ -188,7 +174,6 @@
         .status-container { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
         .status-text { font-size: 0.7rem; color: #aaa; }
         
-        /* Ekolayzer */
         .equalizer { display: flex; gap: 3px; height: 12px; align-items: flex-end; opacity: 0.3; }
         .bar { width: 3px; background-color: #777; height: 2px; transition: all 0.3s; }
         .radio-player.playing .equalizer { opacity: 1; }
@@ -198,7 +183,6 @@
         .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
         @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
 
-        /* Kontroller */
         .controls { display: flex; align-items: center; gap: 15px; }
         .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; }
         .control-btn:hover { opacity: 1; transform: scale(1.15); }
@@ -230,7 +214,6 @@
         .weather-widget:hover .weather-details, .weather-widget.search-mode .weather-details { opacity: 1; transform: translateY(0); }
         .detail-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #ddd; margin-bottom: 6px; }
         
-        /* Arama Kutusu */
         .city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; animation: fadeIn 0.3s ease; position: relative; }
         .weather-widget.search-mode .city-search-box { display: flex; }
         .weather-widget.search-mode .weather-details { display: none; }
@@ -362,9 +345,9 @@
             { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", accent: "#e52d27" }
         ];
         
-        const photos = ["profil.jpg", "profil.jpg"]; // Fotoğraf listesi
+        const photos = ["profil.jpg", "profil.jpg"]; 
         let currentStationIndex = 0;
-        let currentStage = 1; // 0: Album, 1: Profile, 2: Bio, 3: Social
+        let currentStage = 1; 
         let userTimeZone = 'Europe/Istanbul';
         
         // Değişkenler
@@ -377,7 +360,6 @@
         let photoIndex = 0;
         let debounceTimer;
         
-        // Audio Visualizer için değişkenler
         let audioCtx, analyzer, dataArray;
         let kickImpulse = 0;
 
@@ -388,13 +370,11 @@
             const overlay = document.getElementById("overlay");
             if(overlay) overlay.classList.add('slide-down-active');
             
-            // Kart ve UI görünürlüğü
             const card = document.getElementById("mainCard");
             card.style.opacity = "1"; card.style.transform = "translateY(0)"; 
             document.getElementById("footerText").classList.add('copyright-visible');
             document.getElementById("weatherWidget").classList.add('visible');
 
-            // AudioContext'i başlat (Tarayıcı politikaları gereği burada olmalı)
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
@@ -407,12 +387,11 @@
                 dataArray = new Uint8Array(analyzer.frequencyBinCount);
             } catch(e) { console.warn("Audio Context başlatılamadı:", e); }
 
-            // Sistemleri Başlat
             setTimeout(() => {
                 initClock();
                 initRadio();
                 initWeather();
-                initSnow(); // Kar efektini başlat
+                initSnow(); 
                 setCircularFavicon();
             }, 100); 
 
@@ -481,15 +460,23 @@
                 document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
             });
 
+            // HATA YÖNETİMİ (DÜZELTİLDİ: Artık kilitlenmiyor)
             audio.addEventListener('error', () => {
                 handleConnectionError();
                 updateUI("Hata! Geçiliyor...", "red");
-                setTimeout(() => triggerChangeStation(1), 1500);
+                // Normal geçiş fonksiyonu yerine ZORLA geçiş fonksiyonunu çağırıyoruz
+                setTimeout(() => forceSkipStation(), 1500); 
             });
             
-            // İlk açılışta oto-oynatma (izin varsa)
             let playPromise = audio.play();
             if(playPromise !== undefined) playPromise.catch(() => updateUI("Hazır - Oynat'a Bas", "#aaa"));
+        }
+
+        // Yeni Fonksiyon: Hatada kilidi açıp zorla değiştirir
+        function forceSkipStation() {
+            clearInterval(fadeInterval);
+            isSwitching = false; // Kilidi kır
+            finalizeStationChange(1);
         }
 
         function triggerChangeStation(direction) {
@@ -512,7 +499,8 @@
             if(audio) {
                 audio.src = stations[currentStationIndex].url; audio.load();
                 updateUI("Bağlanıyor...", "#fff");
-                connectionTimeout = setTimeout(() => { handleConnectionError(); triggerChangeStation(1); }, 8000);
+                // Timeout süresinde yanıt gelmezse zorla geç
+                connectionTimeout = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
                 audio.play().catch(()=>{});
             }
         }
@@ -520,8 +508,6 @@
         function togglePlay() {
             const audio = document.getElementById("bgMusic");
             if(!audio) return;
-            
-            // Audio Context Resume (Gerekirse)
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
             if (audio.paused) {
@@ -554,7 +540,6 @@
             if (navigator.geolocation) navigator.geolocation.getCurrentPosition((pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude), defaultFail);
             else defaultFail();
             
-            // Şehir Arama Dinleyicisi
             document.getElementById("cityInput")?.addEventListener("input", function() {
                 const query = this.value;
                 clearTimeout(debounceTimer);
@@ -648,7 +633,7 @@
             }, 1200);
         }
 
-        // --- Kar Efekti (Ritim Duyarlı) ---
+        // --- Kar Efekti (Ritim Duyarlı ve Salınımlı) ---
         function initSnow() {
             const canvas = document.getElementById("snowCanvas"); 
             if(!canvas) return;
@@ -659,11 +644,29 @@
             window.addEventListener('resize', resize); resize();
 
             class Snowflake {
-                constructor() { this.reset(); }
-                reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * -canvas.height; this.size = Math.random() * 3 + 1; this.speed = Math.random() * 0.5 + 0.3; this.opacity = Math.random() * 0.5 + 0.3; }
+                constructor() { 
+                    this.reset(); 
+                    // Salınım için başlangıç değerleri
+                    this.angle = Math.random() * Math.PI * 2; 
+                    this.angleSpeed = Math.random() * 0.02 + 0.01;
+                }
+                reset() { 
+                    this.x = Math.random() * canvas.width; 
+                    this.y = Math.random() * -canvas.height; 
+                    this.size = Math.random() * 3 + 1; 
+                    this.speed = Math.random() * 0.5 + 0.3; 
+                    this.opacity = Math.random() * 0.5 + 0.3; 
+                }
                 update() { 
                     this.y += this.speed + kickImpulse; 
+                    
+                    // Trigonometrik Salınım (Sağ-Sol Hareketi)
+                    this.angle += this.angleSpeed;
+                    this.x += Math.cos(this.angle) * 1; 
+
                     if (this.y > canvas.height) this.reset(); 
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.x < 0) this.x = canvas.width;
                 }
                 draw() { ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
             }
@@ -672,7 +675,6 @@
 
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                // Bas Analizi
                 if (analyzer && isPlaying) {
                     try {
                         analyzer.getByteFrequencyData(dataArray);
@@ -687,13 +689,11 @@
             animate();
         }
 
-        // --- Dinamik Favicon ---
         function setCircularFavicon() {
             const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
             img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
         }
         
-        // --- UI Modları ---
         function enableSearchMode(e) { e.stopPropagation(); document.getElementById("weatherWidget").classList.add("search-mode"); document.getElementById("cityInput").focus(); }
         function disableSearchMode(e) { e.stopPropagation(); document.getElementById("weatherWidget").classList.remove("search-mode"); document.getElementById("cityInput").value = ""; }
     </script>
