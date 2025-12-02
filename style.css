@@ -183,7 +183,7 @@ body.view-mode-weather #mainCard {
     padding: 12px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15);
     display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     width: fit-content; min-width: 280px; max-width: 400px; transition: all 0.5s;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, border-color 0.3s;
 }
 
 body:not(.view-mode-social) .radio-player:hover {
@@ -205,15 +205,9 @@ body:not(.view-mode-social) .radio-player:hover {
 .radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
 .radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
 
-/* --- KONTROLLER: Normal Mod (Yatay) --- */
-.controls { 
-    display: flex; align-items: center; gap: 15px; 
-}
-
-/* Ana butonlar grubu (Geri, Oynat, İleri) */
-.main-buttons {
-    display: flex; align-items: center; gap: 15px;
-}
+/* --- KONTROLLER (Yatay) --- */
+.controls { display: flex; align-items: center; gap: 15px; }
+.main-buttons { display: flex; align-items: center; gap: 15px; }
 
 .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; }
 .control-btn:hover { opacity: 1; transform: scale(1.15); }
@@ -223,45 +217,22 @@ body:not(.view-mode-social) .radio-player:hover {
 .radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
 
 /* --- DİNAMİK SES AYARI --- */
-.volume-group {
-    display: flex; align-items: center; position: relative;
-    margin-left: 0; height: 100%;
-}
-.vol-slider-wrapper {
-    width: 0; height: 6px; 
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px; margin-left: 8px; 
-    position: relative;
-    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-    display: flex; align-items: center; opacity: 0; pointer-events: none;
-}
-.volume-group:hover .vol-slider-wrapper {
-    width: 80px; opacity: 1; pointer-events: auto;
-}
-.vol-range {
-    -webkit-appearance: none; width: 100%; height: 100%; background: transparent;
-    position: absolute; z-index: 2; cursor: pointer; top: 0; left: 0; margin: 0;
-}
+.volume-group { display: flex; align-items: center; position: relative; margin-left: 0; height: 100%; }
+.vol-slider-wrapper { width: 0; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-left: 8px; position: relative; transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; display: flex; align-items: center; opacity: 0; pointer-events: none; }
+.volume-group:hover .vol-slider-wrapper { width: 80px; opacity: 1; pointer-events: auto; }
+.vol-range { -webkit-appearance: none; width: 100%; height: 100%; background: transparent; position: absolute; z-index: 2; cursor: pointer; top: 0; left: 0; margin: 0; }
 .vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
-.vol-fill {
-    height: 100%; 
-    background: var(--theme-color, #fff);
-    border-radius: 10px; width: 50%;
-    position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none;
-    transition: background-color 0.5s ease;
-    box-shadow: 0 0 10px rgba(255,255,255,0.3);
-}
+.vol-fill { height: 100%; background: var(--theme-color, #fff); border-radius: 10px; width: 50%; position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; transition: background-color 0.5s ease; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
 /* --- RADYO: TAM EKRAN (MERKEZ) MODU --- */
-body.view-mode-social .volume-group:hover .vol-slider-wrapper {
+body.view-mode-social .radio-wrapper {
     top: 50%; left: 50%; bottom: auto; right: auto;
     transform: translate(-50%, -50%);
-    width: 150px !important; align-items: center; z-index: 60;
+    width: 380px; align-items: center; z-index: 60;
 }
 
-
 body.view-mode-social .radio-player {
-    width: 100%; height: 420px; /* Biraz uzattık */
+    width: 100%; height: 420px;
     flex-direction: column; justify-content: center; gap: 30px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -276,36 +247,18 @@ body.view-mode-social .status-text { font-size: 1rem; }
 body.view-mode-social .equalizer { height: 40px; gap: 6px; opacity: 1; }
 body.view-mode-social .equalizer .bar { width: 6px; background-color: #fff !important; }
 
-/* --- MERKEZ MODU KONTROLLER (Dikey Düzen) --- */
-body.view-mode-social .controls { 
-    flex-direction: column; /* Dikey yap */
-    gap: 25px; 
-    margin-top: 20px; 
-    justify-content: center; width: 100%; 
-}
-
-body.view-mode-social .main-buttons {
-    gap: 40px; /* Buton aralarını aç */
-}
-
+/* Dikey Kontroller */
+body.view-mode-social .controls { flex-direction: column; gap: 25px; margin-top: 20px; justify-content: center; width: 100%; }
+body.view-mode-social .main-buttons { gap: 40px; }
 body.view-mode-social .control-btn { font-size: 1.8rem; }
 body.view-mode-social .play-btn { width: 80px; height: 80px; font-size: 2rem; background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 body.view-mode-social .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
 
-/* Merkez modda ses ayarını ortala ve büyüt */
-body.view-mode-social .volume-group {
-    justify-content: center;
-    width: 100%;
-}
-body.view-mode-social .vol-slider-wrapper {
-    width: 150px; /* Daha geniş slider */
-    opacity: 1; /* Hep görünür olsun mu? Hover'da kalsın dersen opacity 0 kalsın */
-    pointer-events: auto;
-}
-/* Merkezde slider hep görünsün dersen:
-body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; } 
-*/
-
+/* Merkez modda ses ayarını ortala ve geniş tut */
+body.view-mode-social .volume-group { justify-content: center; width: 100%; }
+body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; pointer-events: auto; }
+/* Hoverda daralmasını engelle */
+body.view-mode-social .volume-group:hover .vol-slider-wrapper { width: 150px !important; }
 
 /* =========================================
    7. HAVA DURUMU WIDGET
@@ -317,15 +270,15 @@ body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; }
     display: flex; flex-direction: column; align-items: flex-end; z-index: 20;
     opacity: 0; transform: translateY(-20px); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     overflow: visible; transition: all 1s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease 1s;
-    max-height: 100px; /* Düzeltme */
+    max-height: 100px; 
     min-width: 160px;
 }
 .weather-widget.visible { opacity: 1; transform: translateY(0); }
 .weather-widget:hover, .weather-widget.search-mode { max-height: 400px; background: rgba(20, 20, 20, 0.5); border-color: rgba(255,255,255,0.3); }
 
-/* --- YENİ: WIDGET HOVER EFEKTLERİ --- */
+/* Widget Hover Efekti */
 body:not(.view-mode-weather):not(.view-mode-social) .weather-widget:not(.search-mode):hover {
-    transform: translateY(-5px) scale(1.02); /* Hafif büyüme */
+    transform: translateY(-5px) scale(1.02);
     box-shadow: 0 15px 40px rgba(0,0,0,0.3);
     border-color: rgba(255,255,255,0.3);
 }
@@ -425,9 +378,4 @@ body.view-mode-social .radio-player { cursor: default; }
     body.view-mode-weather .weather-icon { font-size: 4rem; }
     body.view-mode-weather .weather-temp { font-size: 3.5rem; }
     .extra-grid { grid-template-columns: 1fr 1fr; }
-}
-
-.radio-player {
-    /* Mevcut transition'a transform ve box-shadow eklendi */
-    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, border-color 0.3s;
 }

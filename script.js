@@ -25,7 +25,7 @@ let state = {
     photoIndex: 0,
     activeBgLayer: 1,
     kickImpulse: 0,
-    lastVolume: 0.5 // Ses hafızası
+    lastVolume: 0.5
 };
 
 let timers = {
@@ -37,13 +37,12 @@ let timers = {
 let audioCtx, analyzer, dataArray;
 
 // =========================================
-// 2. BAŞLATMA VE AUTOPLAY
+// 2. BAŞLATMA
 // =========================================
 function startExperience() {
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
     
-    // Kartı göster
     const card = document.getElementById("mainCard");
     card.style.opacity = "1"; 
     card.style.transform = "translateY(0) scale(1.12)"; 
@@ -51,26 +50,18 @@ function startExperience() {
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
 
-    // Müzik Analizörünü Hazırla
     setupAudioContext();
-    
-    // Radyoyu yükle ve OYNAT
     initRadio();
     
-    setTimeout(() => {
-        togglePlay(); 
-    }, 100);
+    setTimeout(() => { togglePlay(); }, 100);
 
-    // Diğer bileşenler
     setTimeout(() => {
         initClock();
         initWeather();
         initSnow();
         setCircularFavicon();
-        
-        // YENİ: Tıklama Etkileşimlerini Başlat
         setupClickInteractions();
-        setupVolumeControl(); // Ses kontrolü başlat
+        setupVolumeControl();
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
@@ -91,11 +82,10 @@ function setupAudioContext() {
 }
 
 // =========================================
-// 3. OLAY DİNLEYİCİLERİ (SCROLL & INPUT)
+// 3. ETKİLEŞİM VE SCROLL
 // =========================================
 window.addEventListener('wheel', (e) => {
     if(state.isScrolling) return;
-    
     if(e.deltaY > 0) { 
         if(state.stage < 4) { state.stage++; changeStage(); lockScroll(); } 
         else { triggerBump('bump-up'); lockScroll(400); }
@@ -131,34 +121,23 @@ function setupClickInteractions() {
 }
 
 function goDefaultPage() { state.stage = 1; changeStage(); }
-
-function lockScroll(duration = 1200) {
-    state.isScrolling = true;
-    setTimeout(() => { state.isScrolling = false; }, duration);
-}
-
-function triggerBump(className) {
-    document.body.classList.add(className);
-    setTimeout(() => document.body.classList.remove(className), 400);
-}
+function lockScroll(duration = 1200) { state.isScrolling = true; setTimeout(() => { state.isScrolling = false; }, duration); }
+function triggerBump(className) { document.body.classList.add(className); setTimeout(() => document.body.classList.remove(className), 400); }
 
 function changeStage() {
     const card = document.getElementById("mainCard");
     card.classList.remove("state-album", "state-bio", "state-social");
     card.setAttribute("data-state", state.stage);
     
-    if(state.stage === 3) document.body.classList.add('view-mode-social');
-    else document.body.classList.remove('view-mode-social');
-
-    if(state.stage === 4) document.body.classList.add('view-mode-weather');
-    else document.body.classList.remove('view-mode-weather');
+    if(state.stage === 3) document.body.classList.add('view-mode-social'); else document.body.classList.remove('view-mode-social');
+    if(state.stage === 4) document.body.classList.add('view-mode-weather'); else document.body.classList.remove('view-mode-weather');
 
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
 }
 
 // =========================================
-// 4. RADYO MANTIĞI
+// 4. RADYO VE SES KONTROLÜ
 // =========================================
 function initRadio() {
     const audio = document.getElementById("bgMusic");
@@ -475,7 +454,7 @@ function enableSearchMode(e) { e.stopPropagation(); document.getElementById("wea
 function disableSearchMode(e) { e.stopPropagation(); document.getElementById("weatherWidget").classList.remove("search-mode"); document.getElementById("cityInput").value = ""; }
 
 // =========================================
-// 7. KAR EFEKTİ
+// 7. KAR EFEKTİ VE VISUALIZER
 // =========================================
 function initSnow() {
     const canvas = document.getElementById("snowCanvas"); if(!canvas) return;
@@ -501,9 +480,38 @@ function initSnow() {
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         if (analyzer && state.isPlaying) {
-            try { analyzer.getByteFrequencyData(dataArray); let bassSum = dataArray[0] + dataArray[1] + dataArray[2]; if ((bassSum / 3) > 210) state.kickImpulse = 2.0; } catch(e) {}
+            try { 
+                analyzer.getByteFrequencyData(dataArray); 
+                
+                // Kar Efekti İçin Bass
+                let bassSum = dataArray[0] + dataArray[1] + dataArray[2]; 
+                if ((bassSum / 3) > 210) state.kickImpulse = 2.0;
+
+                // Radyo Visualizer (Sadece Stage 3)
+                if (state.stage === 3) {
+                    const player = document.getElementById("playerBox");
+                    let visualSum = 0;
+                    for(let i = 0; i < 20; i++) visualSum += dataArray[i];
+                    let avg = visualSum / 20;
+                    const color = CONFIG.stations[state.currentStation].accent;
+                    const scaleAmount = 1 + (avg / 255) * 0.05;
+                    const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
+                    const shadowSize = 20 + (avg * 0.2);
+
+                    player.style.transform = `scale(${scaleAmount})`;
+                    player.style.boxShadow = `0 10px ${shadowSize}px ${color}${shadowOpacity}`;
+                    player.style.borderColor = `rgba(255, 255, 255, ${0.1 + (avg/255)*0.5})`;
+                } else {
+                    const player = document.getElementById("playerBox");
+                    if(player.style.transform) player.style.transform = "";
+                    if(player.style.boxShadow) player.style.boxShadow = "";
+                    if(player.style.borderColor) player.style.borderColor = "";
+                }
+            } catch(e) {}
         }
+        
         state.kickImpulse *= 0.90; 
         snowflakes.forEach(flake => { flake.update(); flake.draw(); }); 
         requestAnimationFrame(animate);
