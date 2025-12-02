@@ -8,7 +8,7 @@
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.1);
     --theme-color: #fff;
-    --spin-speed: 30s; /* Varsayılan LED Hızı (Daha yavaş başlatıyoruz) */
+    --spin-speed: 30s;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,12 +19,7 @@ body {
     height: 100vh;
     display: flex; justify-content: center; align-items: center;
     overflow: hidden; color: var(--text-color); position: relative;
-    
-    /* YENİ: Metin Seçimi Engelleme */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
 }
 
 /* =========================================
@@ -77,7 +72,7 @@ body {
 @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
-/* DİKEY (Y-EKSENİ) ZIPLAMA EFEKTLERİ (Geri Döndü) */
+/* DİKEY (Y-EKSENİ) ZIPLAMA EFEKTLERİ */
 @keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
 @keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
 
@@ -88,11 +83,7 @@ body {
 @keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* LED Dönme Animasyonu */
-@keyframes spin { 
-    from { transform: rotate(0deg); } 
-    to { transform: rotate(360deg); } 
-}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 body.bump-up:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 body.bump-down:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpDownCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -115,25 +106,14 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 #overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
 .click-icon { font-size: 2rem; opacity: 0.7; animation: bounce 2s infinite; }
 
-/* SAĞ TARAF SAYFA GÖSTERGELERİ */
-.stage-indicators {
-    position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
-    display: flex; flex-direction: column; gap: 15px; z-index: 100;
-}
-.indicator-dot {
-    width: 10px; height: 10px; background: rgba(255,255,255,0.2);
-    border-radius: 50%; transition: all 0.3s ease; cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.1);
-}
+.stage-indicators { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+.indicator-dot { width: 10px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 50%; transition: all 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
 .indicator-dot:hover { background: rgba(255,255,255,0.5); }
-.indicator-dot.active {
-    background: var(--theme-color, white);
-    transform: scale(1.4);
-    box-shadow: 0 0 10px rgba(255,255,255,0.3);
-    border-color: transparent;
-}
+.indicator-dot.active { background: var(--theme-color, white); transform: scale(1.4); box-shadow: 0 0 10px rgba(255,255,255,0.3); border-color: transparent; }
 
-/* KART YAPISI (DİKEY GEÇİŞLİ) */
+/* =========================================
+   KART YAPISI (DÜZENLENDİ)
+========================================= */
 .card {
     background-color: var(--glass-bg);
     backdrop-filter: blur(20px);
@@ -152,15 +132,27 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 }
 
 .info-box { position: absolute; top: 170px; left: 0; width: 100%; transition: all 0.8s ease; opacity: 1; z-index: 2; }
-.info-box h2 { margin-bottom: 2px; font-weight: 600; font-size: 1.6rem; }
-.info-box .subtitle { font-size: 0.75rem; color: #ccc; letter-spacing: 1px; text-transform: uppercase; }
+/* Biyografi Sayfasındaki Başlık Ayarı */
+.info-box h2 { 
+    margin-bottom: 5px; 
+    font-weight: 700; 
+    font-size: 1.6rem; 
+    letter-spacing: -0.5px;
+    transition: all 0.5s ease;
+}
+.info-box .subtitle { font-size: 0.75rem; color: #ccc; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; }
 
 .bio-box {
-    position: absolute; top: 250px; left: 0; width: 100%; padding: 0 30px;
-    opacity: 0; transform: translateY(30px); /* Dikey gizli */
+    position: absolute; top: 250px; left: 0; width: 100%; padding: 0 40px;
+    opacity: 0; transform: translateY(30px); 
     transition: all 0.8s ease; pointer-events: none;
+    text-align: center;
 }
-.bio-box p { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; color: #ddd; }
+/* Biyografi Yazı Ayarı */
+.bio-box p { 
+    font-size: 1rem; opacity: 0.9; line-height: 1.7; color: #eee; 
+    font-weight: 300;
+}
 
 .album-nav {
     position: absolute; top: 50%; transform: translateY(-50%);
@@ -168,9 +160,12 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 }
 .nav-left { left: 20px; } .nav-right { right: 20px; }
 
+/* Sosyal Medya İkonları */
 .social-box {
     position: absolute; bottom: 50px; left: 0; width: 100%;
-    display: flex; justify-content: center; gap: 12px; transition: all 0.8s ease;
+    display: flex; justify-content: center; gap: 12px; 
+    transition: opacity 0.6s ease, transform 0.6s ease; /* Fade efektleri */
+    opacity: 1;
 }
 .social-btn {
     text-decoration: none; color: white; width: 42px; height: 42px; border-radius: 50%;
@@ -186,26 +181,51 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
 .social-btn:hover::before { opacity: 1; }
 
-/* STATE YÖNETİMİ (DİKEY GEÇİŞLİ) */
-.card.state-album { width: 800px; height: 600px; transform: scale(1); }
-.card.state-album .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 30px; border: none; }
-/* Dikey olarak gizle */
+/* --- STATE 1: ALBÜM MODU (0. SAYFA) --- */
+.card.state-album { 
+    width: 550px; /* Kare boyut */
+    height: 550px; 
+    transform: scale(1); 
+}
+.card.state-album .profile-img { 
+    width: 100%; height: 100%; top: 0; left: 0; 
+    transform: none; border-radius: 30px; border: none; 
+}
+/* Bilgileri gizle */
 .card.state-album .info-box, 
-.card.state-album .bio-box, 
-.card.state-album .social-box { 
-    opacity: 0; pointer-events: none; transform: translateY(50px); 
+.card.state-album .bio-box { 
+    opacity: 0; pointer-events: none; transform: translateY(30px); 
+}
+/* Sosyal medya ikonlarını gizle (Fade Out) */
+.card.state-album .social-box {
+    opacity: 0; pointer-events: none; transform: translateY(20px);
 }
 .card.state-album .album-nav { opacity: 1; pointer-events: auto; }
 
-.card.state-bio { height: 400px; transform: scale(1); }
-.card.state-bio .profile-img { opacity: 0; pointer-events: none; transform: translateY(-50px); }
-.card.state-bio .info-box { top: 40px; transform: scale(1); }
-/* Dikey olarak göster */
-.card.state-bio .bio-box { 
-    top: 130px; opacity: 1; 
-    transform: translateY(0); pointer-events: auto; 
+/* --- STATE 2: BİYOGRAFİ MODU (1. SAYFA) --- */
+.card.state-bio { height: 420px; transform: scale(1); } /* Kart yüksekliği */
+
+/* Profil fotosu YUKARI kayarak kaybolsun */
+.card.state-bio .profile-img { 
+    opacity: 0; pointer-events: none; 
+    transform: translateY(-120px) scale(0.5); /* Düz yukarı */
 }
 
+/* İsim başlığı daha büyük */
+.card.state-bio .info-box { top: 50px; transform: scale(1); }
+.card.state-bio .info-box h2 { font-size: 2.5rem; letter-spacing: -1px; } 
+
+/* Biyografi göster */
+.card.state-bio .bio-box { 
+    top: 150px; opacity: 1; 
+    transform: translateY(0); pointer-events: auto; 
+}
+/* Sosyal medya ikonlarını göster (Fade In) */
+.card.state-bio .social-box {
+    opacity: 1; pointer-events: auto; transform: translateY(0);
+}
+
+/* Diğer State'ler (Radyo & Hava Durumu) */
 body.view-mode-social #mainCard,
 body.view-mode-weather #mainCard {
     opacity: 0 !important;
@@ -235,24 +255,21 @@ body.view-mode-weather #mainCard {
     z-index: 1;
 }
 
-/* LED / SNAKE BORDER EFEKTİ */
 .radio-player::before {
     content: ''; position: absolute;
     width: 200%; height: 200%; 
     background: conic-gradient(transparent 45%, var(--theme-color) 50%, transparent 55%);
     top: -50%; left: -50%;
     z-index: -2;
-    /* Değişken --spin-speed ile kontrol edilir */
     animation: spin var(--spin-speed, 30s) linear infinite;
     opacity: 0; transition: opacity 0.5s;
 }
 
-/* KART ARKAPLANI (CAM EFEKTİ) */
 .radio-player::after {
     content: ''; position: absolute;
     inset: 2px; 
-    background: rgba(30, 30, 30, 0.6); /* Yarı şeffaf */
-    backdrop-filter: blur(35px); /* Buzlu cam */
+    background: rgba(30, 30, 30, 0.6); 
+    backdrop-filter: blur(35px);
     border-radius: 48px;
     z-index: -1;
 }

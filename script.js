@@ -181,8 +181,6 @@ function initRadio() {
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
         document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
-        
-        // Müzik Çalarken Sabit Hız (5s)
         document.documentElement.style.setProperty('--spin-speed', '5s');
     });
 
@@ -254,8 +252,6 @@ function togglePlay() {
                 document.getElementById("playerBox").classList.remove("playing", "active-glow");
                 document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
                 document.title = "Yusuf Ali - Kişisel Blog";
-                
-                // Müzik Durunca Çok Yavaş (30s)
                 document.documentElement.style.setProperty('--spin-speed', '30s');
             }
         }, 100);
