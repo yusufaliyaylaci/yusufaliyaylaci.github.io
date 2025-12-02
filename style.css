@@ -194,6 +194,14 @@ body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.
 }
 .card.state-album .album-nav { opacity: 1; pointer-events: auto; }
 
+/* --- GİRİŞ EKRANI (Varsayılan / Stage 1) İÇİN DÜZELTME --- */
+.card[data-state="1"] .social-box {
+    opacity: 1; 
+    pointer-events: auto; 
+    transform: translateY(0);
+    bottom: 40px;
+}
+
 /* --- STATE 2: BİYOGRAFİ MODU (1. SAYFA) --- */
 .card.state-bio { height: 420px; transform: scale(1); }
 
@@ -462,4 +470,11 @@ body.view-mode-social .radio-player { cursor: default; }
     body.view-mode-weather .weather-temp { font-size: 3.5rem; }
     .extra-grid { grid-template-columns: 1fr 1fr; }
     .stage-indicators { right: 10px; gap: 10px; }
+}
+
+/* Fotoğraf Geçiş Animasyonu İçin */
+.profile-img.changing {
+    opacity: 0 !important;
+    transform: translateX(-50%) scale(0.9) !important;
+    transition: all 0.3s ease-in-out;
 }

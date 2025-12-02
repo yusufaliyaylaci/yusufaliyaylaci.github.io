@@ -354,7 +354,20 @@ function updateThemeColors(isError) {
 
 function nextPhoto() { state.photoIndex = (state.photoIndex + 1) % CONFIG.photos.length; updatePhoto(); }
 function prevPhoto() { state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.length) % CONFIG.photos.length; updatePhoto(); }
-function updatePhoto() { document.getElementById("profileImg").src = CONFIG.photos[state.photoIndex]; }
+
+// YENİLENMİŞ FOTOĞRAF GÜNCELLEME FONKSİYONU
+function updatePhoto() { 
+    const img = document.getElementById("profileImg");
+    img.classList.add("changing"); // Görünmez yap
+    
+    setTimeout(() => {
+        img.src = CONFIG.photos[state.photoIndex]; // Fotoğrafı değiştir
+        
+        img.onload = () => {
+            img.classList.remove("changing"); // Görünür yap
+        };
+    }, 300); // CSS transition süresiyle (0.3s) eşleşmeli
+}
 
 function initClock() {
     function update() {
