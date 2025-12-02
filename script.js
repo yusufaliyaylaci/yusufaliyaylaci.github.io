@@ -3,12 +3,6 @@
 // =========================================
 const CONFIG = {
     stations: [
-        { 
-            name: "Lofi Hip Hop", 
-            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
-            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
-            accent: "#c31432" 
-        },
         // --- Yabancı & Popüler ---
         { 
             name: "Power FM", 
@@ -129,6 +123,12 @@ const CONFIG = {
             url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", 
             gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", 
             accent: "#4CA1AF" 
+        },
+        { 
+            name: "Lofi Hip Hop", 
+            url: "https://stream.zeno.fm/0r0xa792kwzuv", 
+            gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", 
+            accent: "#c31432" 
         }
     ],
     // FOTOĞRAFLAR
@@ -154,6 +154,7 @@ let state = {
     isScrolling: false,
     isPlaying: false,
     isSwitching: false,
+    isRetrying: false,
     photoIndex: 0,
     activeBgLayer: 1,
     kickImpulse: 0,
@@ -163,7 +164,8 @@ let state = {
 let timers = {
     fade: null,
     connection: null,
-    debounce: null
+    debounce: null,
+    retry: null
 };
 
 let audioCtx, analyzer, dataArray;
@@ -279,9 +281,8 @@ function initPageIndicators() {
         dot.className = "indicator-dot";
         if(i === state.stage) dot.classList.add("active");
         
-        // DÜZELTME BURADA YAPILDI
         dot.onclick = (e) => { 
-            e.stopPropagation(); // Tıklamanın arka plana geçmesini engeller
+            e.stopPropagation(); 
             state.stage = i; 
             changeStage(); 
         };
@@ -305,29 +306,63 @@ function initRadio() {
     const audio = document.getElementById("bgMusic");
     if(!audio) return;
     
-    updateUI(CONFIG.stations[state.currentStation].name, "Hazırlanıyor...", "#aaa");
+    updateStatusUI("connecting", "Uydu Bağlantısı Kuruluyor...");
     audio.src = CONFIG.stations[state.currentStation].url;
     audio.volume = state.lastVolume;
 
     audio.addEventListener('playing', () => {
-        clearTimeout(timers.connection); 
-        state.isSwitching = false; 
+        clearTimeout(timers.connection);
+        clearTimeout(timers.retry); 
+        state.isSwitching = false;
+        state.isRetrying = false;
         state.isPlaying = true;
+        
         fadeInMusic(); 
         updateBackground('station'); 
         updateThemeColors(false);
-        updateUI(null, "Canlı Yayın", CONFIG.stations[state.currentStation].accent);
+        
+        updateStatusUI("live", "CANLI YAYIN");
+        
         document.getElementById("playerBox").classList.add("playing", "active-glow");
+        document.getElementById("playerBox").classList.remove("player-error");
         document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
+        
+        document.body.classList.remove("shake-active");
+        
         document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
         document.documentElement.style.setProperty('--spin-speed', '5s');
     });
 
-    audio.addEventListener('error', () => {
-        handleConnectionError();
-        updateUI(null, "Hata! Geçiliyor...", "red");
-        setTimeout(() => forceSkipStation(), 1500); 
+    audio.addEventListener('waiting', () => {
+        if(state.isPlaying && !state.isSwitching) {
+             updateStatusUI("connecting", "Sinyal Aranıyor...");
+        }
     });
+
+    audio.addEventListener('error', (e) => {
+        if(state.isSwitching) return;
+        console.log("Yayın hatası, kurtarma moduna geçiliyor...");
+        attemptReconnect();
+    });
+}
+
+function attemptReconnect() {
+    if(state.isRetrying) return; 
+    state.isRetrying = true;
+
+    const audio = document.getElementById("bgMusic");
+    updateStatusUI("retrying", "Bağlantı Koptu! Tekrar Deneniyor");
+    
+    timers.retry = setTimeout(() => {
+        if(state.isRetrying) {
+            console.log("Bağlantı başarısız, sıradaki istasyona geçiliyor...");
+            handleConnectionError(); 
+            forceSkipStation(); 
+        }
+    }, 5000);
+
+    audio.load();
+    audio.play().catch(e => console.log("Otomatik oynatma engellendi veya hata devam ediyor."));
 }
 
 function setupVolumeControl() {
@@ -380,13 +415,13 @@ function togglePlay() {
         audio.play().catch(() => handleConnectionError());
     } else {
         clearInterval(timers.fade); 
-        updateUI(null, "Durduruluyor...", "#aaa");
+        updateStatusUI(null, "Durduruluyor...", "#aaa");
         
         timers.fade = setInterval(() => {
             if (audio.volume > 0.02) audio.volume -= 0.02;
             else { 
                 audio.pause(); audio.volume = 0; clearInterval(timers.fade); state.isPlaying = false;
-                updateUI(null, "Durduruldu", "#aaa"); 
+                updateStatusUI(null, "Durduruldu", "#aaa"); 
                 updateBackground('default'); updateThemeColors(false);
                 document.getElementById("playerBox").classList.remove("playing", "active-glow");
                 document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
@@ -401,10 +436,11 @@ function triggerChangeStation(direction) {
     if(state.isSwitching) return; 
     state.isSwitching = true; 
     clearTimeout(timers.connection);
+    clearTimeout(timers.retry);
     
     const audio = document.getElementById("bgMusic");
     if(audio && !audio.paused) {
-        updateUI(null, "Değiştiriliyor...", "#f093fb");
+        updateStatusUI("connecting", "Frekans Değiştiriliyor...");
         clearInterval(timers.fade);
         timers.fade = setInterval(() => {
             if (audio.volume > 0.05) audio.volume -= 0.05;
@@ -419,17 +455,30 @@ function finalizeStationChange(direction) {
     if(audio) {
         audio.src = CONFIG.stations[state.currentStation].url; audio.load();
         audio.volume = state.lastVolume;
-        updateUI(CONFIG.stations[state.currentStation].name, "Bağlanıyor...", "#fff");
+        updateStatusUI("connecting", "Bağlanıyor...");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
     }
 }
 
-function updateUI(name, msg, color) {
-    if(name) document.getElementById("stationName").innerText = name;
-    if(msg) {
-        const s = document.getElementById("statusText");
-        s.innerText = msg; s.style.color = color;
+function updateStatusUI(statusType, msg, customColor) {
+    if(CONFIG.stations[state.currentStation].name) {
+        document.getElementById("stationName").innerText = CONFIG.stations[state.currentStation].name;
+    }
+
+    const sText = document.getElementById("statusText");
+    sText.innerText = msg;
+    
+    sText.classList.remove("status-connecting", "status-live", "status-retrying");
+    
+    if(statusType === "connecting") sText.classList.add("status-connecting");
+    else if(statusType === "live") sText.classList.add("status-live");
+    else if(statusType === "retrying") sText.classList.add("status-retrying");
+    
+    if(statusType === "live") {
+        sText.style.color = CONFIG.stations[state.currentStation].accent;
+    } else {
+        sText.style.color = ""; 
     }
 }
 
@@ -442,14 +491,23 @@ function fadeInMusic() {
 
 function handleConnectionError() {
     clearTimeout(timers.connection);
+    clearTimeout(timers.retry);
+    state.isRetrying = false;
+
+    updateStatusUI("error", "Hata! Diğer frekansa geçiliyor...", "red");
+    
     document.getElementById("error-overlay").classList.add('active-error'); 
     document.getElementById("shockwave").classList.add('active-swipe'); 
     document.getElementById("playerBox").classList.add('player-error');
+    
+    document.body.classList.add("shake-active");
+    
     updateBackground('error'); updateThemeColors(true);
     setTimeout(() => {
         document.getElementById("error-overlay").classList.remove('active-error'); 
         document.getElementById("shockwave").classList.remove('active-swipe'); 
         document.getElementById("playerBox").classList.remove('player-error');
+        document.body.classList.remove("shake-active");
     }, 1200);
 }
 
@@ -483,18 +541,17 @@ function updateThemeColors(isError) {
 function nextPhoto() { state.photoIndex = (state.photoIndex + 1) % CONFIG.photos.length; updatePhoto(); }
 function prevPhoto() { state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.length) % CONFIG.photos.length; updatePhoto(); }
 
-// YENİLENMİŞ FOTOĞRAF GÜNCELLEME FONKSİYONU
 function updatePhoto() { 
     const img = document.getElementById("profileImg");
-    img.classList.add("changing"); // Görünmez yap
+    img.classList.add("changing"); 
     
     setTimeout(() => {
-        img.src = CONFIG.photos[state.photoIndex]; // Fotoğrafı değiştir
+        img.src = CONFIG.photos[state.photoIndex]; 
         
         img.onload = () => {
-            img.classList.remove("changing"); // Görünür yap
+            img.classList.remove("changing");
         };
-    }, 300); // CSS transition süresiyle (0.3s) eşleşmeli
+    }, 300); 
 }
 
 function initClock() {
@@ -664,22 +721,18 @@ function initSnow() {
             try { 
                 analyzer.getByteFrequencyData(dataArray); 
                 
-                // Kar Efekti İçin Bass
                 let bassSum = dataArray[0] + dataArray[1] + dataArray[2]; 
                 if ((bassSum / 3) > 210) state.kickImpulse = 2.0;
 
-                // Radyo Visualizer (Sadece Stage 3)
                 if (state.stage === 3) {
                     const player = document.getElementById("playerBox");
                     let visualSum = 0;
                     for(let i = 0; i < 20; i++) visualSum += dataArray[i];
                     let avg = visualSum / 20;
                     
-                    // Zıplama Efekti (Scale)
                     const scaleAmount = 1 + (avg / 255) * 0.05; 
                     player.style.transform = `scale(${scaleAmount})`;
 
-                    // Parlama (Box Shadow)
                     const color = CONFIG.stations[state.currentStation].accent;
                     const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
                     const shadowSize = 20 + (avg * 0.2);
@@ -700,7 +753,6 @@ function initSnow() {
     animate();
 }
 
-// Sağ tık menüsünü engelle
 document.addEventListener('contextmenu', event => event.preventDefault());
 
 function setCircularFavicon() {
