@@ -459,36 +459,61 @@ function triggerPopupSequence() {
     const song = document.getElementById('popupSong');
     const icon = document.querySelector('.popup-icon');
 
-    // 1. Aşama: Dinleme Efekti
+    // --- AŞAMA 1: ARAMA EFEKTİ (Yukarıdan İner) ---
     popup.classList.add('active');
-    title.innerText = "Dinleniyor...";
-    song.innerText = "Yayın Analiz Ediliyor";
-    icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // "Dinleniyor..." modunu ayarla
+    title.innerText = "Ses Analizi";
+    title.style.color = "#aaa";
+    song.innerHTML = "Frekans Taranıyor...";
+    song.style.color = "white";
+    
+    // Dönme efekti ekle
+    icon.innerHTML = '<i class="fas fa-compact-disc fa-spin"></i>';
+    icon.style.color = "white";
 
-    // 2. Aşama: Sonuç Gösterme (2.5 sn sonra)
+    // --- AŞAMA 2: BULMA VE GÖSTERME (3 Saniye Sonra) ---
     setTimeout(() => {
-        // Radyo adını ve "Canlı" bilgisini göster (Daha gerçekçi durur)
+        // Radyo istasyonunun adını al
         const stationName = CONFIG.stations[state.currentStation].name;
         
-        // Metadata varsa (çok nadir) onu kullan, yoksa fallback kullan
-        let displayTitle = "CANLI PERFORMANS";
-        let displaySubtitle = `${stationName} Yayını`;
+        // Metadata kontrolü (Tarayıcı şarkı verisi yakalayabildi mi?)
+        let displayTitle = "Canlı Yayın";
+        let displayArtist = stationName;
+        let foundData = false;
 
-        if('mediaSession' in navigator && navigator.mediaSession.metadata && navigator.mediaSession.metadata.title) {
-             displayTitle = navigator.mediaSession.metadata.title;
-             displaySubtitle = navigator.mediaSession.metadata.artist || stationName;
+        if('mediaSession' in navigator && navigator.mediaSession.metadata) {
+             if(navigator.mediaSession.metadata.title) {
+                 displayTitle = navigator.mediaSession.metadata.title;
+                 foundData = true;
+             }
+             if(navigator.mediaSession.metadata.artist) {
+                 displayArtist = navigator.mediaSession.metadata.artist;
+             }
         }
 
-        title.innerText = "Şu An Yayında";
-        song.innerHTML = `<span style="color:var(--theme-color)">${displaySubtitle}</span><br>${displayTitle}`;
-        icon.innerHTML = '<i class="fas fa-music"></i>';
+        // Başlık kısmını güncelle
+        title.innerText = foundData ? "Şarkı Bulundu" : "Şu An Yayında";
+        title.style.color = foundData ? "#4caf50" : "var(--theme-color)"; // Bulunduysa yeşil yap
 
-        // 3. Aşama: Kapanış (5 sn sonra)
+        // Şarkı ve Sanatçı bilgisini bas
+        song.innerHTML = `
+            <span style="color:var(--theme-color); font-size:0.85em; display:block; margin-bottom:2px;">
+                ${displayArtist}
+            </span>
+            ${displayTitle}
+        `;
+
+        // İkonu güncelle (Müzik notası)
+        icon.innerHTML = '<i class="fas fa-music"></i>';
+        icon.style.color = "var(--theme-color)";
+
+        // --- AŞAMA 3: KAPANIŞ (Toplam 8 Saniye Sonra Yukarı Çıkar) ---
         setTimeout(() => {
             popup.classList.remove('active');
-        }, 5000);
+        }, 5000); // Sonuç 5 saniye ekranda kalsın
 
-    }, 2500);
+    }, 3000); // 3 saniye "aranıyor" animasyonu sürsün
 }
 
 function attemptReconnect() {
