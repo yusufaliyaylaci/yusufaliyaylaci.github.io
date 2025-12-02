@@ -62,7 +62,7 @@ function startExperience() {
         setCircularFavicon();
         setupClickInteractions();
         setupVolumeControl();
-        initPageIndicators(); // Sayfa Noktalarını Başlat
+        initPageIndicators();
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
@@ -136,24 +136,17 @@ function changeStage() {
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
 
-    updatePageIndicators(); // Noktayı güncelle
+    updatePageIndicators();
 }
 
-// YENİ: Sayfa Göstergeleri (Dots)
 function initPageIndicators() {
     const container = document.getElementById("stageIndicators");
     container.innerHTML = "";
-    // Toplam 5 stage var: 0, 1, 2, 3, 4
     for(let i = 0; i <= 4; i++) {
         const dot = document.createElement("div");
         dot.className = "indicator-dot";
         if(i === state.stage) dot.classList.add("active");
-        
-        // Tıklayınca o sayfaya git
-        dot.onclick = () => {
-            state.stage = i;
-            changeStage();
-        };
+        dot.onclick = () => { state.stage = i; changeStage(); };
         container.appendChild(dot);
     }
 }
@@ -189,7 +182,7 @@ function initRadio() {
         document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
         document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
         
-        // Müzik Çalarken Hızlan (5s)
+        // Müzik Çalarken Sabit Hız (5s)
         document.documentElement.style.setProperty('--spin-speed', '5s');
     });
 
@@ -262,8 +255,8 @@ function togglePlay() {
                 document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
                 document.title = "Yusuf Ali - Kişisel Blog";
                 
-                // Müzik Durunca Yavaşla (20s)
-                document.documentElement.style.setProperty('--spin-speed', '20s');
+                // Müzik Durunca Çok Yavaş (30s)
+                document.documentElement.style.setProperty('--spin-speed', '30s');
             }
         }, 100);
     }
@@ -534,11 +527,11 @@ function initSnow() {
                     for(let i = 0; i < 20; i++) visualSum += dataArray[i];
                     let avg = visualSum / 20;
                     
-                    // 1. Zıplama Efekti (Scale) - Geri geldi
+                    // Zıplama Efekti (Scale)
                     const scaleAmount = 1 + (avg / 255) * 0.05; 
                     player.style.transform = `scale(${scaleAmount})`;
 
-                    // 2. Parlama (Box Shadow)
+                    // Parlama (Box Shadow)
                     const color = CONFIG.stations[state.currentStation].accent;
                     const shadowOpacity = Math.floor((avg / 255) * 100).toString(16);
                     const shadowSize = 20 + (avg * 0.2);
@@ -558,6 +551,9 @@ function initSnow() {
     }
     animate();
 }
+
+// Sağ tık menüsünü engelle
+document.addEventListener('contextmenu', event => event.preventDefault());
 
 function setCircularFavicon() {
     const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
