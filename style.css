@@ -477,3 +477,18 @@ body.view-mode-weather .extended-info {
     body.view-mode-weather .weather-temp { font-size: 3.5rem; }
     .extra-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* --- TIKLANABİLİRLİK İMLEÇLERİ (CURSOR) --- */
+
+/* Normal modda widgetlar tıklanabilir görünsün */
+.weather-widget { cursor: pointer; }
+.radio-player { cursor: pointer; }
+
+/* Genişletilmiş modlarda veya arama modunda imleç normal olsun */
+body.view-mode-weather .weather-widget,
+.weather-widget.search-mode { cursor: default; }
+
+body.view-mode-social .radio-player { cursor: default; }
+
+/* Butonların imleci her zaman el işareti kalsın */
+.control-btn, .weather-header, .change-city-text, .suggestion-item { cursor: pointer; }

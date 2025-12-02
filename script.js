@@ -66,6 +66,9 @@ function startExperience() {
         initWeather();
         initSnow();
         setCircularFavicon();
+        
+        // YENİ: Tıklama Etkileşimlerini Başlat
+        setupClickInteractions();
     }, 100); 
 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
@@ -92,7 +95,6 @@ window.addEventListener('wheel', (e) => {
     if(state.isScrolling) return;
     
     if(e.deltaY > 0) { 
-        // LİMİTİ 4'E ÇIKARDIK (Hava Durumu Modu için)
         if(state.stage < 4) { state.stage++; changeStage(); lockScroll(); } 
         else { triggerBump('bump-up'); lockScroll(400); }
     } else { 
@@ -100,6 +102,63 @@ window.addEventListener('wheel', (e) => {
         else { triggerBump('bump-down'); lockScroll(400); }
     }
 });
+
+// YENİ: Tıklama Etkileşimleri (Widget Açma/Kapama)
+function setupClickInteractions() {
+    // 1. HAVA DURUMU WIDGET'INA TIKLAMA
+    const wWidget = document.getElementById("weatherWidget");
+    wWidget.addEventListener('click', (e) => {
+        // Arama yapılıyorsa genişletme yapma
+        if(wWidget.classList.contains('search-mode')) return;
+        // Zaten hava durumu sayfasındaysak işlem yapma
+        if(state.stage === 4) return;
+
+        // Hava Durumu Sayfasına Geç (Stage 4)
+        state.stage = 4;
+        changeStage();
+        e.stopPropagation(); // Tıklamanın body'ye ulaşmasını engelle
+    });
+
+    // 2. RADYO WIDGET'INA TIKLAMA
+    const rPlayer = document.getElementById("playerBox");
+    rPlayer.addEventListener('click', (e) => {
+        // Eğer butonlara (play/pause/next) tıklandıysa sayfayı açma, sadece butonu çalıştır
+        if(e.target.closest('button')) return;
+        
+        // Zaten radyo sayfasındaysak işlem yapma
+        if(state.stage === 3) return;
+
+        // Radyo Sayfasına Geç (Stage 3)
+        state.stage = 3;
+        changeStage();
+        e.stopPropagation(); 
+    });
+
+    // 3. BOŞLUĞA TIKLAMA (GERİ DÖNME)
+    document.addEventListener('click', (e) => {
+        // Sadece genişletilmiş modlardaysak (Radyo veya Hava Durumu) çalışsın
+        if(state.stage === 3 || state.stage === 4) {
+            
+            // Tıklanan yer aktif widget'ın içi mi?
+            const insideRadio = e.target.closest('.radio-player');
+            const insideWeather = e.target.closest('.weather-widget');
+
+            // Eğer Radyo modundaysak ve radyoya tıklanmadıysa -> Varsayılana dön
+            if(state.stage === 3 && !insideRadio) {
+                goDefaultPage();
+            }
+            // Eğer Hava Durumu modundaysak ve widgeta tıklanmadıysa -> Varsayılana dön
+            if(state.stage === 4 && !insideWeather) {
+                goDefaultPage();
+            }
+        }
+    });
+}
+
+function goDefaultPage() {
+    state.stage = 1; // 1. Sayfa (Profil/Varsayılan)
+    changeStage();
+}
 
 function lockScroll(duration = 1200) {
     state.isScrolling = true;
@@ -120,7 +179,7 @@ function changeStage() {
     if(state.stage === 3) document.body.classList.add('view-mode-social');
     else document.body.classList.remove('view-mode-social');
 
-    // HAVA DURUMU MODU (STAGE 4 - YENİ)
+    // HAVA DURUMU MODU (STAGE 4)
     if(state.stage === 4) document.body.classList.add('view-mode-weather');
     else document.body.classList.remove('view-mode-weather');
 
