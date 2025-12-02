@@ -391,13 +391,13 @@ body.view-mode-social .radio-player { cursor: default; }
     body.view-mode-weather .weather-temp { font-size: 3.5rem; }
     .extra-grid { grid-template-columns: 1fr 1fr; }
     .stage-indicators { right: 10px; gap: 10px; }
-    .fullscreen-btn { display: none !important; } /* Mobilde full screen gizle */
+    .fullscreen-btn { display: none !important; }
 }
 
 .profile-img.changing { opacity: 0 !important; transform: translateX(-50%) scale(0.9) !important; transition: all 0.3s ease-in-out; }
 
 /* =========================================
-   YENİ EKLENEN ÖZELLİKLER (FULLSCREEN, DOTS, SHAZAM)
+   YENİ EKLENEN: FULLSCREEN, DOTS, POPUP
 ========================================= */
 
 /* 1. Fullscreen Butonu */
@@ -413,11 +413,7 @@ body.view-mode-social .radio-player { cursor: default; }
 }
 .fullscreen-btn:hover { background: rgba(255, 255, 255, 0.15); opacity: 1; transform: scale(1.1); }
 
-/* 2. Shazam / Şarkı Bul Butonu */
-.shazam-btn { margin-left: 10px; opacity: 0.8 !important; }
-.shazam-btn:hover { color: #00bfff; opacity: 1 !important; }
-
-/* 3. Dinamik 3 Nokta Animasyonu (Loaders) */
+/* 2. Dinamik 3 Nokta Animasyonu */
 .connecting-dots {
     display: inline-flex; align-items: center; height: 12px; gap: 3px; margin-right: 6px;
 }
@@ -428,6 +424,27 @@ body.view-mode-social .radio-player { cursor: default; }
 .connecting-dots span:nth-child(1) { animation-delay: 0.0s; }
 .connecting-dots span:nth-child(2) { animation-delay: 0.2s; height: 60%; }
 .connecting-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* 3. Otomatik Şarkı Popup'ı */
+.song-popup {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    padding: 20px; border-radius: 0 0 30px 30px;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    z-index: 10; display: flex; align-items: center; gap: 15px;
+}
+.song-popup.active { transform: translateY(0); }
+
+.popup-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1.2rem; color: var(--theme-color);
+}
+.popup-content { text-align: left; }
+.popup-title { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+.popup-song { font-size: 0.95rem; font-weight: 600; color: white; line-height: 1.2; }
 
 @keyframes soundWave { 0%, 100% { height: 30%; } 50% { height: 100%; } }
 @keyframes shakeHard {

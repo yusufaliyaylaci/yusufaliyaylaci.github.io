@@ -205,7 +205,8 @@ let timers = {
     fade: null,
     connection: null,
     debounce: null,
-    retry: null
+    retry: null,
+    detection: null // YENİ
 };
 
 let audioCtx, analyzer, dataArray;
@@ -214,7 +215,7 @@ let audioCtx, analyzer, dataArray;
 // 2. BAŞLATMA VE ELEMENT OLUŞTURMA
 // =========================================
 function startExperience() {
-    createDynamicElements(); // Butonları oluştur
+    createDynamicElements(); // Butonları ve Popup'ı oluştur
     
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
@@ -244,7 +245,6 @@ function startExperience() {
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
 }
 
-// Yeni butonları HTML'e enjekte eden fonksiyon
 function createDynamicElements() {
     // 1. Fullscreen Butonu
     if (!document.querySelector('.fullscreen-btn')) {
@@ -255,16 +255,21 @@ function createDynamicElements() {
         document.body.appendChild(fsBtn);
     }
 
-    // 2. Shazam/Şarkı Bul Butonu
-    const volGroup = document.getElementById('volGroup');
-    if (volGroup && !document.querySelector('.shazam-btn')) {
-        const shazamBtn = document.createElement('button');
-        shazamBtn.className = 'control-btn shazam-btn';
-        shazamBtn.innerHTML = '<i class="fas fa-search"></i>';
-        shazamBtn.title = "Çalan Şarkıyı Bul";
-        shazamBtn.onclick = findCurrentSong;
-        // Volume grubunun başına ekle
-        volGroup.parentNode.insertBefore(shazamBtn, volGroup.nextSibling);
+    // 2. Şarkı Popup Elementi (Radio Player'ın içine)
+    const playerBox = document.getElementById('playerBox');
+    if (playerBox && !document.querySelector('.song-popup')) {
+        const popup = document.createElement('div');
+        popup.className = 'song-popup';
+        popup.id = 'songPopup';
+        popup.innerHTML = `
+            <div class="popup-icon"><i class="fas fa-music"></i></div>
+            <div class="popup-content">
+                <div class="popup-title" id="popupTitle">Dinleniyor...</div>
+                <div class="popup-song" id="popupSong">---</div>
+            </div>
+        `;
+        // Kartın içine ekle (playerBox'ın değil, mainCard'ın)
+        document.getElementById('mainCard').appendChild(popup);
     }
 }
 
@@ -276,29 +281,6 @@ function toggleFullScreen() {
         if (document.exitFullscreen) document.exitFullscreen();
         document.querySelector('.fullscreen-btn i').className = 'fas fa-expand';
     }
-}
-
-function findCurrentSong(e) {
-    if(e) e.stopPropagation();
-    
-    // Görsel geri bildirim
-    const btn = document.querySelector('.shazam-btn');
-    const originalIcon = btn.innerHTML;
-    
-    updateStatusUI("connecting", "Şarkı Aranıyor...");
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
-    // 1.5 saniye bekle (dinliyor efekti) sonra Google'da ara
-    setTimeout(() => {
-        const stationName = CONFIG.stations[state.currentStation].name;
-        // Radyo adıyla birlikte "çalma listesi" veya "çalan şarkı" araması yap
-        const query = `${stationName} çalan şarkı playlist`;
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
-        
-        // Eski haline dön
-        btn.innerHTML = originalIcon;
-        if(state.isPlaying) updateStatusUI("live", "CANLI YAYIN");
-    }, 1500);
 }
 
 function setupAudioContext() {
@@ -369,6 +351,11 @@ function changeStage() {
     if(state.stage === 0) card.classList.add("state-album");
     else if(state.stage === 2) card.classList.add("state-bio");
 
+    // Pop-up sadece radyo modunda görünür
+    if(state.stage !== 3) {
+        document.getElementById('songPopup')?.classList.remove('active');
+    }
+
     updatePageIndicators();
 }
 
@@ -421,6 +408,7 @@ function initRadio() {
         updateThemeColors(false);
         
         updateStatusUI("live", "CANLI YAYIN");
+        startSongDetectionLoop(); // Şarkı bulma döngüsünü başlat
         
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playerBox").classList.remove("player-error");
@@ -443,6 +431,58 @@ function initRadio() {
         console.log("Yayın hatası, kurtarma moduna geçiliyor...");
         attemptReconnect();
     });
+}
+
+// --- OTOMATİK ŞARKI BULMA SİMÜLASYONU ---
+function startSongDetectionLoop() {
+    clearInterval(timers.detection);
+    // Her 30 saniyede bir sistemi tetikle
+    timers.detection = setInterval(() => {
+        // Sadece radyo açıksa (Stage 3) ve çalıyorsa çalışsın
+        if(state.stage === 3 && state.isPlaying && !state.isSwitching) {
+            triggerPopupSequence();
+        }
+    }, 30000); 
+
+    // İlk açılışta da tetikle (5 sn sonra)
+    setTimeout(() => {
+        if(state.stage === 3 && state.isPlaying) triggerPopupSequence();
+    }, 5000);
+}
+
+function triggerPopupSequence() {
+    const popup = document.getElementById('songPopup');
+    const title = document.getElementById('popupTitle');
+    const song = document.getElementById('popupSong');
+    const icon = document.querySelector('.popup-icon');
+
+    // 1. Aşama: Dinleme Modu
+    popup.classList.add('active');
+    title.innerText = "Dinleniyor...";
+    song.innerText = "Analiz Ediliyor";
+    icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    // 2. Aşama: Şarkı Bulundu (2.5 sn sonra)
+    setTimeout(() => {
+        // Tarayıcıdan metadata almaya çalış, yoksa radyo adını yaz
+        let detectedSong = "Radyo Yayını";
+        let detectedArtist = CONFIG.stations[state.currentStation].name;
+
+        if('mediaSession' in navigator && navigator.mediaSession.metadata) {
+            if(navigator.mediaSession.metadata.title) detectedSong = navigator.mediaSession.metadata.title;
+            if(navigator.mediaSession.metadata.artist) detectedArtist = navigator.mediaSession.metadata.artist;
+        }
+
+        title.innerText = "Şu An Çalıyor";
+        song.innerHTML = `<span style="color:var(--theme-color)">${detectedArtist}</span><br>${detectedSong}`;
+        icon.innerHTML = '<i class="fas fa-music"></i>';
+
+        // 3. Aşama: Kapanış (5 sn sonra)
+        setTimeout(() => {
+            popup.classList.remove('active');
+        }, 5000);
+
+    }, 2500);
 }
 
 function attemptReconnect() {
