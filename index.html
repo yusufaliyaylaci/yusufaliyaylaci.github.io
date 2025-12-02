@@ -11,7 +11,7 @@
 
     <style>
         /* =========================================
-           1. GENEL SIFIRLAMA VE TEMEL STİLLER
+           1. TEMEL YAPILANDIRMA
         ========================================= */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -22,9 +22,7 @@
             overflow: hidden; color: white; position: relative;
         }
 
-        /* =========================================
-           2. ARKA PLAN VE EFEKTLER
-        ========================================= */
+        /* Arka Plan Gradyan */
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: 400% 400%;
@@ -35,6 +33,7 @@
         #bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
+        /* Arkaplan Saati */
         .big-clock-num {
             position: absolute; top: 50%; transform: translateY(-50%);
             font-size: 30vw; font-weight: 800; color: rgba(255, 255, 255, 0.06);
@@ -44,6 +43,7 @@
         #clock-hour { left: 2%; text-align: left; }
         #clock-minute { right: 2%; text-align: right; }
 
+        /* Tarih */
         #date-display {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
             font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
@@ -51,8 +51,8 @@
             font-weight: 300; pointer-events: none;
         }
 
+        /* Efekt Katmanları */
         #snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-
         #error-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, transparent 40%, rgba(200, 0, 0, 0.4) 100%);
@@ -69,7 +69,7 @@
         @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
 
         /* =========================================
-           3. GİRİŞ EKRANI (OVERLAY)
+           2. GİRİŞ EKRANI
         ========================================= */
         #overlay {
             position: fixed; top: -15vh; left: 0; width: 100%; height: 115vh; padding-top: 15vh;
@@ -88,43 +88,48 @@
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
 
         /* =========================================
-           4. ANA KART BİLEŞENİ
+           3. KART TASARIMI VE STATE SİSTEMİ
         ========================================= */
         .card {
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 30px;
             text-align: center; width: 360px; height: 500px;
-            opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: hidden;
         }
 
+        /* --- İçerik Bileşenleri --- */
         .profile-img {
             position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
             width: 140px; height: 140px; border-radius: 50%; object-fit: cover;
-            border: 3px solid rgba(255,255,255,0.2); transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2;
+            border: 3px solid rgba(255,255,255,0.2); transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2;
         }
         
-        .info-box { position: absolute; top: 210px; left: 0; width: 100%; transition: all 1s ease; opacity: 1; }
+        .info-box { 
+            position: absolute; top: 210px; left: 0; width: 100%; 
+            transition: all 0.8s ease; opacity: 1; z-index: 2;
+        }
         .info-box h2 { margin-bottom: 5px; font-weight: 600; font-size: 1.8rem; }
         .info-box .subtitle { font-size: 0.8rem; color: #ccc; letter-spacing: 1px; text-transform: uppercase; }
 
         .bio-box {
             position: absolute; top: 280px; left: 0; width: 100%; padding: 0 30px;
-            opacity: 0; transform: translateY(30px); transition: all 1s ease;
+            opacity: 0; transform: translateY(30px); transition: all 0.8s ease; pointer-events: none;
         }
         .bio-box p { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; color: #ddd; }
 
         .social-box {
             position: absolute; bottom: 40px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 15px; transition: all 1s ease;
+            display: flex; justify-content: center; gap: 15px; transition: all 0.8s ease;
         }
         .social-btn {
             text-decoration: none; color: white; width: 45px; height: 45px; border-radius: 50%;
             background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center;
-            font-size: 1.2rem; transition: all 0.5s ease; border: 1px solid rgba(255,255,255,0.1);
+            font-size: 1.2rem; transition: all 0.4s ease; border: 1px solid rgba(255,255,255,0.1);
             position: relative; overflow: hidden;
         }
-        .social-text { max-width: 0; overflow: hidden; opacity: 0; transition: all 0.5s; font-size: 0.8rem; margin-left: 0; }
+        .social-text { max-width: 0; overflow: hidden; opacity: 0; transition: all 0.4s; font-size: 0.9rem; margin-left: 0; white-space: nowrap; }
+        
         .social-btn::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(45deg, #f093fb, #f5576c); opacity: 0; transition: opacity 0.3s; z-index: -1;
@@ -132,32 +137,64 @@
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
         .social-btn:hover::before { opacity: 1; }
 
+        /* Albüm Okları */
         .album-nav {
             position: absolute; top: 50%; transform: translateY(-50%);
             font-size: 2rem; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: 0.5s; z-index: 20;
         }
         .nav-left { left: 20px; } .nav-right { right: 20px; }
 
-        /* --- KART DURUMLARI --- */
+        /* --- KART STATE (DURUM) YÖNETİMİ --- */
+        
+        /* STATE 0: ALBÜM MODU (Tam ekran foto) */
         .card.state-album { width: 800px; height: 600px; }
         .card.state-album .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 30px; border: none; }
-        .card.state-album .info-box, .card.state-album .bio-box, .card.state-album .social-box { opacity: 0; pointer-events: none; }
+        .card.state-album .info-box, .card.state-album .bio-box, .card.state-album .social-box { opacity: 0; pointer-events: none; transform: translateY(20px); }
         .card.state-album .album-nav { opacity: 1; pointer-events: auto; }
 
+        /* STATE 1: PROFİL MODU (Varsayılan) */
+        /* CSS yukarıda tanımlı varsayılan değerlerdir */
+
+        /* STATE 2: BİYOGRAFİ MODU */
         .card.state-bio .profile-img { width: 80px; height: 80px; top: 30px; opacity: 0.7; }
         .card.state-bio .info-box { top: 120px; transform: scale(0.9); }
-        .card.state-bio .bio-box { opacity: 1; transform: translateY(0); top: 200px; }
+        .card.state-bio .bio-box { opacity: 1; transform: translateY(0); top: 200px; pointer-events: auto; }
 
-        .card.state-social { width: 500px; height: 500px; }
-        .card.state-social .profile-img { width: 60px; height: 60px; top: 20px; opacity: 0.4; }
-        .card.state-social .info-box { top: 90px; opacity: 0.4; }
-        .card.state-social .bio-box { opacity: 0; }
-        .card.state-social .social-box { bottom: 150px; flex-direction: column; width: 60%; left: 20%; gap: 10px; }
-        .card.state-social .social-btn { width: 100%; height: 60px; border-radius: 15px; justify-content: flex-start; padding-left: 20px; }
-        .card.state-social .social-text { max-width: 200px; opacity: 1; margin-left: 15px; }
+        /* STATE 3: SOSYAL MEDYA MODU (Sadece Butonlar) */
+        .card.state-social { width: 450px; height: 400px; /* Kart boyutu değişiyor */ }
+        
+        /* Profil ve Yazıları GİZLE */
+        .card.state-social .profile-img { 
+            opacity: 0; 
+            transform: translateY(-50px) scale(0.5); /* Yukarı uçup küçülerek kaybol */
+            pointer-events: none; 
+        }
+        .card.state-social .info-box { 
+            opacity: 0; 
+            transform: translateY(-30px); /* Yazılar yukarı uçup kaybol */
+            pointer-events: none; 
+        }
+        .card.state-social .bio-box { opacity: 0; pointer-events: none; }
+
+        /* Sosyal Butonları ORTALA ve GENİŞLET */
+        .card.state-social .social-box { 
+            bottom: auto; top: 50%; transform: translateY(-50%); /* Dikey ortalama */
+            flex-direction: column; /* Alt alta diz */
+            width: 70%; left: 15%; /* Yatay ortalama */
+            gap: 15px; 
+        }
+        .card.state-social .social-btn { 
+            width: 100%; height: 65px; 
+            border-radius: 15px; 
+            justify-content: flex-start; padding-left: 25px; 
+            font-weight: 600;
+        }
+        .card.state-social .social-text { 
+            max-width: 300px; opacity: 1; margin-left: 20px; 
+        }
 
         /* =========================================
-           5. RADYO PLAYER BİLEŞENİ
+           4. RADYO PLAYER
         ========================================= */
         .radio-wrapper { position: fixed; bottom: 30px; right: 30px; z-index: 60; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
         .radio-player {
@@ -190,7 +227,7 @@
         .play-btn:hover { background: rgba(255,255,255,0.2); }
 
         /* =========================================
-           6. HAVA DURUMU BİLEŞENİ
+           5. HAVA DURUMU
         ========================================= */
         .weather-widget {
             position: fixed; top: 30px; right: 30px;
@@ -225,7 +262,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* =========================================
-           7. FOOTER VE MOBİL UYUMLULUK
+           6. FOOTER VE MOBİL
         ========================================= */
         .footer-copyright {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
@@ -334,7 +371,7 @@
 
     <script>
         // =========================================
-        // 1. YAPILANDIRMA VE VERİLER
+        // 1. YAPILANDIRMA
         // =========================================
         const stations = [
             { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
@@ -350,7 +387,6 @@
         let currentStage = 1; 
         let userTimeZone = 'Europe/Istanbul';
         
-        // Değişkenler
         let isScrolling = false;
         let fadeInterval;
         let isSwitching = false;
@@ -364,7 +400,7 @@
         let kickImpulse = 0;
 
         // =========================================
-        // 2. BAŞLATMA VE GİRİŞ (BOOTSTRAP)
+        // 2. SİSTEMLERİ BAŞLAT
         // =========================================
         function startExperience() {
             const overlay = document.getElementById("overlay");
@@ -385,7 +421,7 @@
                 analyzer.connect(audioCtx.destination);
                 analyzer.fftSize = 256;
                 dataArray = new Uint8Array(analyzer.frequencyBinCount);
-            } catch(e) { console.warn("Audio Context başlatılamadı:", e); }
+            } catch(e) { console.warn("Audio Context Hatası:", e); }
 
             setTimeout(() => {
                 initClock();
@@ -399,7 +435,7 @@
         }
 
         // =========================================
-        // 3. SCROLL VE NAVİGASYON SİSTEMİ
+        // 3. SCROLL / KART NAVİGASYON
         // =========================================
         window.addEventListener('wheel', (e) => {
             if(isScrolling) return;
@@ -426,7 +462,7 @@
         function updatePhoto() { document.getElementById("profileImg").src = photos[photoIndex]; }
 
         // =========================================
-        // 4. SAAT SİSTEMİ
+        // 4. SAAT
         // =========================================
         function initClock() {
             function updateClock() {
@@ -444,7 +480,7 @@
         }
 
         // =========================================
-        // 5. RADYO SİSTEMİ
+        // 5. RADYO
         // =========================================
         function initRadio() {
             const audio = document.getElementById("bgMusic");
@@ -460,11 +496,9 @@
                 document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
             });
 
-            // HATA YÖNETİMİ (DÜZELTİLDİ: Artık kilitlenmiyor)
             audio.addEventListener('error', () => {
                 handleConnectionError();
                 updateUI("Hata! Geçiliyor...", "red");
-                // Normal geçiş fonksiyonu yerine ZORLA geçiş fonksiyonunu çağırıyoruz
                 setTimeout(() => forceSkipStation(), 1500); 
             });
             
@@ -472,10 +506,9 @@
             if(playPromise !== undefined) playPromise.catch(() => updateUI("Hazır - Oynat'a Bas", "#aaa"));
         }
 
-        // Yeni Fonksiyon: Hatada kilidi açıp zorla değiştirir
         function forceSkipStation() {
             clearInterval(fadeInterval);
-            isSwitching = false; // Kilidi kır
+            isSwitching = false;
             finalizeStationChange(1);
         }
 
@@ -499,7 +532,6 @@
             if(audio) {
                 audio.src = stations[currentStationIndex].url; audio.load();
                 updateUI("Bağlanıyor...", "#fff");
-                // Timeout süresinde yanıt gelmezse zorla geç
                 connectionTimeout = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
                 audio.play().catch(()=>{});
             }
@@ -533,7 +565,7 @@
         }
 
         // =========================================
-        // 6. HAVA DURUMU SİSTEMİ
+        // 6. HAVA DURUMU
         // =========================================
         function initWeather() {
             const defaultFail = () => updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin");
@@ -596,7 +628,7 @@
         }
 
         // =========================================
-        // 7. YARDIMCI GÖRSEL SİSTEMLER
+        // 7. YARDIMCI FONKSİYONLAR
         // =========================================
         function updateUI(msg, color) {
             document.getElementById("stationName").innerText = stations[currentStationIndex].name;
@@ -633,7 +665,8 @@
             }, 1200);
         }
 
-        // --- Kar Efekti (Ritim Duyarlı ve Salınımlı) ---
+        // --- KAR EFEKTİ GÜNCELLEMESİ ---
+        // Daha gerçekçi süzülme ve rastgelelik eklendi
         function initSnow() {
             const canvas = document.getElementById("snowCanvas"); 
             if(!canvas) return;
@@ -646,9 +679,11 @@
             class Snowflake {
                 constructor() { 
                     this.reset(); 
-                    // Salınım için başlangıç değerleri
+                    // Her kar tanesinin başlangıç açısı ve dönüş hızı rastgele
                     this.angle = Math.random() * Math.PI * 2; 
-                    this.angleSpeed = Math.random() * 0.02 + 0.01;
+                    this.angleSpeed = Math.random() * 0.01 + 0.005; // Daha yavaş dönüş
+                    // Salınım miktarı (ne kadar sağ sol yapacağı) rastgele
+                    this.swing = Math.random() * 1.5 + 0.5; 
                 }
                 reset() { 
                     this.x = Math.random() * canvas.width; 
@@ -660,9 +695,10 @@
                 update() { 
                     this.y += this.speed + kickImpulse; 
                     
-                    // Trigonometrik Salınım (Sağ-Sol Hareketi)
                     this.angle += this.angleSpeed;
-                    this.x += Math.cos(this.angle) * 1; 
+                    // Math.cos * this.swing ile daha doğal ve rastgele bir salınım
+                    // 0.3 katsayısı ile hareketi yumuşattık (çok sert sağ sol yapmasın)
+                    this.x += Math.cos(this.angle) * this.swing * 0.3; 
 
                     if (this.y > canvas.height) this.reset(); 
                     if (this.x > canvas.width) this.x = 0;
