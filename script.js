@@ -157,6 +157,8 @@ function initRadio() {
         updateUI(null, "Canlı Yayın", CONFIG.stations[state.currentStation].accent);
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playIcon").classList.replace("fa-play", "fa-pause");
+        // Sekme Başlığı Güncelle
+        document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
     });
 
     audio.addEventListener('error', () => {
@@ -226,6 +228,8 @@ function togglePlay() {
                 updateBackground('default'); updateThemeColors(false);
                 document.getElementById("playerBox").classList.remove("playing", "active-glow");
                 document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
+                // Başlığı eski haline getir
+                document.title = "Yusuf Ali - Kişisel Blog";
             }
         }, 100);
     }
@@ -256,6 +260,8 @@ function finalizeStationChange(direction) {
         updateUI(CONFIG.stations[state.currentStation].name, "Bağlanıyor...", "#fff");
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
+        // Başlığı güncelle
+        document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
     }
 }
 
@@ -501,9 +507,9 @@ function initSnow() {
                     player.style.transform = `scale(${scaleAmount})`;
 
                     // 2. LED Dönüş Hızı (Bass vurunca hızlan, yoksa yavaşla)
-                    // Normalde 60s, ağır kickte 2s'e düşsün
-                    let targetSpeed = 60; // Varsayılan çok yavaş
-                    if (avg > 180) targetSpeed = 2; // Bass vurduğunda hızlan
+                    // Varsayılan 20sn (çok yavaş). Bass vurunca (avg > 170) 0.5sn'ye düşüyor (hızlanıyor)
+                    let targetSpeed = 20; 
+                    if (avg > 170) targetSpeed = 0.5; 
                     
                     player.style.setProperty('--spin-speed', `${targetSpeed}s`);
 
