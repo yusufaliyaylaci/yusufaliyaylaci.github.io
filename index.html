@@ -67,16 +67,43 @@
         @keyframes swipeLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         @keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
 
-        /* Esneme Animasyonları */
-        @keyframes bumpUp { 0% { transform: translateY(0) scale(1.1); } 50% { transform: translateY(-30px) scale(1.1); } 100% { transform: translateY(0) scale(1.1); } }
-        @keyframes bumpDown { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
-        .bump-up-anim { animation: bumpUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .bump-down-anim { animation: bumpDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* --- GLOBAL ESNEME ANİMASYONLARI --- */
+        /* Normal Kart Esnemesi */
+        @keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
+        @keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
 
-        /* Visualizer Animasyonu */
+        /* Dashboard Modu Esnemesi (Merkezdeki elemanlar için) */
+        @keyframes bumpUpDash { 0% { transform: translate(50%, -50%); } 50% { transform: translate(50%, -80px); } 100% { transform: translate(50%, -50%); } }
+        @keyframes bumpDownDash { 0% { transform: translate(50%, -50%); } 50% { transform: translate(50%, -20px); } 100% { transform: translate(50%, -50%); } }
+        
+        /* Hava Durumu Özel Esnemesi (Zaten yukarıda olduğu için koordinatları farklı) */
+        @keyframes bumpUpWeather { 0% { transform: translate(50%, -290px); } 50% { transform: translate(50%, -320px); } 100% { transform: translate(50%, -290px); } }
+        @keyframes bumpDownWeather { 0% { transform: translate(50%, -290px); } 50% { transform: translate(50%, -260px); } 100% { transform: translate(50%, -290px); } }
+
+        /* Visualizer Özel Esnemesi (Radyoya yapışık) */
+        @keyframes bumpUpVis { 0% { transform: translate(-50%, 190px); } 50% { transform: translate(-50%, 160px); } 100% { transform: translate(-50%, 190px); } }
+        @keyframes bumpDownVis { 0% { transform: translate(-50%, 190px); } 50% { transform: translate(-50%, 220px); } 100% { transform: translate(-50%, 190px); } }
+
+        /* Animasyon Tetikleyiciler */
+        /* Sayfa 0-2 arası Kart Esnemesi */
+        body.bump-up .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        body.bump-down .card { animation: bumpDownCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        /* Sayfa 3 (Dashboard) Esnemesi */
+        body.bump-up.view-mode-social .radio-wrapper { animation: bumpUpDash 0.4s; }
+        body.bump-down.view-mode-social .radio-wrapper { animation: bumpDownDash 0.4s; }
+        
+        body.bump-up.view-mode-social .weather-widget { animation: bumpUpWeather 0.4s; }
+        body.bump-down.view-mode-social .weather-widget { animation: bumpDownWeather 0.4s; }
+
+        body.bump-up.view-mode-social .card.state-social .social-box { animation: bumpUpVis 0.4s; }
+        body.bump-down.view-mode-social .card.state-social .social-box { animation: bumpDownVis 0.4s; }
+
+
+        /* Visualizer Beat Animasyonu */
         @keyframes visualizerBeat {
-            0%, 100% { height: 50px; transform: scaleY(1); }
-            50% { height: 70px; transform: scaleY(1.2); background: rgba(255,255,255,0.15); }
+            0%, 100% { height: 30px; background: rgba(255,255,255,0.05); }
+            50% { height: 60px; background: rgba(255,255,255,0.2); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
         }
 
         /* =========================================
@@ -127,7 +154,7 @@
         }
         .bio-box p { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; color: #ddd; }
         
-        /* Sosyal Medya Kutusu (Normal) */
+        /* Sosyal Medya Kutusu (Normal Hali) */
         .social-box {
             position: absolute; bottom: 50px; left: 0; width: 100%;
             display: flex; justify-content: center; gap: 12px; transition: all 0.8s ease;
@@ -145,7 +172,6 @@
         }
         .social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
         .social-btn:hover::before { opacity: 1; }
-        
         .album-nav {
             position: absolute; top: 50%; transform: translateY(-50%);
             font-size: 2rem; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: 0.5s; z-index: 20;
@@ -163,7 +189,7 @@
         .card.state-bio .info-box { top: 40px; transform: scale(1); }
         .card.state-bio .bio-box { top: 130px; opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-        /* STATE 3: DASHBOARD (Şeffaf Kart Modu) */
+        /* STATE 3: DASHBOARD (Kart Görünmez) */
         .card.state-social { 
             width: 100%; height: 100%; background-color: transparent; border-color: transparent; 
             backdrop-filter: blur(0px); box-shadow: none; pointer-events: none; transform: scale(1);
@@ -171,32 +197,40 @@
         .card.state-social .bio-box { opacity: 0; transform: translateY(-50px); pointer-events: none; }
         .card.state-social .profile-img, .card.state-social .info-box { opacity: 0; pointer-events: none; }
 
-        /* --- DASHBOARD İKONLARI (Visualizer - EN ALTTA) --- */
+        /* --- VISUALIZER MODU (Radyonun Altına Bütünleşik) --- */
         .card.state-social .social-box { 
             bottom: auto; top: 50%; left: 50%; 
-            /* Y Ekseni: +250px aşağı kaydır (Radyonun altına) */
-            transform: translate(-50%, 250px); 
-            gap: 15px; pointer-events: auto;
-            width: 360px; height: 80px;
-            align-items: flex-start; /* Yukarıdan aşağı sarksın veya tabandan büyüsün */
+            /* Radyonun altına yapışık (Yarı yükseklik + pay) */
+            transform: translate(-50%, 190px); 
+            gap: 10px; pointer-events: auto;
+            width: 320px; height: auto;
+            align-items: flex-start; /* Yukarıdan aşağı sark */
         }
         .card.state-social .social-btn {
-            width: 100%; height: 50px; 
-            border-radius: 10px; font-size: 1.5rem; 
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-            animation: visualizerBeat 1s infinite alternate ease-in-out;
+            width: 100%; height: 40px; 
+            /* Üst köşeleri düz yap ki radyoya yapışık dursun */
+            border-top-left-radius: 0; border-top-right-radius: 0;
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            font-size: 1.5rem; border-top: none;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            animation: visualizerBeat 1.2s infinite alternate ease-in-out;
+            transition: all 0.3s;
         }
         .card.state-social .social-btn:nth-child(1) { animation-delay: 0s; }
-        .card.state-social .social-btn:nth-child(2) { animation-delay: 0.3s; }
-        .card.state-social .social-btn:nth-child(3) { animation-delay: 0.6s; }
-        .card.state-social .social-btn:hover { background: rgba(255,255,255,0.3); transform: scaleY(1.1); animation-play-state: paused; }
+        .card.state-social .social-btn:nth-child(2) { animation-delay: 0.4s; }
+        .card.state-social .social-btn:nth-child(3) { animation-delay: 0.8s; }
+        .card.state-social .social-btn:hover { 
+            background: rgba(255,255,255,0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            height: 80px; /* Hoverda uzasın */
+            animation-play-state: paused; 
+        }
         .card.state-social .social-text { display: none; }
 
         /* =========================================
            4. DASHBOARD BİLEŞENLERİ (Radyo & Hava)
         ========================================= */
         
-        /* --- RADYO (ORTADA / MERKEZDE) --- */
+        /* --- RADYO --- */
         .radio-wrapper { 
             position: fixed; bottom: 30px; right: 30px; z-index: 60; 
             display: flex; flex-direction: column; align-items: flex-end; gap: 10px; 
@@ -205,8 +239,8 @@
         
         body.view-mode-social .radio-wrapper {
             bottom: 50%; right: 50%; 
-            transform: translate(50%, 50%); /* Tam Merkeze */
-            align-items: center; width: 360px;
+            transform: translate(50%, -50%); /* Tam Merkezde */
+            align-items: center; width: 360px; z-index: 50;
         }
 
         .radio-player {
@@ -216,12 +250,13 @@
             width: fit-content; min-width: 280px; max-width: 400px; transition: all 0.5s;
         }
         
-        /* Dashboard Radyo Stili */
         body.view-mode-social .radio-player {
             width: 360px; height: 380px; 
             border-radius: 30px; 
+            /* Alt köşe düzleşsin mi? Hayır, oval kalsın, visualizer altından çıksın */
             flex-direction: column; justify-content: center;
-            background: rgba(255, 255, 255, 0.05); padding: 30px; gap: 30px;
+            background: rgba(255, 255, 255, 0.03); /* Cam Efekti */
+            padding: 30px; gap: 30px;
         }
 
         body.view-mode-social .radio-info { text-align: center; align-items: center; width: 100%; flex-grow: 0; }
@@ -254,7 +289,7 @@
         .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; display: flex; align-items: center; justify-content: center; }
         .play-btn:hover { background: rgba(255,255,255,0.2); }
 
-        /* --- HAVA DURUMU (EN ÜSTTE) --- */
+        /* --- HAVA DURUMU (Radyonun ÜZERİNDE) --- */
         .weather-widget {
             position: fixed; top: 30px; right: 30px;
             background: rgba(20, 20, 20, 0.4); backdrop-filter: blur(25px);
@@ -265,13 +300,14 @@
             max-height: 70px; min-width: 160px;
         }
 
-        /* Dashboard Modu (En Üste Taşı) */
+        /* Dashboard Modu (Radyo'nun Arkasında Kalmaması İçin Yukarı Taşıdık) */
         body.view-mode-social .weather-widget {
             top: 50%; right: 50%;
-            /* Radyonun Üzerine (-260px yukarı) */
-            transform: translate(50%, -260px); 
+            /* Radyo Merkez (-50%) olduğu için Radyo üst sınırı yaklaşık -190px. Biz -290px'e çıkarıyoruz. */
+            transform: translate(50%, -290px); 
             width: 360px; max-height: 200px;
-            background: rgba(20, 20, 20, 0.8); border-radius: 20px; align-items: center;
+            /* Rengi diğer kartlarla eşitledik */
+            background: rgba(255, 255, 255, 0.03); border-radius: 20px; align-items: center;
         }
         
         body.view-mode-social .weather-header { justify-content: space-between; width: 100%; margin-bottom: 5px; flex-direction: row-reverse; }
@@ -466,16 +502,16 @@
                 if(currentStage < 3) { 
                     currentStage++; changeStage(); lockScroll(); 
                 } else {
-                    card.classList.add('bump-up-anim');
-                    setTimeout(() => card.classList.remove('bump-up-anim'), 400);
+                    document.body.classList.add('bump-up');
+                    setTimeout(() => document.body.classList.remove('bump-up'), 400);
                     lockScroll(400);
                 }
             } else { 
                 if(currentStage > 0) { 
                     currentStage--; changeStage(); lockScroll(); 
                 } else {
-                    card.classList.add('bump-down-anim');
-                    setTimeout(() => card.classList.remove('bump-down-anim'), 400);
+                    document.body.classList.add('bump-down');
+                    setTimeout(() => document.body.classList.remove('bump-down'), 400);
                     lockScroll(400);
                 }
             }
