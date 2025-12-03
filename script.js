@@ -225,7 +225,8 @@ function startExperience() {
     setupAudioContext();
     initRadio();
     initTouchInteractions();
-    
+    initOnlineCounter();
+
     setTimeout(() => { togglePlay(); }, 100);
 
     setTimeout(() => {
@@ -967,4 +968,32 @@ document.addEventListener('contextmenu', event => event.preventDefault());
 function setCircularFavicon() {
     const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
     img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
+}
+
+// =========================================
+// 8. ONLINE KULLANICI SİMÜLASYONU
+// =========================================
+function initOnlineCounter() {
+    const counterEl = document.getElementById("onlineCount");
+    // Başlangıç için rastgele bir sayı (12 ile 25 arası)
+    let currentCount = Math.floor(Math.random() * (25 - 12 + 1)) + 12;
+    counterEl.innerText = currentCount;
+
+    // Her 3 ile 8 saniye arasında sayıyı güncelle
+    function updateCount() {
+        const change = Math.random() > 0.5 ? 1 : -1; // +1 veya -1 kişi
+        currentCount += change;
+
+        // Sınırları koru (Minimum 8, Maksimum 35 kişi olsun)
+        if (currentCount < 8) currentCount = 8;
+        if (currentCount > 35) currentCount = 35;
+
+        counterEl.innerText = currentCount;
+        
+        // Bir sonraki güncelleme için rastgele zaman ayarla
+        const nextUpdate = Math.floor(Math.random() * (8000 - 3000 + 1)) + 3000;
+        setTimeout(updateCount, nextUpdate);
+    }
+
+    setTimeout(updateCount, 4000); // İlk güncelleme 4sn sonra
 }

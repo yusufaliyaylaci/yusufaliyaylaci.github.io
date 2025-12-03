@@ -480,3 +480,74 @@ body.view-mode-social .radio-player { cursor: default; }
 
 @keyframes blinkLive { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes loadingDots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+
+/* =========================================
+   8. EKSİK ANIMASYONLAR (Hava Durumu İçin)
+========================================= */
+/* Hava Durumu widget'ı ekranın ortasında (-50%, -50%) durduğu için,
+   zıplama animasyonunu buna göre ayarlamamız gerekiyor. */
+
+@keyframes bumpUpWeather {
+    0% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, calc(-50% - 30px)); } /* Yukarı iter */
+    100% { transform: translate(-50%, -50%); }
+}
+
+@keyframes bumpDownWeather {
+    0% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, calc(-50% + 30px)); } /* Aşağı çeker */
+    100% { transform: translate(-50%, -50%); }
+}
+
+/* =========================================
+   9. CANLI KULLANICI SAYACI (Sol Alt)
+========================================= */
+.online-counter {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    z-index: 90;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.online-counter:hover {
+    background: rgba(20, 20, 20, 0.6);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #4caf50; /* Canlı yeşil */
+    border-radius: 50%;
+    box-shadow: 0 0 10px #4caf50;
+    animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 15px #4caf50; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@media (max-width: 480px) {
+    .online-counter {
+        bottom: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 0.7rem;
+    }
+}
