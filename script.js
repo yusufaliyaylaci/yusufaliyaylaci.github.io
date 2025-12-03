@@ -438,12 +438,14 @@ function initRadio() {
     audio.src = CONFIG.stations[state.currentStation].url;
     audio.volume = Math.pow(state.lastVolume, 2);
 
-    // --- YENİ EKLENEN KISIM: Media Session Handlers (Tuşlar) ---
+    // --- Media Session Handlers (Tuşlar) ---
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', () => togglePlay());
         navigator.mediaSession.setActionHandler('pause', () => togglePlay());
         navigator.mediaSession.setActionHandler('previoustrack', () => triggerChangeStation(-1));
         navigator.mediaSession.setActionHandler('nexttrack', () => triggerChangeStation(1));
+        // Android Stop butonu için de destek ekleyelim
+        navigator.mediaSession.setActionHandler('stop', () => togglePlay());
     }
     // -----------------------------------------------------------
 
@@ -481,21 +483,24 @@ function initRadio() {
     });
 }
 
-// --- YENİ EKLENEN KISIM: Media Session Metadata Güncelleme ---
+// --- Media Session Metadata Güncelleme (Android için Düzeltildi) ---
 function updateMediaSessionMetadata() {
     if ('mediaSession' in navigator) {
+        // Tam URL'yi hesapla (Android'in göreli yolları sevmemesi sorununu çözer)
+        // Eğer yerel dosyada çalışıyorsan yine de çalışır, sunucuda çalışırsa https ekler.
+        const artUrl = new URL('profil.jpg', window.location.href).href;
+
         navigator.mediaSession.metadata = new MediaMetadata({
             title: CONFIG.stations[state.currentStation].name,
             artist: "Yusuf Ali Blog",
             album: "Canlı Yayın",
-            // Resmi buradan çekiyor, BG rengini buna göre ayarlayacak
             artwork: [
-                { src: 'profil.jpg', sizes: '96x96', type: 'image/jpeg' },
-                { src: 'profil.jpg', sizes: '128x128', type: 'image/jpeg' },
-                { src: 'profil.jpg', sizes: '192x192', type: 'image/jpeg' },
-                { src: 'profil.jpg', sizes: '256x256', type: 'image/jpeg' },
-                { src: 'profil.jpg', sizes: '384x384', type: 'image/jpeg' },
-                { src: 'profil.jpg', sizes: '512x512', type: 'image/jpeg' },
+                { src: artUrl, sizes: '96x96', type: 'image/jpeg' },
+                { src: artUrl, sizes: '128x128', type: 'image/jpeg' },
+                { src: artUrl, sizes: '192x192', type: 'image/jpeg' },
+                { src: artUrl, sizes: '256x256', type: 'image/jpeg' },
+                { src: artUrl, sizes: '384x384', type: 'image/jpeg' },
+                { src: artUrl, sizes: '512x512', type: 'image/jpeg' },
             ]
         });
     }
