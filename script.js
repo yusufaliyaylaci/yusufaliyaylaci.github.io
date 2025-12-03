@@ -748,10 +748,18 @@ function prevPhoto() { state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.
 function updatePhoto() { 
     const img = document.getElementById("profileImg");
     img.classList.add("changing"); 
-    setTimeout(() => {
-        img.src = CONFIG.photos[state.photoIndex]; 
-        img.onload = () => { img.classList.remove("changing"); };
-    }, 300); 
+    
+    // YENİ KOD: Resim yüklenince 'changing' sınıfını kaldırır.
+    // Eski yöntemde resim yüklenmeden süre bitiyordu.
+    const newImg = new Image();
+    newImg.src = CONFIG.photos[state.photoIndex];
+    
+    newImg.onload = () => {
+        img.src = CONFIG.photos[state.photoIndex];
+        setTimeout(() => {
+            img.classList.remove("changing");
+        }, 100); 
+    };
 }
 
 function initClock() {
@@ -773,9 +781,17 @@ function initClock() {
 // 6. HAVA DURUMU İŞLEMLERİ
 // =========================================
 function initWeather() {
-    const defaultFail = () => updateWeatherUI({temperature_2m: "--", wind_speed_10m: "--", relative_humidity_2m: "--", weather_code: 0}, "Şehir Seçin");
-    if (navigator.geolocation) navigator.geolocation.getCurrentPosition((pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude), defaultFail);
-    else defaultFail();
+    // YENİ KOD: Hata durumunda İzmir'i varsayılan olarak göster
+    const defaultFail = () => fetchWeather(38.41, 27.13, "İzmir (Varsayılan)");
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude), 
+            defaultFail
+        );
+    } else {
+        defaultFail();
+    }
     setupCitySearch();
 }
 
