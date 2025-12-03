@@ -225,8 +225,10 @@ function startExperience() {
     setupAudioContext();
     initRadio();
     initTouchInteractions();
-    initOnlineCounter();
-
+    
+    // Canlı Kullanıcı Sayacını Başlat
+    initOnlineCounter(); 
+    
     setTimeout(() => { togglePlay(); }, 100);
 
     setTimeout(() => {
@@ -396,14 +398,10 @@ function changeStage() {
     updatePageIndicators();
 }
 
-// =========================================
-// YENİDEN DÜZENLENMİŞ FONKSİYON
-// =========================================
 function initPageIndicators() {
     const container = document.getElementById("stageIndicators");
     container.innerHTML = "";
-    // DÜZELTME: Döngüyü 0'dan 4'e çevirdik.
-    // Böylece Stage 0 (En üst) -> Stage 4 (En alt) sırasıyla dizilir.
+    // Stage 0 (En üst) -> Stage 4 (En alt)
     for(let i = 0; i <= 4; i++) {
         const dot = document.createElement("div");
         dot.className = "indicator-dot";
@@ -440,6 +438,15 @@ function initRadio() {
     audio.src = CONFIG.stations[state.currentStation].url;
     audio.volume = Math.pow(state.lastVolume, 2);
 
+    // --- YENİ EKLENEN KISIM: Media Session Handlers (Tuşlar) ---
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', () => togglePlay());
+        navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+        navigator.mediaSession.setActionHandler('previoustrack', () => triggerChangeStation(-1));
+        navigator.mediaSession.setActionHandler('nexttrack', () => triggerChangeStation(1));
+    }
+    // -----------------------------------------------------------
+
     audio.addEventListener('playing', () => {
         clearTimeout(timers.connection);
         clearTimeout(timers.retry); 
@@ -452,6 +459,7 @@ function initRadio() {
         updateThemeColors(false);
         updateStatusUI("live", "CANLI YAYIN");
         startSongDetectionLoop();
+        updateMediaSessionMetadata(); // Bildirim güncelle
         
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playerBox").classList.remove("player-error");
@@ -472,6 +480,27 @@ function initRadio() {
         attemptReconnect();
     });
 }
+
+// --- YENİ EKLENEN KISIM: Media Session Metadata Güncelleme ---
+function updateMediaSessionMetadata() {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: CONFIG.stations[state.currentStation].name,
+            artist: "Yusuf Ali Blog",
+            album: "Canlı Yayın",
+            // Resmi buradan çekiyor, BG rengini buna göre ayarlayacak
+            artwork: [
+                { src: 'profil.jpg', sizes: '96x96', type: 'image/jpeg' },
+                { src: 'profil.jpg', sizes: '128x128', type: 'image/jpeg' },
+                { src: 'profil.jpg', sizes: '192x192', type: 'image/jpeg' },
+                { src: 'profil.jpg', sizes: '256x256', type: 'image/jpeg' },
+                { src: 'profil.jpg', sizes: '384x384', type: 'image/jpeg' },
+                { src: 'profil.jpg', sizes: '512x512', type: 'image/jpeg' },
+            ]
+        });
+    }
+}
+// -----------------------------------------------------------
 
 function startSongDetectionLoop() {
     clearInterval(timers.detection);
@@ -617,6 +646,11 @@ function togglePlay() {
         clearInterval(timers.fade); 
         updateStatusUI(null, "Durduruluyor...", "#aaa");
         
+        // Bildirim durumunu güncelle (Paused)
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = "paused";
+        }
+
         timers.fade = setInterval(() => {
             if (audio.volume > 0.02) audio.volume -= 0.02;
             else { 
@@ -658,6 +692,10 @@ function finalizeStationChange(direction) {
         audio.src = CONFIG.stations[state.currentStation].url; audio.load();
         audio.volume = Math.pow(state.lastVolume, 2);
         updateStatusUI("connecting", "Bağlanıyor...");
+        
+        // Metadata'yı yeni istasyon için güncelle
+        updateMediaSessionMetadata();
+        
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
         audio.play().catch(()=>{});
     }
