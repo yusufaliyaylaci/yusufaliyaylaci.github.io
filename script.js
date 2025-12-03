@@ -395,10 +395,15 @@ function changeStage() {
     updatePageIndicators();
 }
 
+// =========================================
+// YENİDEN DÜZENLENMİŞ FONKSİYON
+// =========================================
 function initPageIndicators() {
     const container = document.getElementById("stageIndicators");
     container.innerHTML = "";
-    for(let i = 4; i >= 0; i--) {
+    // DÜZELTME: Döngüyü 0'dan 4'e çevirdik.
+    // Böylece Stage 0 (En üst) -> Stage 4 (En alt) sırasıyla dizilir.
+    for(let i = 0; i <= 4; i++) {
         const dot = document.createElement("div");
         dot.className = "indicator-dot";
         dot.dataset.stage = i;
@@ -749,8 +754,6 @@ function updatePhoto() {
     const img = document.getElementById("profileImg");
     img.classList.add("changing"); 
     
-    // YENİ KOD: Resim yüklenince 'changing' sınıfını kaldırır.
-    // Eski yöntemde resim yüklenmeden süre bitiyordu.
     const newImg = new Image();
     newImg.src = CONFIG.photos[state.photoIndex];
     
@@ -781,7 +784,6 @@ function initClock() {
 // 6. HAVA DURUMU İŞLEMLERİ
 // =========================================
 function initWeather() {
-    // YENİ KOD: Hata durumunda İzmir'i varsayılan olarak göster
     const defaultFail = () => fetchWeather(38.41, 27.13, "İzmir (Varsayılan)");
     
     if (navigator.geolocation) {
