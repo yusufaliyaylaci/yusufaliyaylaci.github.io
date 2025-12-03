@@ -202,10 +202,44 @@ let timers = {
     detection: null,
     popupSearch: null,
     popupResult: null,
-    popupClose: null
+    popupClose: null,
+    promptClose: null // YENİ EKLENDİ
 };
 
 let audioCtx, analyzer, dataArray;
+
+// =========================================
+// YENİ KOD: UYGULAMA İNDİRME PROMOSYONU KONTROLÜ
+// =========================================
+function showDownloadPrompt() {
+    const prompt = document.getElementById('downloadPrompt');
+    if (!prompt) return;
+
+    // 1. Pop-up'ı göster
+    prompt.classList.add('active');
+
+    // 2. 7 saniye sonra otomatik gizle
+    timers.promptClose = setTimeout(() => {
+        hideDownloadPrompt(false);
+    }, 7000); 
+}
+
+function hideDownloadPrompt(clicked) {
+    const prompt = document.getElementById('downloadPrompt');
+    if (prompt) {
+        prompt.classList.remove('active');
+    }
+    clearTimeout(timers.promptClose);
+    
+    // Eğer kullanıcı indirme butonuna tıkladıysa, tekrar göstermemek için yerel depolamaya kaydet
+    if (clicked) {
+        localStorage.setItem('yaliApp_promptShown', 'true');
+    }
+}
+// =========================================
+// YENİ KOD SONU
+// =========================================
+
 
 // =========================================
 // 2. BAŞLATMA VE ELEMENT OLUŞTURMA
@@ -228,6 +262,15 @@ function startExperience() {
     
     // Canlı Kullanıcı Sayacını Başlat
     initOnlineCounter(); 
+
+    // 💡 YENİ EKLENEN KOD: Hoş geldin ekranı çıktıktan 3 saniye sonra pop-up'ı göster
+    setTimeout(() => {
+        // Pop-up'ı daha önce gösterip göstermediğimizi kontrol edelim (Yalnızca web'de)
+        if (typeof window !== 'undefined' && localStorage.getItem('yaliApp_promptShown') !== 'true') {
+            showDownloadPrompt();
+        }
+    }, 3000); 
+
     
     setTimeout(() => { togglePlay(); }, 100);
 
