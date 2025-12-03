@@ -971,7 +971,7 @@ function setCircularFavicon() {
 }
 
 // =========================================
-// 8. ONLINE USERS COUNTER
+// 8. SENKRONİZE VE YUMUŞAK GEÇİŞLİ KULLANICI SİMÜLASYONU
 // =========================================
 function initOnlineCounter() {
     const counterEl = document.getElementById("onlineCount");
@@ -984,60 +984,82 @@ function initOnlineCounter() {
 
     function updateCount() {
         const now = new Date();
+        const currentDisplayed = parseInt(counterEl.innerText) || 0; // Ekranda şu an yazan sayı
         
         // 1. ADIM: SAATİ AL (Türkiye Saati)
         const hour = parseInt(now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }));
         
-        // 2. ADIM: SAATE GÖRE YOĞUNLUK VE GÜNCELLEME HIZI BELİRLE
+        // 2. ADIM: SAATE GÖRE "HEDEF" YOĞUNLUK VE GÜNCELLEME HIZI
         let minUsers, maxUsers, updateInterval;
 
-        // updateInterval: Kaç milisaniyede bir sayı değişsin?
-        
         if (hour >= 17 && hour <= 23) { 
-            // AKŞAM ZİRVESİ (Çok Hızlı)
-            minUsers = 150; maxUsers = 300; 
-            updateInterval = 3000; // 3 saniyede bir değişir
+            // AKŞAM ZİRVESİ (Kalabalık)
+            minUsers = 180; maxUsers = 320; 
+            updateInterval = 4000; 
         }
         else if (hour >= 12 && hour < 17) { 
-            // ÖĞLE SAATLERİ (Orta Hızlı)
-            minUsers = 90; maxUsers = 160; 
-            updateInterval = 7000; // 7 saniyede bir değişir
+            // ÖĞLE SAATLERİ
+            minUsers = 100; maxUsers = 170; 
+            updateInterval = 6000;
         }
         else if ((hour >= 8 && hour < 12) || (hour >= 0 && hour < 3)) { 
-            // SABAH VE GECE (Yavaş)
-            minUsers = 40; maxUsers = 100;
-            if(hour < 3) { minUsers = 50; maxUsers = 120; }
-            updateInterval = 12000; // 12 saniyede bir değişir
+            // SABAH VE GECE
+            minUsers = 50; maxUsers = 110;
+            if(hour < 3) { minUsers = 60; maxUsers = 130; } // Gece yarısı biraz daha aktif
+            updateInterval = 10000; 
         }
         else { 
-            // ÖLÜ SAATLER 03:00 - 08:00 (Çok Yavaş)
-            minUsers = 3; maxUsers = 20; 
-            updateInterval = 25000; // 25 saniyede bir değişir
+            // ÖLÜ SAATLER
+            minUsers = 5; maxUsers = 25; 
+            updateInterval = 20000; 
         }
 
-        // 3. ADIM: ZAMAN BLOĞU OLUŞTUR
-        // Belirlenen hıza (updateInterval) göre zamanı dilimlere bölüyoruz.
+        // 3. ADIM: HEDEF SAYIYI BELİRLE (Target)
+        // Zaman bloğuna göre o an olması gereken "ideal" sayıyı buluyoruz.
         const timeBlock = Math.floor(now.getTime() / updateInterval); 
-
-        // 4. ADIM: SENKRONİZE SAYI ÜRETİMİ
         const randomFactor = seededRandom(timeBlock); 
-        let displayCount = Math.floor(randomFactor * (maxUsers - minUsers + 1)) + minUsers;
+        const targetCount = Math.floor(randomFactor * (maxUsers - minUsers + 1)) + minUsers;
 
-        // Ekrana yaz
-        counterEl.innerText = displayCount;
+        // 4. ADIM: YUMUŞAK GEÇİŞ (Smoothing)
+        // Ekrandaki sayı ile hedef sayı arasındaki farka bak.
+        let diff = targetCount - currentDisplayed;
+        let step = 0;
+
+        // Fark çok büyük olsa bile, her seferinde en fazla 3-7 kişi ekle/çıkar.
+        // Bu sayede ani sıçramalar engellenir.
+        const maxStep = Math.floor(Math.random() * 5) + 3; // 3 ile 7 arası değişim
         
-        // Nokta animasyonunu tetikle (Sadece değişim anında parlasın)
+        if (Math.abs(diff) > maxStep) {
+            // Eğer fark maxStep'ten büyükse, sadece maxStep kadar ilerle
+            step = diff > 0 ? maxStep : -maxStep;
+        } else {
+            // Fark küçükse direkt hedefe git
+            step = diff;
+        }
+
+        // Yeni gösterilecek sayı
+        let nextDisplay = currentDisplayed + step;
+
+        // İlk açılışta 0'dan başlamasın, direkt aralığa girsin (Sadece sayfa ilk yüklendiğinde)
+        if (currentDisplayed === 0 || currentDisplayed < minUsers / 2) {
+             nextDisplay = targetCount;
+        }
+
+        counterEl.innerText = nextDisplay;
+        
+        // Nokta animasyonu
         const dot = document.querySelector('.live-dot');
-        if(dot) {
+        if(dot && step !== 0) { // Sadece sayı değiştiyse yanıp sön
             dot.style.animation = 'none';
-            dot.offsetHeight; /* Reflow */
+            dot.offsetHeight; 
             dot.style.animation = 'pulseGreen 2s infinite';
         }
 
-        // Bir sonraki blok zamanını bekle
+        // Bir sonraki kontrol zamanı
         const msToNextBlock = updateInterval - (now.getTime() % updateInterval);
         setTimeout(updateCount, msToNextBlock);
     }
 
+    // Başlat
     updateCount();
 }
