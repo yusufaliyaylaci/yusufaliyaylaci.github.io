@@ -971,29 +971,74 @@ function setCircularFavicon() {
 }
 
 // =========================================
-// 8. ONLINE KULLANICI SİMÜLASYONU
+// 8. GERÇEKÇİ ZAMANLI KULLANICI SİMÜLASYONU
 // =========================================
 function initOnlineCounter() {
     const counterEl = document.getElementById("onlineCount");
-    // Başlangıç için rastgele bir sayı (12 ile 25 arası)
-    let currentCount = Math.floor(Math.random() * (25 - 12 + 1)) + 12;
+
+    // Saate göre ziyaretçi aralığını belirleyen fonksiyon
+    function getRangeByHour() {
+        // Türkiye saatiyle şu anki saati al (0-23 arası)
+        const now = new Date();
+        const hour = parseInt(now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }));
+
+        // SAAT DİLİMLERİNE GÖRE MANTIK:
+        // 06:00 - 08:00 -> En düşük (Uyanma vakti)
+        if (hour >= 6 && hour < 8) return { min: 2, max: 15 };
+        
+        // 08:00 - 12:00 -> Sabah artışı (İşe/Okula gidiş)
+        if (hour >= 8 && hour < 12) return { min: 40, max: 100 };
+        
+        // 12:00 - 17:00 -> Öğle saatleri (Orta yoğunluk)
+        if (hour >= 12 && hour < 17) return { min: 90, max: 160 };
+        
+        // 17:00 - 23:59 -> ZİRVE SAATLERİ (Okul/İş çıkışı ve akşam)
+        if (hour >= 17 && hour <= 23) return { min: 150, max: 300 };
+        
+        // 00:00 - 03:00 -> Gececiler (Yavaş düşüş)
+        if (hour >= 0 && hour < 3) return { min: 50, max: 120 };
+        
+        // 03:00 - 06:00 -> Derin uyku (Düşük)
+        return { min: 5, max: 30 }; 
+    }
+
+    // İlk açılışta o anki saate uygun rastgele bir sayıyla başla
+    let range = getRangeByHour();
+    let currentCount = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
     counterEl.innerText = currentCount;
 
-    // Her 3 ile 8 saniye arasında sayıyı güncelle
     function updateCount() {
-        const change = Math.random() > 0.5 ? 1 : -1; // +1 veya -1 kişi
-        currentCount += change;
+        // Her güncellemede saati ve aralığı tekrar kontrol et (saat geçişleri için)
+        const currentRange = getRangeByHour();
+        
+        // Değişim miktarı: İnsanlar birer birer girip çıkmaz, bazen 3 kişi girer 2 kişi çıkar.
+        // -3 ile +4 arasında rastgele bir değişim yapıyoruz.
+        let change = Math.floor(Math.random() * 8) - 3; 
 
-        // Sınırları koru (Minimum 8, Maksimum 35 kişi olsun)
-        if (currentCount < 8) currentCount = 8;
-        if (currentCount > 35) currentCount = 35;
+        // Eğer mevcut sayı olması gerekenden AZ ise, artırma eğilimine gir (yukarı it)
+        if (currentCount < currentRange.min) change = Math.abs(change) + Math.floor(Math.random() * 3);
+        
+        // Eğer mevcut sayı olması gerekenden ÇOK ise, azaltma eğilimine gir (aşağı it)
+        if (currentCount > currentRange.max) change = -Math.abs(change) - Math.floor(Math.random() * 3);
+
+        // Zirve saatlerde (akşam) hareketlilik daha hızlı olsun
+        if (currentRange.max > 200) {
+            change *= 2; // Dalgalanmayı 2 katına çıkar
+        }
+
+        currentCount += change;
+        
+        // Güvenlik: Sayı asla 1'in altına düşmesin
+        if (currentCount < 1) currentCount = 1;
 
         counterEl.innerText = currentCount;
         
-        // Bir sonraki güncelleme için rastgele zaman ayarla
-        const nextUpdate = Math.floor(Math.random() * (8000 - 3000 + 1)) + 3000;
+        // Bir sonraki güncellemeyi rastgele bir süre sonra yap (2.5sn ile 6sn arası)
+        // Böylece robotik bir sayaç gibi "tık-tık" artmaz, doğal durur.
+        const nextUpdate = Math.floor(Math.random() * (6000 - 2500 + 1)) + 2500;
         setTimeout(updateCount, nextUpdate);
     }
 
-    setTimeout(updateCount, 4000); // İlk güncelleme 4sn sonra
+    // Döngüyü başlat
+    setTimeout(updateCount, 4000);
 }
