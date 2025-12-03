@@ -971,87 +971,99 @@ function setCircularFavicon() {
 }
 
 // =========================================
-// 8. DOĞAL "RANDOM WALK" KULLANICI SİMÜLASYONU
+// 8. SENKRONİZE "DALGA" SİMÜLASYONU (Noise Math)
 // =========================================
 function initOnlineCounter() {
     const counterEl = document.getElementById("onlineCount");
-    
-    // Tarayıcı hafızasından son durumu al
-    let currentCount = parseInt(localStorage.getItem('savedUserCount'));
-    let lastUpdate = parseInt(localStorage.getItem('savedLastUpdate'));
-    const now = Date.now();
 
-    // Eğer hafızada sayı yoksa veya çok eski (1 saatten fazla) ise sıfırdan hesapla
-    if (!currentCount || !lastUpdate || (now - lastUpdate > 3600000)) {
-        currentCount = getBaseCountForHour();
+    // Basit bir "Tohumlu Rastgele Sayı" üreticisi
+    // Aynı 'seed' girilirse HER ZAMAN aynı sonucu verir.
+    function pseudoRandom(input) {
+        let t = input += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 
-    // Saate göre "olması gereken" ortalama sayıyı getir
-    function getBaseCountForHour() {
-        const hour = new Date().getHours(); // Yerel saat yeterli, basit tutalım
+    // İki sayı arasında yumuşak geçiş yap (Cosine Interpolation)
+    // Bu, sayıların keskin değil, dalga gibi akmasını sağlar.
+    function cosineInterpolate(y1, y2, mu) {
+        const mu2 = (1 - Math.cos(mu * Math.PI)) / 2;
+        return (y1 * (1 - mu2) + y2 * mu2);
+    }
+
+    // Zamana bağlı gürültü fonksiyonu
+    // time: Şu anki zaman
+    // scale: Dalganın genişliği (ne kadar yavaş değişeceği)
+    function getNoise(time, scale) {
+        const t = time / scale;
+        const i = Math.floor(t); // Zamanın tam sayı kısmı (Hangi noktadayız?)
+        const f = t - i;         // Zamanın küsuratı (Noktalar arası neresi?)
         
-        // Saatlik baz yoğunluk haritası (00:00 - 23:00)
-        // Bu dizi günün saatlerine göre ortalama insan sayısını belirler
-        const hourlyBase = [
-            45, 30, 20, 15, 10, 8,   // 00-05 (Gece - Düşüş)
-            12, 25, 60, 90, 110, 130, // 06-11 (Sabah - Artış)
-            140, 150, 145, 155, 160, 175, // 12-17 (Öğle - Dengeli)
-            190, 210, 230, 220, 180, 100  // 18-23 (Akşam - Zirve ve Düşüş)
-        ];
+        // Bu nokta ve bir sonraki nokta için rastgele değer üret
+        const r1 = pseudoRandom(i);
+        const r2 = pseudoRandom(i + 1);
         
-        // Biraz rastgelelik ekle (+/- %10)
-        let base = hourlyBase[hour];
-        let noise = Math.floor(Math.random() * (base * 0.2)) - (base * 0.1);
-        return Math.floor(base + noise);
+        // İkisi arasında yumuşak geçiş yap
+        return cosineInterpolate(r1, r2, f);
     }
 
     function updateCount() {
-        // Hedefimiz, o saatin baz değerine yakın durmak
-        const target = getBaseCountForHour();
-        
-        // Değişim Yönü: Hedefe uzaksa ona doğru, yakınsa rastgele takıl
-        let change = 0;
-        const diff = target - currentCount;
-        
-        // Eğer fark çoksa hedefe yönel, değilse %40 ihtimalle sabit kal, %30 art, %30 azal
-        if (Math.abs(diff) > 15) {
-            change = diff > 0 ? 1 : -1;
-        } else {
-            const roll = Math.random();
-            if (roll > 0.6) change = 1;
-            else if (roll < 0.3) change = -1;
-            else change = 0; // Sabit kal
-        }
+        // 1. ZAMANI AL (Saniye cinsinden)
+        // Herkeste aynı olması için Date.now() kullanıyoruz.
+        const now = Date.now(); 
+        const serverTime = now / 1000; // Saniyeye çevir
 
-        // Yeni sayıyı uygula
-        currentCount += change;
+        // 2. SAATE GÖRE BAZ YOĞUNLUK
+        const hour = new Date().getHours();
         
-        // Asla 1'in altına düşmesin
-        if (currentCount < 1) currentCount = 1;
+        // Saatlik ortalama kullanıcı haritası
+        const hourlyBase = [
+            45, 30, 20, 15, 10, 8,   // 00-05
+            12, 25, 60, 90, 110, 130, // 06-11
+            140, 150, 145, 155, 160, 175, // 12-17
+            190, 210, 230, 220, 180, 100  // 18-23
+        ];
+        
+        // Şu anki saatin baz değeri ile bir sonraki saatin baz değeri arasında geçiş yap
+        // Böylece saat başlarında sayı aniden zıplamaz.
+        const currentBase = hourlyBase[hour];
+        const nextBase = hourlyBase[(hour + 1) % 24];
+        const minuteProgress = new Date().getMinutes() / 60;
+        const smoothedBase = currentBase + (nextBase - currentBase) * minuteProgress;
 
-        // Ekrana yaz ve hafızaya kaydet
-        counterEl.innerText = currentCount;
-        localStorage.setItem('savedUserCount', currentCount);
-        localStorage.setItem('savedLastUpdate', Date.now());
+        // 3. DOĞAL DALGALANMA OLUŞTUR (Matematiksel İmza)
+        // İki farklı "dalga"yı üst üste bindiriyoruz:
+        // - Yavaş Dalga: Ana trendi belirler (40 saniyede bir değişir)
+        // - Hızlı Dalga: Anlık giriş çıkışları belirler (7 saniyede bir değişir)
+        
+        const slowWave = getNoise(serverTime, 40) * 30; // +/- 30 kişi oynayabilir
+        const fastWave = getNoise(serverTime, 7) * 5;   // +/- 5 kişi titreşim
+        
+        // Hepsini topla
+        let finalCount = Math.floor(smoothedBase + slowWave + fastWave);
+        
+        // Güvenlik: 5'in altına düşmesin
+        if (finalCount < 5) finalCount = 5;
 
-        // Nokta animasyonu (Sadece değişim varsa parlasın)
-        if (change !== 0) {
+        // 4. EKRANA YAZ
+        const prevText = counterEl.innerText;
+        counterEl.innerText = finalCount;
+
+        // Eğer sayı değiştiyse noktayı yak
+        if (prevText != finalCount) {
             const dot = document.querySelector('.live-dot');
             if(dot) {
                 dot.style.animation = 'none';
-                dot.offsetHeight; // Reflow
+                dot.offsetHeight; 
                 dot.style.animation = 'pulseGreen 2s infinite';
             }
         }
 
-        // Bir sonraki hareket ne zaman? (Tamamen rastgele insan davranışı)
-        // Kalabalık saatlerde daha hızlı, sakin saatlerde daha yavaş değişim
-        let nextInterval = Math.random() * 5000 + 3000; // 3-8 saniye arası
-        
-        // Eğer hedef sayıdan çok uzaksak (örn: site yeni açıldı), daha hızlı toparla
-        if (Math.abs(diff) > 20) nextInterval = 1000; 
-
-        setTimeout(updateCount, nextInterval);
+        // Çok hızlı güncelle (Saniyede 2 kere)
+        // Matematiksel formül olduğu için sık güncellemek performansı etkilemez
+        // ve animasyonun akıcı olmasını sağlar.
+        setTimeout(updateCount, 500);
     }
 
     updateCount();
