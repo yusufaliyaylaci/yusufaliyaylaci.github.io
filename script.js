@@ -971,74 +971,62 @@ function setCircularFavicon() {
 }
 
 // =========================================
-// 8. GERÇEKÇİ ZAMANLI KULLANICI SİMÜLASYONU
+// 8. SENKRONİZE GERÇEKÇİ KULLANICI SİMÜLASYONU
 // =========================================
 function initOnlineCounter() {
     const counterEl = document.getElementById("onlineCount");
 
-    // Saate göre ziyaretçi aralığını belirleyen fonksiyon
-    function getRangeByHour() {
-        // Türkiye saatiyle şu anki saati al (0-23 arası)
-        const now = new Date();
-        const hour = parseInt(now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }));
-
-        // SAAT DİLİMLERİNE GÖRE MANTIK:
-        // 06:00 - 08:00 -> En düşük (Uyanma vakti)
-        if (hour >= 6 && hour < 8) return { min: 2, max: 15 };
-        
-        // 08:00 - 12:00 -> Sabah artışı (İşe/Okula gidiş)
-        if (hour >= 8 && hour < 12) return { min: 40, max: 100 };
-        
-        // 12:00 - 17:00 -> Öğle saatleri (Orta yoğunluk)
-        if (hour >= 12 && hour < 17) return { min: 90, max: 160 };
-        
-        // 17:00 - 23:59 -> ZİRVE SAATLERİ (Okul/İş çıkışı ve akşam)
-        if (hour >= 17 && hour <= 23) return { min: 150, max: 300 };
-        
-        // 00:00 - 03:00 -> Gececiler (Yavaş düşüş)
-        if (hour >= 0 && hour < 3) return { min: 50, max: 120 };
-        
-        // 03:00 - 06:00 -> Derin uyku (Düşük)
-        return { min: 5, max: 30 }; 
+    // Matematiksel Rastgelelik (Pseudo-Random) Fonksiyonu
+    // Bu fonksiyon, aynı "tohumu" (seed) verirsen HER ZAMAN aynı sonucu verir.
+    // Böylece herkes aynı anda aynı sayıyı görür.
+    function seededRandom(seed) {
+        var x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
     }
-
-    // İlk açılışta o anki saate uygun rastgele bir sayıyla başla
-    let range = getRangeByHour();
-    let currentCount = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
-    counterEl.innerText = currentCount;
 
     function updateCount() {
-        // Her güncellemede saati ve aralığı tekrar kontrol et (saat geçişleri için)
-        const currentRange = getRangeByHour();
+        const now = new Date();
         
-        // Değişim miktarı: İnsanlar birer birer girip çıkmaz, bazen 3 kişi girer 2 kişi çıkar.
-        // -3 ile +4 arasında rastgele bir değişim yapıyoruz.
-        let change = Math.floor(Math.random() * 8) - 3; 
+        // 1. ADIM: ZAMAN DİLİMİ AYARLAMA
+        // Her 7 saniyede bir yeni bir "blok" oluşturuyoruz.
+        // Bu sayede sayı her saniye değil, 7 saniyede bir değişir (daha doğal durur).
+        const timeBlock = Math.floor(now.getTime() / 7000); 
 
-        // Eğer mevcut sayı olması gerekenden AZ ise, artırma eğilimine gir (yukarı it)
-        if (currentCount < currentRange.min) change = Math.abs(change) + Math.floor(Math.random() * 3);
+        // 2. ADIM: SAATE GÖRE YOĞUNLUK (Türkiye Saati)
+        const hour = parseInt(now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }));
         
-        // Eğer mevcut sayı olması gerekenden ÇOK ise, azaltma eğilimine gir (aşağı it)
-        if (currentCount > currentRange.max) change = -Math.abs(change) - Math.floor(Math.random() * 3);
+        let minUsers, maxUsers;
 
-        // Zirve saatlerde (akşam) hareketlilik daha hızlı olsun
-        if (currentRange.max > 200) {
-            change *= 2; // Dalgalanmayı 2 katına çıkar
+        if (hour >= 6 && hour < 8) { minUsers = 2; maxUsers = 15; }           // Sabahın körü
+        else if (hour >= 8 && hour < 12) { minUsers = 40; maxUsers = 100; }   // Sabah
+        else if (hour >= 12 && hour < 17) { minUsers = 90; maxUsers = 160; }  // Öğle
+        else if (hour >= 17 && hour <= 23) { minUsers = 150; maxUsers = 300; } // Akşam Zirvesi
+        else if (hour >= 0 && hour < 3) { minUsers = 50; maxUsers = 120; }    // Gece
+        else { minUsers = 5; maxUsers = 30; }                                 // Geç gece
+
+        // 3. ADIM: SENKRONİZE SAYI ÜRETİMİ
+        // timeBlock (zaman) değişkenini "seed" olarak kullanıyoruz.
+        // Herkesin saati aynı olduğu için (sistem saati), herkes aynı "random" değeri üretir.
+        const randomFactor = seededRandom(timeBlock); 
+        
+        // Aralıktaki sayıyı hesapla
+        let displayCount = Math.floor(randomFactor * (maxUsers - minUsers + 1)) + minUsers;
+
+        // Ekrana yaz
+        counterEl.innerText = displayCount;
+        
+        // Canlılık efekti için noktayı yanıp söndür
+        const dot = document.querySelector('.live-dot');
+        if(dot) {
+            dot.style.animation = 'none';
+            dot.offsetHeight; /* Trigger reflow */
+            dot.style.animation = 'pulseGreen 2s infinite';
         }
 
-        currentCount += change;
-        
-        // Güvenlik: Sayı asla 1'in altına düşmesin
-        if (currentCount < 1) currentCount = 1;
-
-        counterEl.innerText = currentCount;
-        
-        // Bir sonraki güncellemeyi rastgele bir süre sonra yap (2.5sn ile 6sn arası)
-        // Böylece robotik bir sayaç gibi "tık-tık" artmaz, doğal durur.
-        const nextUpdate = Math.floor(Math.random() * (6000 - 2500 + 1)) + 2500;
-        setTimeout(updateCount, nextUpdate);
+        // Bir sonraki 7 saniyelik bloğun başlamasını bekle
+        const msToNextBlock = 7000 - (now.getTime() % 7000);
+        setTimeout(updateCount, msToNextBlock);
     }
 
-    // Döngüyü başlat
-    setTimeout(updateCount, 4000);
+    updateCount();
 }
