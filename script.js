@@ -971,14 +971,12 @@ function setCircularFavicon() {
 }
 
 // =========================================
-// 8. SENKRONİZE GERÇEKÇİ KULLANICI SİMÜLASYONU
+// 8. ONLINE USERS COUNTER
 // =========================================
 function initOnlineCounter() {
     const counterEl = document.getElementById("onlineCount");
 
-    // Matematiksel Rastgelelik (Pseudo-Random) Fonksiyonu
-    // Bu fonksiyon, aynı "tohumu" (seed) verirsen HER ZAMAN aynı sonucu verir.
-    // Böylece herkes aynı anda aynı sayıyı görür.
+    // Matematiksel Rastgelelik (Seed'e göre hep aynı sonucu verir)
     function seededRandom(seed) {
         var x = Math.sin(seed) * 10000;
         return x - Math.floor(x);
@@ -987,44 +985,57 @@ function initOnlineCounter() {
     function updateCount() {
         const now = new Date();
         
-        // 1. ADIM: ZAMAN DİLİMİ AYARLAMA
-        // Her 7 saniyede bir yeni bir "blok" oluşturuyoruz.
-        // Bu sayede sayı her saniye değil, 7 saniyede bir değişir (daha doğal durur).
-        const timeBlock = Math.floor(now.getTime() / 7000); 
-
-        // 2. ADIM: SAATE GÖRE YOĞUNLUK (Türkiye Saati)
+        // 1. ADIM: SAATİ AL (Türkiye Saati)
         const hour = parseInt(now.toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }));
         
-        let minUsers, maxUsers;
+        // 2. ADIM: SAATE GÖRE YOĞUNLUK VE GÜNCELLEME HIZI BELİRLE
+        let minUsers, maxUsers, updateInterval;
 
-        if (hour >= 6 && hour < 8) { minUsers = 2; maxUsers = 15; }           // Sabahın körü
-        else if (hour >= 8 && hour < 12) { minUsers = 40; maxUsers = 100; }   // Sabah
-        else if (hour >= 12 && hour < 17) { minUsers = 90; maxUsers = 160; }  // Öğle
-        else if (hour >= 17 && hour <= 23) { minUsers = 150; maxUsers = 300; } // Akşam Zirvesi
-        else if (hour >= 0 && hour < 3) { minUsers = 50; maxUsers = 120; }    // Gece
-        else { minUsers = 5; maxUsers = 30; }                                 // Geç gece
-
-        // 3. ADIM: SENKRONİZE SAYI ÜRETİMİ
-        // timeBlock (zaman) değişkenini "seed" olarak kullanıyoruz.
-        // Herkesin saati aynı olduğu için (sistem saati), herkes aynı "random" değeri üretir.
-        const randomFactor = seededRandom(timeBlock); 
+        // updateInterval: Kaç milisaniyede bir sayı değişsin?
         
-        // Aralıktaki sayıyı hesapla
+        if (hour >= 17 && hour <= 23) { 
+            // AKŞAM ZİRVESİ (Çok Hızlı)
+            minUsers = 150; maxUsers = 300; 
+            updateInterval = 3000; // 3 saniyede bir değişir
+        }
+        else if (hour >= 12 && hour < 17) { 
+            // ÖĞLE SAATLERİ (Orta Hızlı)
+            minUsers = 90; maxUsers = 160; 
+            updateInterval = 7000; // 7 saniyede bir değişir
+        }
+        else if ((hour >= 8 && hour < 12) || (hour >= 0 && hour < 3)) { 
+            // SABAH VE GECE (Yavaş)
+            minUsers = 40; maxUsers = 100;
+            if(hour < 3) { minUsers = 50; maxUsers = 120; }
+            updateInterval = 12000; // 12 saniyede bir değişir
+        }
+        else { 
+            // ÖLÜ SAATLER 03:00 - 08:00 (Çok Yavaş)
+            minUsers = 3; maxUsers = 20; 
+            updateInterval = 25000; // 25 saniyede bir değişir
+        }
+
+        // 3. ADIM: ZAMAN BLOĞU OLUŞTUR
+        // Belirlenen hıza (updateInterval) göre zamanı dilimlere bölüyoruz.
+        const timeBlock = Math.floor(now.getTime() / updateInterval); 
+
+        // 4. ADIM: SENKRONİZE SAYI ÜRETİMİ
+        const randomFactor = seededRandom(timeBlock); 
         let displayCount = Math.floor(randomFactor * (maxUsers - minUsers + 1)) + minUsers;
 
         // Ekrana yaz
         counterEl.innerText = displayCount;
         
-        // Canlılık efekti için noktayı yanıp söndür
+        // Nokta animasyonunu tetikle (Sadece değişim anında parlasın)
         const dot = document.querySelector('.live-dot');
         if(dot) {
             dot.style.animation = 'none';
-            dot.offsetHeight; /* Trigger reflow */
+            dot.offsetHeight; /* Reflow */
             dot.style.animation = 'pulseGreen 2s infinite';
         }
 
-        // Bir sonraki 7 saniyelik bloğun başlamasını bekle
-        const msToNextBlock = 7000 - (now.getTime() % 7000);
+        // Bir sonraki blok zamanını bekle
+        const msToNextBlock = updateInterval - (now.getTime() % updateInterval);
         setTimeout(updateCount, msToNextBlock);
     }
 
