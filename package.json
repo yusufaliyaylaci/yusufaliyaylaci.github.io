@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -19,9 +19,12 @@
         "repo": "yusufaliyaylaci.github.io"
       }
     ],
+    "directories": {
+      "buildResources": "assets"
+    },
     "win": {
       "target": "nsis",
-      "icon": "icon.ico"
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -29,22 +32,26 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "YaliApp",
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
       "installerHeader": "build/installerHeader.bmp",
       "installerSidebar": "build/installerSidebar.bmp",
       "license": "build/license.txt",
       "deleteAppDataOnUninstall": true,
-      "displayLanguageSelector": true
+      "displayLanguageSelector": false,
+      "language": "1033"
     },
     "files": [
       "**/*",
       "!dist/*",
-      "!node_modules/*"
+      "!node_modules/*",
+      "!build/*",
+      "!deploy.bat",
+      "!.gitignore"
     ]
   },
   "dependencies": {
-    "electron-updater": "^6.6.2"
+    "electron-updater": "^6.1.1"
   },
   "devDependencies": {
     "electron": "^25.0.0",
