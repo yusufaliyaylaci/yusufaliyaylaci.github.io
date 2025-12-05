@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yali-blog-v1.4.5';
+const CACHE_NAME = 'yali-blog-v1.4.4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
