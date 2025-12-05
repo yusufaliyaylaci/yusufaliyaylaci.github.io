@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
+// --- İMZA KONTROLÜNÜ KAPAT (Kritik Ayar) ---
+autoUpdater.verifyUpdateCodeSignature = false;
+
 let mainWindow;
 
 function createWindow() {
@@ -9,7 +12,7 @@ function createWindow() {
         width: 1200,
         height: 800,
         title: "YaliApp",
-        icon: path.join(__dirname, 'icon.ico'),
+        icon: path.join(__dirname, 'assets/icon.ico'), // Yolu assets olarak düzelttik
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -26,42 +29,30 @@ function createWindow() {
 ipcMain.on('minimize-app', () => { if (mainWindow) mainWindow.minimize(); });
 ipcMain.on('close-app', () => { if (mainWindow) mainWindow.close(); });
 
-// --- GÜNCELLEME OLAYLARI (DEBUG İÇİN) ---
+// --- GÜNCELLEME OLAYLARI ---
 
-// 1. Güncelleme Aranıyor
+// 1. Kontrol Ediliyor
 autoUpdater.on('checking-for-update', () => {
+    // Konsola yazar, kullanıcıyı rahatsız etmez
     console.log('Güncelleme kontrol ediliyor...');
 });
 
-// 2. Güncelleme Bulundu (İndiriliyor)
+// 2. Güncelleme Bulundu -> İndiriliyor
 autoUpdater.on('update-available', () => {
     dialog.showMessageBox({
         type: 'info',
         title: 'Güncelleme Bulundu',
-        message: 'Yeni bir sürüm var! Arka planda indiriliyor, lütfen bekleyin...',
+        message: 'Yeni bir sürüm tespit edildi. Arka planda indiriliyor, lütfen bekleyin...',
         buttons: ['Tamam']
     });
 });
 
-// 3. Güncelleme Yok (Zaten en son sürümdesin)
-// (Bunu normalde kullanıcıya göstermeyiz ama test için açabilirsin)
-/*
-autoUpdater.on('update-not-available', () => {
-    dialog.showMessageBox({
-        type: 'info',
-        title: 'Güncelsiniz',
-        message: 'Şu an en son sürümü kullanıyorsunuz.',
-        buttons: ['Tamam']
-    });
-});
-*/
-
-// 4. HATA ÇIKTI (En Önemlisi Bu!)
+// 3. Hata Çıktı -> Göster
 autoUpdater.on('error', (err) => {
     dialog.showErrorBox('Güncelleme Hatası', 'Hata detayı: ' + (err.message || err));
 });
 
-// 5. İndirme Bitti (Yükle)
+// 4. İndirme Bitti -> Yükle
 autoUpdater.on('update-downloaded', () => {
     dialog.showMessageBox({
         type: 'info',
@@ -76,7 +67,7 @@ autoUpdater.on('update-downloaded', () => {
 app.whenReady().then(() => {
     createWindow();
     
-    // Uygulama açıldıktan 3 saniye sonra güncellemeyi kontrol et
+    // Uygulama açıldıktan 3 saniye sonra kontrol et
     setTimeout(() => {
         autoUpdater.checkForUpdatesAndNotify();
     }, 3000);
