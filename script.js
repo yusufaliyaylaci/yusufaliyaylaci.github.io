@@ -203,20 +203,43 @@ let timers = {
     popupSearch: null,
     popupResult: null,
     popupClose: null,
-    promptClose: null // YENİ EKLENDİ
+    promptClose: null
 };
 
 let audioCtx, analyzer, dataArray;
 
 // =========================================
-// YENİ KOD: UYGULAMA İNDİRME PROMOSYONU KONTROLÜ
+// YENİ KOD: İŞLETİM SİSTEMİ KONTROLÜ VE POP-UP
 // =========================================
+
+// Kullanıcının İşletim Sistemini Algıla
+function getOS() {
+    if (typeof window === 'undefined') return 'Unknown';
+    
+    const userAgent = window.navigator.userAgent;
+    // Basit ama etkili kontrol
+    if (userAgent.indexOf("Win") !== -1) return "Windows";
+    if (userAgent.indexOf("Mac") !== -1) return "MacOS";
+    if (userAgent.indexOf("Linux") !== -1) return "Linux";
+    if (userAgent.indexOf("Android") !== -1) return "Android";
+    if (userAgent.indexOf("like Mac") !== -1) return "iOS";
+    
+    return "Unknown";
+}
+
 function showDownloadPrompt() {
+    // Sadece Windows kullanıcılarına göster
+    if (getOS() !== 'Windows') {
+        console.log("Kullanıcı Windows değil, indirme teklifi gizlendi.");
+        return;
+    }
+
     const prompt = document.getElementById('downloadPrompt');
     if (!prompt) return;
 
     // 1. Pop-up'ı göster
     prompt.classList.add('active');
+    prompt.setAttribute('aria-hidden', 'false');
 
     // 2. 7 saniye sonra otomatik gizle
     timers.promptClose = setTimeout(() => {
@@ -228,6 +251,7 @@ function hideDownloadPrompt(clicked) {
     const prompt = document.getElementById('downloadPrompt');
     if (prompt) {
         prompt.classList.remove('active');
+        prompt.setAttribute('aria-hidden', 'true');
     }
     clearTimeout(timers.promptClose);
     
@@ -259,19 +283,16 @@ function startExperience() {
     setupAudioContext();
     initRadio();
     initTouchInteractions();
-    
-    // Canlı Kullanıcı Sayacını Başlat
     initOnlineCounter(); 
 
-    // 💡 YENİ EKLENEN KOD: Hoş geldin ekranı çıktıktan 3 saniye sonra pop-up'ı göster
+    // Hoş geldin ekranı çıktıktan 3 saniye sonra pop-up'ı göster
     setTimeout(() => {
-        // Pop-up'ı daha önce gösterip göstermediğimizi kontrol edelim (Yalnızca web'de)
+        // Pop-up'ı daha önce gösterip göstermediğimizi kontrol edelim
         if (typeof window !== 'undefined' && localStorage.getItem('yaliApp_promptShown') !== 'true') {
             showDownloadPrompt();
         }
     }, 3000); 
 
-    
     setTimeout(() => { togglePlay(); }, 100);
 
     setTimeout(() => {
@@ -293,6 +314,9 @@ function createDynamicElements() {
         fsBtn.className = 'fullscreen-btn';
         fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
         fsBtn.onclick = toggleFullScreen;
+        fsBtn.setAttribute('aria-label', 'Tam Ekran Modu');
+        fsBtn.setAttribute('role', 'button');
+        fsBtn.tabIndex = 0;
         document.body.appendChild(fsBtn);
     }
 
@@ -450,6 +474,8 @@ function initPageIndicators() {
         dot.className = "indicator-dot";
         dot.dataset.stage = i;
         if(i === state.stage) dot.classList.add("active");
+        dot.setAttribute('aria-label', `Sayfa ${i}`);
+        dot.setAttribute('role', 'button');
         
         dot.onclick = (e) => { 
             e.stopPropagation(); 
@@ -487,7 +513,6 @@ function initRadio() {
         navigator.mediaSession.setActionHandler('pause', () => togglePlay());
         navigator.mediaSession.setActionHandler('previoustrack', () => triggerChangeStation(-1));
         navigator.mediaSession.setActionHandler('nexttrack', () => triggerChangeStation(1));
-        // Android Stop butonu için de destek ekleyelim
         navigator.mediaSession.setActionHandler('stop', () => togglePlay());
     }
     // -----------------------------------------------------------
@@ -504,7 +529,7 @@ function initRadio() {
         updateThemeColors(false);
         updateStatusUI("live", "CANLI YAYIN");
         startSongDetectionLoop();
-        updateMediaSessionMetadata(); // Bildirim güncelle
+        updateMediaSessionMetadata(); 
         
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playerBox").classList.remove("player-error");
@@ -526,11 +551,8 @@ function initRadio() {
     });
 }
 
-// --- Media Session Metadata Güncelleme (Android için Düzeltildi) ---
 function updateMediaSessionMetadata() {
     if ('mediaSession' in navigator) {
-        // Tam URL'yi hesapla (Android'in göreli yolları sevmemesi sorununu çözer)
-        // Eğer yerel dosyada çalışıyorsan yine de çalışır, sunucuda çalışırsa https ekler.
         const artUrl = new URL('profil.jpg', window.location.href).href;
 
         navigator.mediaSession.metadata = new MediaMetadata({
@@ -548,7 +570,6 @@ function updateMediaSessionMetadata() {
         });
     }
 }
-// -----------------------------------------------------------
 
 function startSongDetectionLoop() {
     clearInterval(timers.detection);
@@ -741,7 +762,6 @@ function finalizeStationChange(direction) {
         audio.volume = Math.pow(state.lastVolume, 2);
         updateStatusUI("connecting", "Bağlanıyor...");
         
-        // Metadata'yı yeni istasyon için güncelle
         updateMediaSessionMetadata();
         
         timers.connection = setTimeout(() => { handleConnectionError(); forceSkipStation(); }, 8000);
@@ -1062,8 +1082,6 @@ function setCircularFavicon() {
 function initOnlineCounter() {
     const counterEl = document.getElementById("onlineCount");
 
-    // Basit bir "Tohumlu Rastgele Sayı" üreticisi
-    // Aynı 'seed' girilirse HER ZAMAN aynı sonucu verir.
     function pseudoRandom(input) {
         let t = input += 0x6D2B79F5;
         t = Math.imul(t ^ t >>> 15, t | 1);
@@ -1071,39 +1089,27 @@ function initOnlineCounter() {
         return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 
-    // İki sayı arasında yumuşak geçiş yap (Cosine Interpolation)
-    // Bu, sayıların keskin değil, dalga gibi akmasını sağlar.
     function cosineInterpolate(y1, y2, mu) {
         const mu2 = (1 - Math.cos(mu * Math.PI)) / 2;
         return (y1 * (1 - mu2) + y2 * mu2);
     }
 
-    // Zamana bağlı gürültü fonksiyonu
-    // time: Şu anki zaman
-    // scale: Dalganın genişliği (ne kadar yavaş değişeceği)
     function getNoise(time, scale) {
         const t = time / scale;
-        const i = Math.floor(t); // Zamanın tam sayı kısmı (Hangi noktadayız?)
-        const f = t - i;         // Zamanın küsuratı (Noktalar arası neresi?)
+        const i = Math.floor(t); 
+        const f = t - i;         
         
-        // Bu nokta ve bir sonraki nokta için rastgele değer üret
         const r1 = pseudoRandom(i);
         const r2 = pseudoRandom(i + 1);
         
-        // İkisi arasında yumuşak geçiş yap
         return cosineInterpolate(r1, r2, f);
     }
 
     function updateCount() {
-        // 1. ZAMANI AL (Saniye cinsinden)
-        // Herkeste aynı olması için Date.now() kullanıyoruz.
         const now = Date.now(); 
-        const serverTime = now / 1000; // Saniyeye çevir
-
-        // 2. SAATE GÖRE BAZ YOĞUNLUK
+        const serverTime = now / 1000; 
         const hour = new Date().getHours();
         
-        // Saatlik ortalama kullanıcı haritası
         const hourlyBase = [
             45, 30, 20, 15, 10, 8,   // 00-05
             12, 25, 60, 90, 110, 130, // 06-11
@@ -1111,32 +1117,20 @@ function initOnlineCounter() {
             190, 210, 230, 220, 180, 100  // 18-23
         ];
         
-        // Şu anki saatin baz değeri ile bir sonraki saatin baz değeri arasında geçiş yap
-        // Böylece saat başlarında sayı aniden zıplamaz.
         const currentBase = hourlyBase[hour];
         const nextBase = hourlyBase[(hour + 1) % 24];
         const minuteProgress = new Date().getMinutes() / 60;
         const smoothedBase = currentBase + (nextBase - currentBase) * minuteProgress;
 
-        // 3. DOĞAL DALGALANMA OLUŞTUR (Matematiksel İmza)
-        // İki farklı "dalga"yı üst üste bindiriyoruz:
-        // - Yavaş Dalga: Ana trendi belirler (40 saniyede bir değişir)
-        // - Hızlı Dalga: Anlık giriş çıkışları belirler (7 saniyede bir değişir)
+        const slowWave = getNoise(serverTime, 40) * 30; 
+        const fastWave = getNoise(serverTime, 7) * 5;   
         
-        const slowWave = getNoise(serverTime, 40) * 30; // +/- 30 kişi oynayabilir
-        const fastWave = getNoise(serverTime, 7) * 5;   // +/- 5 kişi titreşim
-        
-        // Hepsini topla
         let finalCount = Math.floor(smoothedBase + slowWave + fastWave);
-        
-        // Güvenlik: 5'in altına düşmesin
         if (finalCount < 5) finalCount = 5;
 
-        // 4. EKRANA YAZ
         const prevText = counterEl.innerText;
         counterEl.innerText = finalCount;
 
-        // Eğer sayı değiştiyse noktayı yak
         if (prevText != finalCount) {
             const dot = document.querySelector('.live-dot');
             if(dot) {
@@ -1146,9 +1140,6 @@ function initOnlineCounter() {
             }
         }
 
-        // Çok hızlı güncelle (Saniyede 2 kere)
-        // Matematiksel formül olduğu için sık güncellemek performansı etkilemez
-        // ve animasyonun akıcı olmasını sağlar.
         setTimeout(updateCount, 500);
     }
 

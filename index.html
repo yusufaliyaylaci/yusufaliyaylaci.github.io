@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Yusuf Ali - Kişisel Blog, Web Tasarım ve Radyo Deneyimi. Teknoloji ve müziğin harmanlandığı interaktif portfolyo.">
+    
+    <meta property="og:title" content="Yusuf Ali - Kişisel Blog & Radyo">
+    <meta property="og:description" content="Dokuz Eylül Üni. & Musician. Teknolojinin teknik dünyasını müziğin ritmiyle harmanlayan interaktif portfolyo.">
+    <meta property="og:image" content="https://yusufaliyaylaci.com/profil.jpg">
+    <meta property="og:url" content="https://yusufaliyaylaci.com">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    
     <title>Yusuf Ali - Kişisel Blog</title>
     
     <link rel="icon" href="profil.jpg" id="dynamicFavicon">
@@ -15,12 +23,14 @@
 </head>
 <body>
 
-    <div id="downloadPrompt">
+    <div id="downloadPrompt" aria-hidden="true">
         <p>Bu siteyi uygulama olarak kullanmak ister misiniz?</p>
         <a id="downloadButton" 
            href="https://github.com/yusufaliyaylaci/App/releases/download/v1.0.2/YaliApp-Setup-1.0.2.exe" 
            target="_blank"
-           onclick="hideDownloadPrompt(true)">
+           rel="noopener noreferrer"
+           onclick="hideDownloadPrompt(true)"
+           aria-label="Windows Uygulamasını İndir">
            <i class="fab fa-windows"></i> Windows için İndir
         </a>
     </div>
@@ -44,7 +54,7 @@
         </div>
     </div>
 
-    <div class="weather-widget" id="weatherWidget">
+    <div class="weather-widget" id="weatherWidget" role="region" aria-label="Hava Durumu Bilgisi">
         <div class="weather-header" id="weatherHeader">
             <div class="weather-main-info">
                 <span class="weather-temp" id="w-temp">--°</span>
@@ -57,7 +67,7 @@
         <div class="weather-details" id="weatherDetails">
             <div class="detail-item"><span>Rüzgar:</span><span id="w-wind">-- km/s</span></div>
             <div class="detail-item"><span>Nem:</span><span id="w-hum">--%</span></div>
-            <div class="change-city-text" onclick="enableSearchMode(event)">Şehir değiştir</div>
+            <div class="change-city-text" onclick="enableSearchMode(event)" role="button" tabindex="0">Şehir değiştir</div>
         </div>
 
         <div class="extended-info" id="extendedInfo">
@@ -74,16 +84,17 @@
 
         <div class="city-search-box" id="citySearchBox">
             <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Ara:</div>
-            <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off">
+            <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off" aria-label="Şehir Ara">
             <div class="suggestions-list" id="suggestionsList"></div>
-            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" onclick="disableSearchMode(event)">İptal</div>
+            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" onclick="disableSearchMode(event)" role="button" tabindex="0">İptal</div>
         </div>
     </div>
 
     <div class="card" id="mainCard" data-state="1">
-        <div class="album-nav nav-left" onclick="prevPhoto()"><i class="fas fa-chevron-left"></i></div>
-        <div class="album-nav nav-right" onclick="nextPhoto()"><i class="fas fa-chevron-right"></i></div>
-        <img src="profil.jpg" alt="Yusuf Ali" class="profile-img" id="profileImg">
+        <div class="album-nav nav-left" onclick="prevPhoto()" role="button" aria-label="Önceki Fotoğraf" tabindex="0"><i class="fas fa-chevron-left"></i></div>
+        <div class="album-nav nav-right" onclick="nextPhoto()" role="button" aria-label="Sonraki Fotoğraf" tabindex="0"><i class="fas fa-chevron-right"></i></div>
+        
+        <img src="profil.jpg" alt="Yusuf Ali Portre" class="profile-img" id="profileImg">
         <div class="info-box">
             <h2>Yusuf Ali</h2>
             <div class="subtitle">Dokuz Eylül Üni. & Musician</div>
@@ -92,9 +103,9 @@
             <p class="bio">Dokuz Eylül Üniversitesi'nde <strong>Elektrik ve Elektronik Teknolojisi</strong> üzerine kariyerimi inşa ediyorum. Teknolojinin teknik dünyasını müziğin ritmiyle harmanlıyor; devrelerin arasında sanat, notaların arasında mühendislik arıyorum.</p>
         </div>
         <div class="social-box">
-            <a href="https://instagram.com/yusufaliyaylaci" class="social-btn" target="_blank"><i class="fab fa-instagram"></i><span class="social-text">Instagram</span></a>
-            <a href="https://x.com/yusufaliyaylaci" class="social-btn" target="_blank"><i class="fab fa-twitter"></i><span class="social-text">Twitter / X</span></a>
-            <a href="https://wa.me/+905382291219" class="social-btn" target="_blank"><i class="fab fa-whatsapp"></i><span class="social-text">WhatsApp</span></a>
+            <a href="https://instagram.com/yusufaliyaylaci" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i><span class="social-text">Instagram</span></a>
+            <a href="https://x.com/yusufaliyaylaci" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="Twitter X"><i class="fab fa-twitter"></i><span class="social-text">Twitter / X</span></a>
+            <a href="https://wa.me/+905382291219" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i><span class="social-text">WhatsApp</span></a>
         </div>
     </div>
 
@@ -110,17 +121,17 @@
             
             <div class="controls">
                 <div class="main-buttons">
-                    <button class="control-btn" onclick="triggerChangeStation(-1)"><i class="fas fa-step-backward"></i></button>
-                    <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
-                    <button class="control-btn" onclick="triggerChangeStation(1)"><i class="fas fa-step-forward"></i></button>
+                    <button class="control-btn" onclick="triggerChangeStation(-1)" aria-label="Önceki İstasyon"><i class="fas fa-step-backward"></i></button>
+                    <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()" aria-label="Oynat / Durdur"><i class="fas fa-play" id="playIcon"></i></button>
+                    <button class="control-btn" onclick="triggerChangeStation(1)" aria-label="Sonraki İstasyon"><i class="fas fa-step-forward"></i></button>
                 </div>
                 
                 <div class="volume-group" id="volGroup">
-                    <button class="control-btn vol-btn" onclick="toggleMute(event)">
+                    <button class="control-btn vol-btn" onclick="toggleMute(event)" aria-label="Sesi Kapat/Aç">
                         <i class="fas fa-volume-up" id="volIcon"></i>
                     </button>
                     <div class="vol-slider-wrapper">
-                        <input type="range" class="vol-range" id="volRange" min="0" max="1" step="0.01">
+                        <input type="range" class="vol-range" id="volRange" min="0" max="1" step="0.01" aria-label="Ses Seviyesi">
                         <div class="vol-fill" id="volFill"></div>
                     </div>
                 </div>
@@ -132,7 +143,7 @@
 
     <div class="footer-copyright" id="footerText">&copy; 2025 Yusuf Ali. Tüm Hakları Saklıdır.<br><span style="font-size: 0.6rem;">Design & Code by Yusuf Ali</span></div>
 
-<div class="online-counter">
+    <div class="online-counter" aria-live="polite">
         <div class="live-dot"></div>
         <span id="onlineCount">18</span> Kişi Burada
     </div>
