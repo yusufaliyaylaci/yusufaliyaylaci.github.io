@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
-// --- İMZA KONTROLÜNÜ KAPAT (Kritik Ayar) ---
+// --- İMZA KONTROLÜNÜ KAPAT ---
 autoUpdater.verifyUpdateCodeSignature = false;
 
 let mainWindow;
@@ -12,7 +12,7 @@ function createWindow() {
         width: 1200,
         height: 800,
         title: "YaliApp",
-        icon: path.join(__dirname, 'assets/icon.ico'), // Yolu assets olarak düzelttik
+        icon: path.join(__dirname, 'assets/icon.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -23,6 +23,17 @@ function createWindow() {
     });
 
     mainWindow.loadFile('index.html');
+
+    // --- F11 (TAM EKRAN) DURUMUNU TAKİP ET ---
+    mainWindow.on('enter-full-screen', () => {
+        // Siteye haber ver: "Tam ekrana geçtim!"
+        mainWindow.webContents.send('fullscreen-update', true);
+    });
+
+    mainWindow.on('leave-full-screen', () => {
+        // Siteye haber ver: "Tam ekrandan çıktım!"
+        mainWindow.webContents.send('fullscreen-update', false);
+    });
 }
 
 // --- PENCERE KONTROLLERİ ---
@@ -30,14 +41,8 @@ ipcMain.on('minimize-app', () => { if (mainWindow) mainWindow.minimize(); });
 ipcMain.on('close-app', () => { if (mainWindow) mainWindow.close(); });
 
 // --- GÜNCELLEME OLAYLARI ---
+autoUpdater.on('checking-for-update', () => { console.log('Güncelleme kontrol ediliyor...'); });
 
-// 1. Kontrol Ediliyor
-autoUpdater.on('checking-for-update', () => {
-    // Konsola yazar, kullanıcıyı rahatsız etmez
-    console.log('Güncelleme kontrol ediliyor...');
-});
-
-// 2. Güncelleme Bulundu -> İndiriliyor
 autoUpdater.on('update-available', () => {
     dialog.showMessageBox({
         type: 'info',
@@ -47,12 +52,10 @@ autoUpdater.on('update-available', () => {
     });
 });
 
-// 3. Hata Çıktı -> Göster
 autoUpdater.on('error', (err) => {
     dialog.showErrorBox('Güncelleme Hatası', 'Hata detayı: ' + (err.message || err));
 });
 
-// 4. İndirme Bitti -> Yükle
 autoUpdater.on('update-downloaded', () => {
     dialog.showMessageBox({
         type: 'info',
@@ -67,7 +70,6 @@ autoUpdater.on('update-downloaded', () => {
 app.whenReady().then(() => {
     createWindow();
     
-    // Uygulama açıldıktan 3 saniye sonra kontrol et
     setTimeout(() => {
         autoUpdater.checkForUpdatesAndNotify();
     }, 3000);
