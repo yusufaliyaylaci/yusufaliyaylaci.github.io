@@ -153,6 +153,51 @@
         <span id="onlineCount">18</span> Kişi Burada
     </div>
 
+    <div id="offline-overlay">
+        <div class="offline-content">
+            <div class="wifi-loader">
+                <span style="--i:1"></span>
+                <span style="--i:2"></span>
+                <span style="--i:3"></span>
+                <span style="--i:4"></span>
+            </div>
+            <h2>Bağlantı Koptu</h2>
+            <p>İnternet bağlantınız kontrol ediliyor...</p>
+            <button onclick="checkConnection(true)" class="retry-btn">Tekrar Dene</button>
+        </div>
+    </div>
+
+    <div id="download-modal" class="modal-overlay" onclick="closeDownloadModal(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Uygulamayı İndir</h3>
+                <i class="fas fa-times close-modal" onclick="toggleDownloadModal()"></i>
+            </div>
+            <div class="platforms-grid">
+                <a id="modal-win-btn" href="#" class="platform-item active" target="_blank">
+                    <i class="fab fa-windows"></i>
+                    <span>Windows</span>
+                    <small id="win-ver-tag">Sürüm Aranıyor...</small>
+                </a>
+                <div class="platform-item disabled">
+                    <i class="fab fa-linux"></i>
+                    <span>Linux</span>
+                    <small>Yakında</small>
+                </div>
+                <div class="platform-item disabled">
+                    <i class="fab fa-android"></i>
+                    <span>Android</span>
+                    <small>Yakında</small>
+                </div>
+                <div class="platform-item disabled">
+                    <i class="fab fa-apple"></i>
+                    <span>iOS</span>
+                    <small>Yakında</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/script.js"></script>
 </body>
 </html>
