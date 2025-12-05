@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -28,7 +28,14 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "YaliApp"
+      "shortcutName": "YaliApp",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "license": "build/license.txt",
+      "deleteAppDataOnUninstall": true,
+      "displayLanguageSelector": true
     },
     "files": [
       "**/*",
