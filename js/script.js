@@ -79,7 +79,7 @@ function hideDownloadPrompt(clicked) {
 }
 
 // =========================================
-// MODAL İŞLEMLERİ (YENİ)
+// MODAL İŞLEMLERİ
 // =========================================
 function toggleDownloadModal() {
     const modal = document.getElementById('download-modal');
@@ -92,11 +92,23 @@ function closeDownloadModal(e) {
     }
 }
 
+// =========================================
+// 2. BAŞLATMA VE ELEMENT OLUŞTURMA
+// =========================================
 function startExperience() {
+    // --- iOS İÇİN KRİTİK DÜZELTME: SES MOTORUNU UYANDIR ---
+    if (getOS() === 'iOS') {
+        document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
+        document.body.addEventListener('click', unlockAudioContext, { once: true });
+    }
+
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
+    
     const card = document.getElementById("mainCard");
-    card.style.opacity = "1"; card.style.transform = "translateY(0) scale(1.12)"; 
+    card.style.opacity = "1"; 
+    card.style.transform = "translateY(0) scale(1.12)"; 
+    
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
 
@@ -119,71 +131,53 @@ function startExperience() {
     }
 
     setTimeout(() => { togglePlay(); }, 100);
-    setTimeout(() => { initClock(); initWeather(); initSnow(); setupClickInteractions(); setupVolumeControl(); initPageIndicators(); }, 100); 
+
+    setTimeout(() => {
+        initClock();
+        initWeather();
+        initSnow();
+        setupClickInteractions();
+        setupVolumeControl();
+        initPageIndicators();
+    }, 100); 
+
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
 }
 
+// --- iOS İÇİN SES MOTORUNU ZORLA BAŞLATMA ---
+function unlockAudioContext() {
+    if (audioCtx && audioCtx.state !== 'running') {
+        audioCtx.resume().then(() => {
+            // Boş bir ses çalarak motoru tetikle
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        });
+    }
+}
+
 function createDynamicElements() {
-    // 1. ELECTRON: Sürükleme Bölgesi
     if (isElectron && !document.querySelector('.drag-region')) {
         const dragDiv = document.createElement('div');
         dragDiv.className = 'drag-region';
         document.body.appendChild(dragDiv);
     }
 
-    // 2. KONTROLLER: App için Kapat/Küçült, Web için İndir
     if (!document.querySelector('.app-controls-container') && !document.querySelector('.web-controls-container')) {
         const container = document.createElement('div');
         
         if (isElectron) {
-            // --- APP MODU ---
             container.className = 'app-controls-container';
-            
-            // Kapat
-            const closeBtn = document.createElement('div');
-            closeBtn.className = 'control-box-btn close-app-btn';
-            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            closeBtn.onclick = () => ipcRenderer.send('close-app');
-            closeBtn.title = "Kapat";
-            container.appendChild(closeBtn);
-
-            // Tam Ekran
-            const fsBtn = document.createElement('div');
-            fsBtn.className = 'control-box-btn fullscreen-btn';
-            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            fsBtn.onclick = toggleFullScreen;
-            fsBtn.title = "Tam Ekran";
-            container.appendChild(fsBtn);
-
-            // Küçült
-            const minBtn = document.createElement('div');
-            minBtn.className = 'control-box-btn';
-            minBtn.innerHTML = '<i class="fas fa-minus"></i>';
-            minBtn.onclick = () => ipcRenderer.send('minimize-app');
-            minBtn.title = "Küçült";
-            container.appendChild(minBtn);
-
+            const closeBtn = document.createElement('div'); closeBtn.className = 'control-box-btn close-app-btn'; closeBtn.innerHTML = '<i class="fas fa-times"></i>'; closeBtn.onclick = () => ipcRenderer.send('close-app'); closeBtn.title = "Kapat"; container.appendChild(closeBtn);
+            const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn);
+            const minBtn = document.createElement('div'); minBtn.className = 'control-box-btn'; minBtn.innerHTML = '<i class="fas fa-minus"></i>'; minBtn.onclick = () => ipcRenderer.send('minimize-app'); minBtn.title = "Küçült"; container.appendChild(minBtn);
         } else {
-            // --- WEB MODU ---
             container.className = 'web-controls-container';
-
-            // Tam Ekran
-            const fsBtn = document.createElement('div');
-            fsBtn.className = 'control-box-btn fullscreen-btn';
-            fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            fsBtn.onclick = toggleFullScreen;
-            fsBtn.title = "Tam Ekran";
-            container.appendChild(fsBtn);
-
-            // İndir Butonu (YENİ)
-            const dlBtn = document.createElement('div');
-            dlBtn.className = 'control-box-btn';
-            dlBtn.innerHTML = '<i class="fas fa-download"></i>';
-            dlBtn.onclick = toggleDownloadModal;
-            dlBtn.title = "Uygulamayı İndir";
-            container.appendChild(dlBtn);
+            const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn);
+            const dlBtn = document.createElement('div'); dlBtn.className = 'control-box-btn'; dlBtn.innerHTML = '<i class="fas fa-download"></i>'; dlBtn.onclick = toggleDownloadModal; dlBtn.title = "Uygulamayı İndir"; container.appendChild(dlBtn);
         }
-
         document.body.appendChild(container);
     }
 
@@ -337,7 +331,15 @@ function initRadio() {
     audio.addEventListener('playing', () => {
         clearTimeout(timers.connection); clearTimeout(timers.retry); 
         state.isSwitching = false; state.isRetrying = false; state.isPlaying = true;
-        fadeInMusic(); updateBackground('station'); updateThemeColors(false); updateStatusUI("live", "CANLI YAYIN");
+        
+        // --- iOS İÇİN DÜZELTME: FADE-IN KAPALI ---
+        if(getOS() === 'iOS') {
+            audio.volume = state.lastVolume;
+        } else {
+            fadeInMusic(); 
+        }
+        
+        updateBackground('station'); updateThemeColors(false); updateStatusUI("live", "CANLI YAYIN");
         startSongDetectionLoop(); updateMediaSessionMetadata(); 
         document.getElementById("playerBox").classList.add("playing", "active-glow");
         document.getElementById("playerBox").classList.remove("player-error");
@@ -397,6 +399,25 @@ function toggleMute(e) {
 
 function togglePlay() {
     const audio = document.getElementById("bgMusic"); if(!audio) return; if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    
+    // --- iOS İÇİN DÜZELTME: FADE EFEKTİNİ ATLA ---
+    if (getOS() === 'iOS') {
+        if (audio.paused) {
+            audio.volume = state.lastVolume;
+            audio.play().catch(() => handleConnectionError());
+        } else {
+            audio.pause();
+            state.isPlaying = false;
+            updateStatusUI(null, "Durduruldu", "#aaa"); 
+            updateBackground('default'); 
+            updateThemeColors(false); 
+            document.getElementById("playerBox").classList.remove("playing", "active-glow"); 
+            document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
+        }
+        return; // Normal akıştan çık
+    }
+
+    // --- NORMAL (DESKTOP/ANDROID) FADE AKIŞI ---
     if (audio.paused) { audio.play().catch(() => handleConnectionError()); } 
     else {
         clearInterval(timers.fade); updateStatusUI(null, "Durduruluyor...", "#aaa"); if ('mediaSession' in navigator) { navigator.mediaSession.playbackState = "paused"; }
@@ -404,7 +425,19 @@ function togglePlay() {
     }
 }
 
-function triggerChangeStation(direction) { if(state.isSwitching) return; stopPopupSequence(); state.isSwitching = true; clearTimeout(timers.connection); clearTimeout(timers.retry); const audio = document.getElementById("bgMusic"); if(audio && !audio.paused) { updateStatusUI("connecting", "Frekans Değiştiriliyor..."); clearInterval(timers.fade); timers.fade = setInterval(() => { if (audio.volume > 0.05) audio.volume -= 0.05; else { clearInterval(timers.fade); audio.pause(); finalizeStationChange(direction); } }, 50); } else { finalizeStationChange(direction); } }
+function triggerChangeStation(direction) { 
+    if(state.isSwitching) return; 
+    stopPopupSequence(); state.isSwitching = true; clearTimeout(timers.connection); clearTimeout(timers.retry); const audio = document.getElementById("bgMusic"); 
+    
+    // --- iOS İÇİN FADE ATLA ---
+    if (getOS() === 'iOS') {
+        audio.pause();
+        finalizeStationChange(direction);
+        return;
+    }
+
+    if(audio && !audio.paused) { updateStatusUI("connecting", "Frekans Değiştiriliyor..."); clearInterval(timers.fade); timers.fade = setInterval(() => { if (audio.volume > 0.05) audio.volume -= 0.05; else { clearInterval(timers.fade); audio.pause(); finalizeStationChange(direction); } }, 50); } else { finalizeStationChange(direction); } 
+}
 
 function finalizeStationChange(direction) {
     state.currentStation = (state.currentStation + (direction === 1 ? 1 : -1) + CONFIG.stations.length) % CONFIG.stations.length;
@@ -507,7 +540,7 @@ function initOnlineCounter() {
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => console.log('Service Worker kayıt edildi:', reg)).catch(err => console.log('Service Worker hatası:', err)); }); }
 
 // =========================================
-// 10. GITHUB API İLE OTO. İNDİRME LİNKİ VE OFFLINE KONTROL
+// 10. GITHUB API İLE OTO. İNDİRME LİNKİ
 // =========================================
 const offlineOverlay = document.getElementById('offline-overlay');
 
@@ -526,23 +559,49 @@ function updateOnlineStatus(isOnline) {
 window.addEventListener('online', () => checkConnection(true));
 window.addEventListener('offline', () => updateOnlineStatus(false));
 
+// --- DÜZELTME: WINDOWS UYGULAMASI İÇİN GERÇEK İNTERNET KONTROLÜ ---
 async function checkConnection(manual = false) {
     if (!navigator.onLine) { updateOnlineStatus(false); return; }
     try {
-        const resp = await fetch('assets/icon.ico?' + new Date().getTime(), { method: 'HEAD', cache: 'no-store' });
-        if (resp.ok) { updateOnlineStatus(true); } else { updateOnlineStatus(false); }
-    } catch (e) { updateOnlineStatus(false); }
-    if(manual) { const btn = document.querySelector('.retry-btn'); const oldText = btn.innerText; btn.innerText = "Kontrol ediliyor..."; setTimeout(() => btn.innerText = oldText, 1000); }
+        // Electron uygulamasındaysak: Gerçek interneti kontrol etmek için web sitesine ping at
+        // Web sitesindeysek: Yine favicon'u kontrol et
+        const checkUrl = isElectron 
+            ? 'https://yusufaliyaylaci.github.io/assets/icon.ico?' + new Date().getTime() 
+            : 'assets/icon.ico?' + new Date().getTime();
+
+        const resp = await fetch(checkUrl, { method: 'HEAD', cache: 'no-store' });
+        
+        if (resp.ok || (isElectron && resp.type === 'opaque')) { 
+            updateOnlineStatus(true); 
+        } else { 
+            updateOnlineStatus(false); 
+        }
+    } catch (e) { 
+        console.log("Ping hatası:", e);
+        // Electron'da bazen CORS hatası olsa bile internet var demektir (fetch başarılı ama içerik yok)
+        // O yüzden hatayı tamamen "offline" saymak yerine yumuşatabiliriz ama şimdilik güvenli olanı yapalım.
+        updateOnlineStatus(false); 
+    }
+    
+    if(manual) { 
+        const btn = document.querySelector('.retry-btn'); 
+        const oldText = btn.innerText; 
+        btn.innerText = "Kontrol ediliyor..."; 
+        setTimeout(() => btn.innerText = oldText, 1000); 
+    }
 }
 
 async function updateDownloadButton() {
     const user = "yusufaliyaylaci"; const repo = "yusufaliyaylaci.github.io"; 
     
-    // --- YENİ MODALDAKİ BUTONU GÜNCELLE ---
     const modalBtn = document.getElementById('modal-win-btn');
     const verTag = document.getElementById('win-ver-tag');
 
     if (!modalBtn) return;
+
+    // --- FALLBACK (YEDEK) LİNK ---
+    // Eğer API çalışmazsa, kullanıcıyı direkt release sayfasına gönderelim.
+    const fallbackUrl = `https://github.com/${user}/${repo}/releases/latest`;
 
     try {
         const response = await fetch(`https://api.github.com/repos/${user}/${repo}/releases/latest`);
@@ -554,10 +613,17 @@ async function updateDownloadButton() {
             modalBtn.href = exeAsset.browser_download_url;
             verTag.innerText = `Son Sürüm: ${data.tag_name}`;
             console.log(`Güncel sürüm bulundu: ${data.tag_name}`);
+        } else {
+            // Asset bulunamazsa yedek linki kullan
+            console.warn("Asset bulunamadı, fallback kullanılıyor.");
+            modalBtn.href = fallbackUrl;
+            verTag.innerText = "Manuel İndir";
         }
     } catch (error) {
-        verTag.innerText = "Bağlantı hatası";
-        console.warn("Son sürüm bilgisi çekilemedi.", error);
+        // Hata durumunda yedek linki kullan
+        console.warn("Son sürüm bilgisi çekilemedi, fallback link kullanılıyor.", error);
+        modalBtn.href = fallbackUrl;
+        verTag.innerText = "İndirme Sayfası";
     }
 }
 
