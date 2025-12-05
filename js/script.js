@@ -30,7 +30,6 @@ const CONFIG = {
         { name: "Power Gold", url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", accent: "#d4af37" },
         { name: "Kafa Radyo", url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", accent: "#4CA1AF" }
     ],
-    // DÜZELTME: Resim yolu profil.png oldu
     photos: [
         "assets/profil.png", "assets/photo1.jpg", "assets/photo2.jpg", "assets/photo3.jpg",
         "assets/photo4.jpg", "assets/photo5.jpg", "assets/photo6.jpg", "assets/photo7.jpg",
@@ -392,7 +391,6 @@ function initRadio() {
 
 function updateMediaSessionMetadata() {
     if ('mediaSession' in navigator) {
-        // DÜZELTME: Profil resmi .png oldu
         const artUrl = new URL('assets/profil.png', window.location.href).href;
         navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/png' }] });
     }
@@ -608,39 +606,85 @@ async function checkConnection(manual = false) {
     }
 }
 
+// --------------------------------------------------------
+// [YENI] LINUX VE WINDOWS ASSETLERINI OTOMATIK BULMA
+// --------------------------------------------------------
 async function updateDownloadButton() {
-    const user = "yusufaliyaylaci"; const repo = "yusufaliyaylaci.github.io"; 
+    const user = "yusufaliyaylaci"; 
+    const repo = "yusufaliyaylaci.github.io"; 
     
-    const modalBtn = document.getElementById('modal-win-btn');
-    const verTag = document.getElementById('win-ver-tag');
+    // Windows Elemanı
+    const winBtn = document.getElementById('modal-win-btn');
+    const winVerTag = document.getElementById('win-ver-tag');
 
-    if (!modalBtn) return;
+    // Linux Elemanları
+    const debBtn = document.getElementById('modal-deb-btn');
+    const debVerTag = document.getElementById('deb-ver-tag');
+    
+    const rpmBtn = document.getElementById('modal-rpm-btn');
+    const rpmVerTag = document.getElementById('rpm-ver-tag');
 
-    // --- FALLBACK (YEDEK) LİNK ---
-    // Eğer API çalışmazsa, kullanıcıyı direkt release sayfasına gönderelim.
+    const archBtn = document.getElementById('modal-arch-btn');
+    const archVerTag = document.getElementById('arch-ver-tag');
+
+    if (!winBtn) return;
+
     const fallbackUrl = `https://github.com/${user}/${repo}/releases/latest`;
 
     try {
         const response = await fetch(`https://api.github.com/repos/${user}/${repo}/releases/latest`);
         if (!response.ok) throw new Error("API Hatası");
         const data = await response.json();
-        const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
 
-        if (exeAsset) {
-            modalBtn.href = exeAsset.browser_download_url;
-            verTag.innerText = `Son Sürüm: ${data.tag_name}`;
-            console.log(`Güncel sürüm bulundu: ${data.tag_name}`);
-        } else {
-            // Asset bulunamazsa yedek linki kullan
-            console.warn("Asset bulunamadı, fallback kullanılıyor.");
-            modalBtn.href = fallbackUrl;
-            verTag.innerText = "Manuel İndir";
+        // 1. Windows (.exe) Bulma
+        const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
+        if (exeAsset && winBtn) {
+            winBtn.href = exeAsset.browser_download_url;
+            winVerTag.innerText = `v${data.tag_name}`;
+        } else if(winBtn) {
+            winBtn.href = fallbackUrl;
         }
+
+        // 2. Debian/Ubuntu (.deb) Bulma
+        const debAsset = data.assets.find(asset => asset.name.endsWith('.deb'));
+        if (debAsset && debBtn) {
+            debBtn.href = debAsset.browser_download_url;
+            debVerTag.innerText = `v${data.tag_name}`;
+        } else if(debBtn) {
+            debBtn.href = fallbackUrl;
+            debVerTag.innerText = "Bulunamadı";
+            debBtn.classList.add("disabled");
+        }
+
+        // 3. Fedora (.rpm) Bulma
+        const rpmAsset = data.assets.find(asset => asset.name.endsWith('.rpm'));
+        if (rpmAsset && rpmBtn) {
+            rpmBtn.href = rpmAsset.browser_download_url;
+            rpmVerTag.innerText = `v${data.tag_name}`;
+        } else if(rpmBtn) {
+            rpmBtn.href = fallbackUrl;
+            rpmVerTag.innerText = "Bulunamadı";
+            rpmBtn.classList.add("disabled");
+        }
+
+        // 4. Arch (.pacman) Bulma
+        const archAsset = data.assets.find(asset => asset.name.endsWith('.pacman') || asset.name.endsWith('.pkg.tar.zst'));
+        if (archAsset && archBtn) {
+            archBtn.href = archAsset.browser_download_url;
+            archVerTag.innerText = `v${data.tag_name}`;
+        } else if(archBtn) {
+            archBtn.href = fallbackUrl;
+            archVerTag.innerText = "Bulunamadı";
+            archBtn.classList.add("disabled");
+        }
+
     } catch (error) {
-        // Hata durumunda yedek linki kullan
-        console.warn("Son sürüm bilgisi çekilemedi, fallback link kullanılıyor.", error);
-        modalBtn.href = fallbackUrl;
-        verTag.innerText = "İndirme Sayfası";
+        console.warn("Sürüm bilgisi çekilemedi.", error);
+        // Hata durumunda hepsi fallback'e gider
+        if(winBtn) winBtn.href = fallbackUrl;
+        if(debBtn) debBtn.href = fallbackUrl;
+        if(rpmBtn) rpmBtn.href = fallbackUrl;
+        if(archBtn) archBtn.href = fallbackUrl;
     }
 }
 

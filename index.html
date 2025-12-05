@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=v1.3.5">
+    <link rel="stylesheet" href="css/style.css?v=v1.3.6">
 </head>
 <body>
 
@@ -185,25 +185,28 @@
                     <span>Windows</span>
                     <small id="win-ver-tag">Sürüm Aranıyor...</small>
                 </a>
-                <div class="platform-item disabled">
-                    <i class="fab fa-linux"></i>
-                    <span>Linux</span>
-                    <small>Yakında</small>
-                </div>
-                <div class="platform-item disabled">
-                    <i class="fab fa-android"></i>
-                    <span>Android</span>
-                    <small>Yakında</small>
-                </div>
-                <div class="platform-item disabled">
-                    <i class="fab fa-apple"></i>
-                    <span>iOS</span>
-                    <small>Yakında</small>
-                </div>
+                
+                <a id="modal-deb-btn" href="#" class="platform-item" target="_blank">
+                    <i class="fab fa-ubuntu"></i>
+                    <span>Debian / Ubuntu</span>
+                    <small id="deb-ver-tag">.deb İndir</small>
+                </a>
+
+                <a id="modal-rpm-btn" href="#" class="platform-item" target="_blank">
+                    <i class="fab fa-fedora"></i>
+                    <span>Fedora</span>
+                    <small id="rpm-ver-tag">.rpm İndir</small>
+                </a>
+
+                <a id="modal-arch-btn" href="#" class="platform-item" target="_blank">
+                    <i class="fas fa-box-open"></i>
+                    <span>Arch Linux</span>
+                    <small id="arch-ver-tag">.pacman İndir</small>
+                </a>
             </div>
         </div>
     </div>
 
-    <script src="js/script.js?v=v1.3.5"></script>
+    <script src="js/script.js?v=v1.3.6"></script>
 </body>
 </html>

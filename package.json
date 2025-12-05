@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -12,7 +12,7 @@
   "build": {
     "appId": "com.yaliapp.desktop",
     "productName": "YaliApp",
-    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "artifactName": "${productName}-${version}-linux.${ext}",
     "publish": [
       {
         "provider": "github",
@@ -25,7 +25,8 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -41,6 +42,18 @@
       "deleteAppDataOnUninstall": true,
       "displayLanguageSelector": false,
       "language": "1033"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm",
+        "pacman"
+      ],
+      "icon": "assets/profil.png",
+      "category": "Audio",
+      "description": "Yusuf Ali Blog & Radyo Player",
+      "maintainer": "Yusuf Ali Yaylaci"
     },
     "files": [
       "**/*",
