@@ -604,3 +604,66 @@ body.view-mode-social .radio-player { cursor: default; }
         font-size: 0.7rem;
     }
 }
+
+/* =========================================
+   10. DESKTOP APP KONTROLLERİ
+========================================= */
+
+/* Tüm butonları kapsayan kutu (Sol Üst) */
+.app-controls-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+    /* Bu kutunun kendisi sürüklenemez olsun ki butonlara basabilelim */
+    -webkit-app-region: no-drag; 
+}
+
+/* Pencerenin üst kısmını sürüklenebilir yapıyoruz */
+.drag-region {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px; /* Üstten 40px'lik alan tutulabilir */
+    z-index: 900;
+    -webkit-app-region: drag; /* İŞTE BU KOD SÜRÜKLEMEYİ SAĞLAR */
+    pointer-events: none; /* Tıklamaları engellemesin */
+}
+
+/* Ortak Buton Stili */
+.control-box-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-box-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+}
+
+/* Kapat Butonu Özel Rengi */
+.close-app-btn:hover {
+    background: rgba(255, 59, 48, 0.8); /* Kırmızı */
+    border-color: transparent;
+    box-shadow: 0 0 15px rgba(255, 59, 48, 0.4);
+}
+
+/* Tam Ekran Butonu için eski stili eziyoruz (Artık grup içinde olacak) */
+.fullscreen-btn {
+    position: static !important; /* Fixed olmasın, flex içinde dursun */
+    margin: 0 !important;
+}

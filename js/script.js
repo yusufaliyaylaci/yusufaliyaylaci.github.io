@@ -167,14 +167,14 @@ const CONFIG = {
         }
     ],
     photos: [
-        "profil.jpg", 
-        "photo1.jpg", 
-        "photo2.jpg", 
-        "photo3.jpg",
-        "photo4.jpg", 
-        "photo5.jpg", 
-        "photo6.jpg", 
-        "photo7.jpg",
+        "assets/profil.jpg", 
+        "assets/photo1.jpg", 
+        "assets/photo2.jpg", 
+        "assets/photo3.jpg",
+        "assets/photo4.jpg", 
+        "assets/photo5.jpg", 
+        "assets/photo6.jpg", 
+        "assets/photo7.jpg",
     ], 
     weatherApi: "https://api.open-meteo.com/v1/forecast",
     geoApi: "https://geocoding-api.open-meteo.com/v1/search"
@@ -209,6 +209,20 @@ let timers = {
 let audioCtx, analyzer, dataArray;
 
 // =========================================
+// YENİ: ELECTRON VE IPC ALGILAMA
+// =========================================
+let isElectron = false;
+let ipcRenderer = null;
+try {
+    if (typeof require !== 'undefined') {
+        ipcRenderer = require('electron').ipcRenderer;
+        isElectron = true;
+    }
+} catch (e) {
+    isElectron = false;
+}
+
+// =========================================
 // YENİ KOD: İŞLETİM SİSTEMİ KONTROLÜ VE POP-UP
 // =========================================
 function getOS() {
@@ -225,8 +239,8 @@ function getOS() {
 }
 
 function showDownloadPrompt() {
-    // Sadece Windows kullanıcılarına göster
-    if (getOS() !== 'Windows') {
+    // Sadece Windows kullanıcılarına göster ve Electron içinde değilse göster
+    if (getOS() !== 'Windows' || isElectron) {
         return;
     }
 
@@ -269,7 +283,7 @@ function startExperience() {
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
 
-    createDynamicElements(); 
+    createDynamicElements(); // BURADA ARTIK ÖZEL BUTONLAR DA OLUŞACAK
     setupAudioContext();
     initRadio();
     initTouchInteractions();
@@ -287,7 +301,7 @@ function startExperience() {
         initClock();
         initWeather();
         initSnow();
-        // setCircularFavicon();  <-- BU SATIRI KALDIRDIM Kİ YENİ İKONUN KAYBOLMASIN
+        // setCircularFavicon();  <-- İptal edildi (icon.ico kullanılıyor)
         setupClickInteractions();
         setupVolumeControl();
         initPageIndicators();
@@ -296,18 +310,53 @@ function startExperience() {
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
 }
 
+// =========================================
+// YENİ: DİNAMİK ELEMENTLER VE PENCERE KONTROLLERİ
+// =========================================
 function createDynamicElements() {
-    if (!document.querySelector('.fullscreen-btn')) {
-        const fsBtn = document.createElement('div');
-        fsBtn.className = 'fullscreen-btn';
-        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
-        fsBtn.onclick = toggleFullScreen;
-        fsBtn.setAttribute('aria-label', 'Tam Ekran Modu');
-        fsBtn.setAttribute('role', 'button');
-        fsBtn.tabIndex = 0;
-        document.body.appendChild(fsBtn);
+    // 1. Sürükleme Alanı Oluştur (Sadece App ise)
+    if (isElectron && !document.querySelector('.drag-region')) {
+        const dragDiv = document.createElement('div');
+        dragDiv.className = 'drag-region';
+        document.body.appendChild(dragDiv);
     }
 
+    // 2. Kontrol Butonları Konteyneri
+    if (!document.querySelector('.app-controls-container')) {
+        const container = document.createElement('div');
+        container.className = 'app-controls-container';
+        
+        // --- A) KAPAT BUTONU (Sadece App) ---
+        if (isElectron) {
+            const closeBtn = document.createElement('div');
+            closeBtn.className = 'control-box-btn close-app-btn';
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.onclick = () => ipcRenderer.send('close-app');
+            closeBtn.title = "Kapat";
+            container.appendChild(closeBtn);
+
+            // --- B) KÜÇÜLT BUTONU (Sadece App) ---
+            const minBtn = document.createElement('div');
+            minBtn.className = 'control-box-btn';
+            minBtn.innerHTML = '<i class="fas fa-minus"></i>';
+            minBtn.onclick = () => ipcRenderer.send('minimize-app');
+            minBtn.title = "Küçült";
+            container.appendChild(minBtn);
+        }
+
+        // --- C) TAM EKRAN BUTONU (Hem Site Hem App) ---
+        const fsBtn = document.createElement('div');
+        fsBtn.className = 'control-box-btn fullscreen-btn';
+        fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fsBtn.onclick = toggleFullScreen;
+        fsBtn.title = "Tam Ekran";
+        container.appendChild(fsBtn);
+
+        // Konteyneri sayfaya ekle
+        document.body.appendChild(container);
+    }
+
+    // Popup (Şarkı Bilgisi) Elementi
     const wrapper = document.querySelector('.radio-wrapper');
     if (wrapper && !document.querySelector('.song-popup')) {
         const popup = document.createElement('div');
@@ -327,10 +376,9 @@ function createDynamicElements() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => console.log(err));
-        document.querySelector('.fullscreen-btn i').className = 'fas fa-compress';
+        // İkonu değiştirmek istersen burada yapabilirsin
     } else {
         if (document.exitFullscreen) document.exitFullscreen();
-        document.querySelector('.fullscreen-btn i').className = 'fas fa-expand';
     }
 }
 
@@ -538,7 +586,7 @@ function initRadio() {
 
 function updateMediaSessionMetadata() {
     if ('mediaSession' in navigator) {
-        const artUrl = new URL('profil.jpg', window.location.href).href;
+        const artUrl = new URL('../assets/profil.jpg', window.location.href).href;
 
         navigator.mediaSession.metadata = new MediaMetadata({
             title: CONFIG.stations[state.currentStation].name,
@@ -1055,11 +1103,6 @@ function initSnow() {
 
 document.addEventListener('contextmenu', event => event.preventDefault());
 
-function setCircularFavicon() {
-    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); img.src = 'profil.jpg';
-    img.onload = () => { canvas.width = 64; canvas.height = 64; ctx.beginPath(); ctx.arc(32, 32, 32, 0, 2 * Math.PI); ctx.closePath(); ctx.clip(); ctx.drawImage(img, 0, 0, 64, 64); document.getElementById('dynamicFavicon').href = canvas.toDataURL(); };
-}
-
 // =========================================
 // 8. SENKRONİZE "DALGA" SİMÜLASYONU (Noise Math)
 // =========================================
@@ -1140,3 +1183,35 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('Service Worker hatası:', err));
     });
 }
+
+// =========================================
+// 10. OTOMATİK GÜNCEL SÜRÜM LİNKİ (GITHUB API)
+// =========================================
+async function updateDownloadButton() {
+    const user = "yusufaliyaylaci";
+    const repo = "yusufaliyaylaci.github.io"; // Repo adın
+    const btn = document.getElementById('downloadButton');
+
+    if (!btn) return;
+
+    try {
+        const response = await fetch(`https://api.github.com/repos/${user}/${repo}/releases/latest`);
+        
+        if (!response.ok) throw new Error("API Hatası");
+
+        const data = await response.json();
+        
+        // Varlıklar içinde .exe dosyasını bul
+        const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
+
+        if (exeAsset) {
+            btn.href = exeAsset.browser_download_url;
+            btn.innerHTML = `<i class="fab fa-windows"></i> Windows için İndir <span style="font-size:0.8em; opacity:0.8; margin-left:5px;">(${data.tag_name})</span>`;
+            console.log(`Güncel sürüm bulundu: ${data.tag_name}`);
+        }
+    } catch (error) {
+        console.warn("Son sürüm bilgisi çekilemedi, varsayılan link kullanılıyor.", error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', updateDownloadButton);

@@ -2,17 +2,17 @@ const CACHE_NAME = 'yali-blog-v1';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './style.css',
-    './script.js',
-    './icon.ico',
-    './profil.jpg',
-    './photo1.jpg',
-    './photo2.jpg',
-    './photo3.jpg',
-    './photo4.jpg',
-    './photo5.jpg',
-    './photo6.jpg',
-    './photo7.jpg'
+    './css/style.css',
+    './js/script.js',
+    './assets/icon.ico',
+    './assets/profil.jpg',
+    './assets/photo1.jpg',
+    './assets/photo2.jpg',
+    './assets/photo3.jpg',
+    './assets/photo4.jpg',
+    './assets/photo5.jpg',
+    './assets/photo6.jpg',
+    './assets/photo7.jpg'
 ];
 
 // 1. Service Worker Kurulumu (Dosyaları Önbelleğe Al)

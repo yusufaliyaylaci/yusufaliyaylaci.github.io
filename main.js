@@ -1,9 +1,11 @@
-const { app, BrowserWindow, dialog } = require('electron');
-const { autoUpdater } = require('electron-updater'); // <-- YENİ EKLENDİ
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
+let mainWindow;
+
 function createWindow() {
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         title: "YaliApp",
@@ -13,26 +15,29 @@ function createWindow() {
             contextIsolation: false
         },
         autoHideMenuBar: true,
-        frame: true
+        frame: false, // <-- ÇERÇEVEYİ KALDIRDIK (Frameless)
+        transparent: true // Kenarların keskin olmaması için (Opsiyonel)
     });
 
     mainWindow.loadFile('index.html');
 }
 
+// --- PENCERE KONTROL KOMUTLARI (Renderer'dan gelen) ---
+ipcMain.on('minimize-app', () => {
+    if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.on('close-app', () => {
+    if (mainWindow) mainWindow.close();
+});
+
+// ------------------------------------------------------
+
 app.whenReady().then(() => {
     createWindow();
     
-    // --- GÜNCELLEME KONTROLÜ BAŞLANGICI ---
-    // Güncelleme kontrolünü başlat
     autoUpdater.checkForUpdatesAndNotify();
     
-    // Güncelleme bulunduğunda
-    autoUpdater.on('update-available', () => {
-        // İstersen burada kullanıcıya bildirim gönderebilirsin
-        console.log('Güncelleme mevcut');
-    });
-
-    // Güncelleme indirildiğinde
     autoUpdater.on('update-downloaded', () => {
         dialog.showMessageBox({
             type: 'info',
@@ -45,7 +50,6 @@ app.whenReady().then(() => {
             }
         });
     });
-    // --- GÜNCELLEME KONTROLÜ BİTİŞİ ---
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
