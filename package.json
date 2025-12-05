@@ -1,0 +1,44 @@
+{
+  "name": "yali-app",
+  "version": "1.0.0",
+  "description": "YaliApp - Yusuf Ali Blog Desktop",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "author": "Yusuf Ali Yaylaci",
+  "license": "ISC",
+  "build": {
+    "appId": "com.yaliapp.desktop",
+    "productName": "YaliApp",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "yusufaliyaylaci",
+        "repo": "yusufaliyaylaci" 
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "YaliApp"
+    },
+    "files": [
+      "**/*",
+      "!dist/*",
+      "!node_modules/*"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0",
+    "electron-updater": "^6.0.0"
+  }
+}

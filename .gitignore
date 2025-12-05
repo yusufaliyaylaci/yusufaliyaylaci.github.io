@@ -1,0 +1,19 @@
+# --- Kisisel ve Gizli Dosyalar ---
+secrets.bat
+deploy.bat
+.env
+
+# --- Bagimliliklar (Cok buyuk olduklari icin yuklenmez) ---
+node_modules/
+npm-debug.log
+
+# --- Derleme Ciktilari (.exe ve kurulum dosyalari) ---
+dist/
+release/
+build/
+
+# --- IDE ve Sistem Dosyalari ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
