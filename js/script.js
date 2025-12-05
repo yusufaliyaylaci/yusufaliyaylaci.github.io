@@ -79,17 +79,31 @@ function hideDownloadPrompt(clicked) {
 }
 
 // =========================================
-// MODAL İŞLEMLERİ
+// MODAL İŞLEMLERİ (YENİ)
 // =========================================
 function toggleDownloadModal() {
     const modal = document.getElementById('download-modal');
-    if (modal) modal.classList.toggle('open');
+    if (modal) {
+        modal.classList.toggle('open');
+        // Modal her acildiginda ana menuye sifirla
+        if(modal.classList.contains('open')) showMainOptions();
+    }
 }
 
 function closeDownloadModal(e) {
     if (e.target.id === 'download-modal') {
         e.target.classList.remove('open');
     }
+}
+
+function showLinuxOptions() {
+    document.getElementById('main-platform-grid').style.display = 'none';
+    document.getElementById('linux-platform-grid').style.display = 'grid';
+}
+
+function showMainOptions() {
+    document.getElementById('linux-platform-grid').style.display = 'none';
+    document.getElementById('main-platform-grid').style.display = 'grid';
 }
 
 // =========================================
@@ -164,15 +178,12 @@ function createDynamicElements() {
 
     // --- SÜRÜM BİLGİSİ (Sadece App) ---
     if (isElectron) {
-        // Main process'ten versiyonu iste
         ipcRenderer.send('get-app-version');
-        
-        // Cevabı dinle ve ekrana yaz
         ipcRenderer.on('app-version', (event, version) => {
             const verDisplay = document.getElementById('app-version-display');
             if(verDisplay) {
                 verDisplay.innerText = `v${version}`;
-                verDisplay.style.display = 'block'; // Görünür yap
+                verDisplay.style.display = 'block'; 
             }
         });
     }
@@ -208,7 +219,6 @@ function toggleFullScreen() {
     else { if (document.exitFullscreen) document.exitFullscreen(); }
 }
 
-// IPC'den gelen tam ekran durumu değişikliğini dinle
 if(isElectron) {
     ipcRenderer.on('fullscreen-update', (event, isFullScreen) => {
         const icon = document.querySelector('.fullscreen-btn i');
@@ -223,7 +233,6 @@ if(isElectron) {
         }
     });
 } else {
-    // Web için standart dinleyici
     document.addEventListener('fullscreenchange', () => {
         const icon = document.querySelector('.fullscreen-btn i');
         if(icon) {
@@ -636,11 +645,14 @@ async function updateDownloadButton() {
         if (!response.ok) throw new Error("API Hatası");
         const data = await response.json();
 
+        // VERSION FIX: "vv1.5.5" -> "v1.5.5"
+        const versionLabel = data.tag_name.startsWith('v') ? data.tag_name : 'v' + data.tag_name;
+
         // 1. Windows (.exe) Bulma
         const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
         if (exeAsset && winBtn) {
             winBtn.href = exeAsset.browser_download_url;
-            winVerTag.innerText = `v${data.tag_name}`;
+            winVerTag.innerText = versionLabel;
         } else if(winBtn) {
             winBtn.href = fallbackUrl;
         }
@@ -649,7 +661,7 @@ async function updateDownloadButton() {
         const debAsset = data.assets.find(asset => asset.name.endsWith('.deb'));
         if (debAsset && debBtn) {
             debBtn.href = debAsset.browser_download_url;
-            debVerTag.innerText = `v${data.tag_name}`;
+            debVerTag.innerText = versionLabel;
         } else if(debBtn) {
             debBtn.href = fallbackUrl;
             debVerTag.innerText = "Bulunamadı";
@@ -660,7 +672,7 @@ async function updateDownloadButton() {
         const rpmAsset = data.assets.find(asset => asset.name.endsWith('.rpm'));
         if (rpmAsset && rpmBtn) {
             rpmBtn.href = rpmAsset.browser_download_url;
-            rpmVerTag.innerText = `v${data.tag_name}`;
+            rpmVerTag.innerText = versionLabel;
         } else if(rpmBtn) {
             rpmBtn.href = fallbackUrl;
             rpmVerTag.innerText = "Bulunamadı";
@@ -671,7 +683,7 @@ async function updateDownloadButton() {
         const archAsset = data.assets.find(asset => asset.name.endsWith('.pacman') || asset.name.endsWith('.pkg.tar.zst'));
         if (archAsset && archBtn) {
             archBtn.href = archAsset.browser_download_url;
-            archVerTag.innerText = `v${data.tag_name}`;
+            archVerTag.innerText = versionLabel;
         } else if(archBtn) {
             archBtn.href = fallbackUrl;
             archVerTag.innerText = "Bulunamadı";

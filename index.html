@@ -26,7 +26,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=v1.5.5">
+    <link rel="stylesheet" href="css/style.css?v=v1.5.6">
+
+    <style>
+        /* Animasyon ve Gecisler icin Ek Stiller */
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .back-btn {
+            grid-column: span 2;
+            background: rgba(255, 255, 255, 0.1) !important;
+            padding: 10px !important;
+            font-size: 0.9rem !important;
+            cursor: pointer;
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2) !important; }
+    </style>
 </head>
 <body>
 
@@ -179,13 +194,39 @@
                 <h3>Uygulamayı İndir</h3>
                 <i class="fas fa-times close-modal" onclick="toggleDownloadModal()"></i>
             </div>
-            <div class="platforms-grid">
+            
+            <div class="platforms-grid fade-in" id="main-platform-grid">
                 <a id="modal-win-btn" href="#" class="platform-item active" target="_blank">
                     <i class="fab fa-windows"></i>
                     <span>Windows</span>
                     <small id="win-ver-tag">Sürüm Aranıyor...</small>
                 </a>
                 
+                <div class="platform-item" onclick="showLinuxOptions()" style="cursor: pointer;">
+                    <i class="fab fa-linux"></i>
+                    <span>Linux</span>
+                    <small id="linux-main-tag">Dağıtım Seçin</small>
+                </div>
+
+                <div class="platform-item disabled">
+                    <i class="fab fa-android"></i>
+                    <span>Android</span>
+                    <small>Yakında</small>
+                </div>
+
+                <div class="platform-item disabled">
+                    <i class="fab fa-apple"></i>
+                    <span>macOS</span>
+                    <small>Yakında</small>
+                </div>
+            </div>
+
+            <div class="platforms-grid fade-in" id="linux-platform-grid" style="display: none;">
+                <div class="platform-item back-btn" onclick="showMainOptions()">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Geri Dön</span>
+                </div>
+
                 <a id="modal-deb-btn" href="#" class="platform-item" target="_blank">
                     <i class="fab fa-ubuntu"></i>
                     <span>Debian / Ubuntu</span>
@@ -204,9 +245,10 @@
                     <small id="arch-ver-tag">.pacman İndir</small>
                 </a>
             </div>
+
         </div>
     </div>
 
-    <script src="js/script.js?v=v1.5.5"></script>
+    <script src="js/script.js?v=v1.5.6"></script>
 </body>
 </html>
