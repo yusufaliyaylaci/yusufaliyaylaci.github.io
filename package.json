@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -16,7 +16,7 @@
       {
         "provider": "github",
         "owner": "yusufaliyaylaci",
-        "repo": "yusufaliyaylaci" 
+        "repo": "yusufaliyaylaci.github.io"
       }
     ],
     "win": {
