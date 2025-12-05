@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -12,6 +12,7 @@
   "build": {
     "appId": "com.yaliapp.desktop",
     "productName": "YaliApp",
+    "verifyUpdateCodeSignature": false,
     "publish": [
       {
         "provider": "github",
