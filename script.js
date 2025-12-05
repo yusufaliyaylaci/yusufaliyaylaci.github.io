@@ -211,13 +211,10 @@ let audioCtx, analyzer, dataArray;
 // =========================================
 // YENİ KOD: İŞLETİM SİSTEMİ KONTROLÜ VE POP-UP
 // =========================================
-
-// Kullanıcının İşletim Sistemini Algıla
 function getOS() {
     if (typeof window === 'undefined') return 'Unknown';
     
     const userAgent = window.navigator.userAgent;
-    // Basit ama etkili kontrol
     if (userAgent.indexOf("Win") !== -1) return "Windows";
     if (userAgent.indexOf("Mac") !== -1) return "MacOS";
     if (userAgent.indexOf("Linux") !== -1) return "Linux";
@@ -230,18 +227,15 @@ function getOS() {
 function showDownloadPrompt() {
     // Sadece Windows kullanıcılarına göster
     if (getOS() !== 'Windows') {
-        console.log("Kullanıcı Windows değil, indirme teklifi gizlendi.");
         return;
     }
 
     const prompt = document.getElementById('downloadPrompt');
     if (!prompt) return;
 
-    // 1. Pop-up'ı göster
     prompt.classList.add('active');
     prompt.setAttribute('aria-hidden', 'false');
 
-    // 2. 7 saniye sonra otomatik gizle
     timers.promptClose = setTimeout(() => {
         hideDownloadPrompt(false);
     }, 7000); 
@@ -255,14 +249,10 @@ function hideDownloadPrompt(clicked) {
     }
     clearTimeout(timers.promptClose);
     
-    // Eğer kullanıcı indirme butonuna tıkladıysa, tekrar göstermemek için yerel depolamaya kaydet
     if (clicked) {
         localStorage.setItem('yaliApp_promptShown', 'true');
     }
 }
-// =========================================
-// YENİ KOD SONU
-// =========================================
 
 
 // =========================================
@@ -285,9 +275,7 @@ function startExperience() {
     initTouchInteractions();
     initOnlineCounter(); 
 
-    // Hoş geldin ekranı çıktıktan 3 saniye sonra pop-up'ı göster
     setTimeout(() => {
-        // Pop-up'ı daha önce gösterip göstermediğimizi kontrol edelim
         if (typeof window !== 'undefined' && localStorage.getItem('yaliApp_promptShown') !== 'true') {
             showDownloadPrompt();
         }
@@ -299,7 +287,7 @@ function startExperience() {
         initClock();
         initWeather();
         initSnow();
-        setCircularFavicon();
+        // setCircularFavicon();  <-- BU SATIRI KALDIRDIM Kİ YENİ İKONUN KAYBOLMASIN
         setupClickInteractions();
         setupVolumeControl();
         initPageIndicators();
@@ -468,7 +456,6 @@ function changeStage() {
 function initPageIndicators() {
     const container = document.getElementById("stageIndicators");
     container.innerHTML = "";
-    // Stage 0 (En üst) -> Stage 4 (En alt)
     for(let i = 0; i <= 4; i++) {
         const dot = document.createElement("div");
         dot.className = "indicator-dot";
@@ -507,7 +494,6 @@ function initRadio() {
     audio.src = CONFIG.stations[state.currentStation].url;
     audio.volume = Math.pow(state.lastVolume, 2);
 
-    // --- Media Session Handlers (Tuşlar) ---
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', () => togglePlay());
         navigator.mediaSession.setActionHandler('pause', () => togglePlay());
@@ -515,7 +501,6 @@ function initRadio() {
         navigator.mediaSession.setActionHandler('nexttrack', () => triggerChangeStation(1));
         navigator.mediaSession.setActionHandler('stop', () => togglePlay());
     }
-    // -----------------------------------------------------------
 
     audio.addEventListener('playing', () => {
         clearTimeout(timers.connection);
@@ -715,7 +700,6 @@ function togglePlay() {
         clearInterval(timers.fade); 
         updateStatusUI(null, "Durduruluyor...", "#aaa");
         
-        // Bildirim durumunu güncelle (Paused)
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = "paused";
         }
@@ -1144,4 +1128,15 @@ function initOnlineCounter() {
     }
 
     updateCount();
+}
+
+// =========================================
+// 9. SERVICE WORKER KAYDI (PWA İÇİN)
+// =========================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker kayıt edildi:', reg))
+            .catch(err => console.log('Service Worker hatası:', err));
+    });
 }

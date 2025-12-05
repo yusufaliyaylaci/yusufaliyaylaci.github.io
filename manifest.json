@@ -1,0 +1,16 @@
+{
+  "name": "Yusuf Ali Blog",
+  "short_name": "Yusuf Ali",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
