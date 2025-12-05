@@ -78,25 +78,16 @@ function hideDownloadPrompt(clicked) {
     if (clicked) localStorage.setItem('yaliApp_promptShown', 'true');
 }
 
-// =========================================
-// MODAL İŞLEMLERİ
-// =========================================
 function toggleDownloadModal() {
     const modal = document.getElementById('download-modal');
     if (modal) modal.classList.toggle('open');
 }
 
 function closeDownloadModal(e) {
-    if (e.target.id === 'download-modal') {
-        e.target.classList.remove('open');
-    }
+    if (e.target.id === 'download-modal') { e.target.classList.remove('open'); }
 }
 
-// =========================================
-// 2. BAŞLATMA VE ELEMENT OLUŞTURMA
-// =========================================
 function startExperience() {
-    // --- iOS İÇİN KRİTİK DÜZELTME: SES MOTORUNU UYANDIR ---
     if (getOS() === 'iOS') {
         document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
         document.body.addEventListener('click', unlockAudioContext, { once: true });
@@ -104,11 +95,8 @@ function startExperience() {
 
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
-    
     const card = document.getElementById("mainCard");
-    card.style.opacity = "1"; 
-    card.style.transform = "translateY(0) scale(1.12)"; 
-    
+    card.style.opacity = "1"; card.style.transform = "translateY(0) scale(1.12)"; 
     document.getElementById("footerText").classList.add('copyright-visible');
     document.getElementById("weatherWidget").classList.add('visible');
 
@@ -131,24 +119,13 @@ function startExperience() {
     }
 
     setTimeout(() => { togglePlay(); }, 100);
-
-    setTimeout(() => {
-        initClock();
-        initWeather();
-        initSnow();
-        setupClickInteractions();
-        setupVolumeControl();
-        initPageIndicators();
-    }, 100); 
-
+    setTimeout(() => { initClock(); initWeather(); initSnow(); setupClickInteractions(); setupVolumeControl(); initPageIndicators(); }, 100); 
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500); 
 }
 
-// --- iOS İÇİN SES MOTORUNU ZORLA BAŞLATMA ---
 function unlockAudioContext() {
     if (audioCtx && audioCtx.state !== 'running') {
         audioCtx.resume().then(() => {
-            // Boş bir ses çalarak motoru tetikle
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
             source.buffer = buffer;
@@ -170,8 +147,11 @@ function createDynamicElements() {
         
         if (isElectron) {
             container.className = 'app-controls-container';
+            // 1. KAPAT (SOL)
             const closeBtn = document.createElement('div'); closeBtn.className = 'control-box-btn close-app-btn'; closeBtn.innerHTML = '<i class="fas fa-times"></i>'; closeBtn.onclick = () => ipcRenderer.send('close-app'); closeBtn.title = "Kapat"; container.appendChild(closeBtn);
+            // 2. BÜYÜLT / TAM EKRAN (ORTA)
             const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn);
+            // 3. KÜÇÜLT (SAĞ)
             const minBtn = document.createElement('div'); minBtn.className = 'control-box-btn'; minBtn.innerHTML = '<i class="fas fa-minus"></i>'; minBtn.onclick = () => ipcRenderer.send('minimize-app'); minBtn.title = "Küçült"; container.appendChild(minBtn);
         } else {
             container.className = 'web-controls-container';
@@ -332,12 +312,7 @@ function initRadio() {
         clearTimeout(timers.connection); clearTimeout(timers.retry); 
         state.isSwitching = false; state.isRetrying = false; state.isPlaying = true;
         
-        // --- iOS İÇİN DÜZELTME: FADE-IN KAPALI ---
-        if(getOS() === 'iOS') {
-            audio.volume = state.lastVolume;
-        } else {
-            fadeInMusic(); 
-        }
+        if(getOS() === 'iOS') { audio.volume = state.lastVolume; } else { fadeInMusic(); }
         
         updateBackground('station'); updateThemeColors(false); updateStatusUI("live", "CANLI YAYIN");
         startSongDetectionLoop(); updateMediaSessionMetadata(); 
@@ -400,24 +375,12 @@ function toggleMute(e) {
 function togglePlay() {
     const audio = document.getElementById("bgMusic"); if(!audio) return; if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     
-    // --- iOS İÇİN DÜZELTME: FADE EFEKTİNİ ATLA ---
     if (getOS() === 'iOS') {
-        if (audio.paused) {
-            audio.volume = state.lastVolume;
-            audio.play().catch(() => handleConnectionError());
-        } else {
-            audio.pause();
-            state.isPlaying = false;
-            updateStatusUI(null, "Durduruldu", "#aaa"); 
-            updateBackground('default'); 
-            updateThemeColors(false); 
-            document.getElementById("playerBox").classList.remove("playing", "active-glow"); 
-            document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
-        }
-        return; // Normal akıştan çık
+        if (audio.paused) { audio.volume = state.lastVolume; audio.play().catch(() => handleConnectionError()); } 
+        else { audio.pause(); state.isPlaying = false; updateStatusUI(null, "Durduruldu", "#aaa"); updateBackground('default'); updateThemeColors(false); document.getElementById("playerBox").classList.remove("playing", "active-glow"); document.getElementById("playIcon").classList.replace("fa-pause", "fa-play"); }
+        return;
     }
 
-    // --- NORMAL (DESKTOP/ANDROID) FADE AKIŞI ---
     if (audio.paused) { audio.play().catch(() => handleConnectionError()); } 
     else {
         clearInterval(timers.fade); updateStatusUI(null, "Durduruluyor...", "#aaa"); if ('mediaSession' in navigator) { navigator.mediaSession.playbackState = "paused"; }
@@ -429,12 +392,7 @@ function triggerChangeStation(direction) {
     if(state.isSwitching) return; 
     stopPopupSequence(); state.isSwitching = true; clearTimeout(timers.connection); clearTimeout(timers.retry); const audio = document.getElementById("bgMusic"); 
     
-    // --- iOS İÇİN FADE ATLA ---
-    if (getOS() === 'iOS') {
-        audio.pause();
-        finalizeStationChange(direction);
-        return;
-    }
+    if (getOS() === 'iOS') { audio.pause(); finalizeStationChange(direction); return; }
 
     if(audio && !audio.paused) { updateStatusUI("connecting", "Frekans Değiştiriliyor..."); clearInterval(timers.fade); timers.fade = setInterval(() => { if (audio.volume > 0.05) audio.volume -= 0.05; else { clearInterval(timers.fade); audio.pause(); finalizeStationChange(direction); } }, 50); } else { finalizeStationChange(direction); } 
 }
