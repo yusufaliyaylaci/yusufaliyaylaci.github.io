@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.4.2",
+  "version": "1.4.5",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -45,7 +45,6 @@
     },
     "linux": {
       "target": [
-        "AppImage",
         "deb",
         "rpm",
         "pacman"
@@ -69,6 +68,6 @@
   },
   "devDependencies": {
     "electron": "^25.0.0",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^24.0.0"
   }
 }
