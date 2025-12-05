@@ -850,3 +850,17 @@ body.view-mode-social .radio-player { cursor: default; }
 .platform-item.disabled {
     opacity: 0.5; cursor: not-allowed; filter: grayscale(1);
 }
+
+/* =========================================
+   13. SÜRÜM BİLGİSİ (SADECE APP)
+========================================= */
+#app-version-display {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    z-index: 9999;
+    pointer-events: none;
+    display: none; /* JS ile görünür yapılacak */
+}

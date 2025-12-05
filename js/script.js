@@ -30,8 +30,9 @@ const CONFIG = {
         { name: "Power Gold", url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", accent: "#d4af37" },
         { name: "Kafa Radyo", url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", accent: "#4CA1AF" }
     ],
+    // DÜZELTME: Resim yolu profil.png oldu
     photos: [
-        "assets/profil.jpg", "assets/photo1.jpg", "assets/photo2.jpg", "assets/photo3.jpg",
+        "assets/profil.png", "assets/photo1.jpg", "assets/photo2.jpg", "assets/photo3.jpg",
         "assets/photo4.jpg", "assets/photo5.jpg", "assets/photo6.jpg", "assets/photo7.jpg",
     ], 
     weatherApi: "https://api.open-meteo.com/v1/forecast",
@@ -78,6 +79,9 @@ function hideDownloadPrompt(clicked) {
     if (clicked) localStorage.setItem('yaliApp_promptShown', 'true');
 }
 
+// =========================================
+// MODAL İŞLEMLERİ
+// =========================================
 function toggleDownloadModal() {
     const modal = document.getElementById('download-modal');
     if (modal) modal.classList.toggle('open');
@@ -89,6 +93,9 @@ function closeDownloadModal(e) {
     }
 }
 
+// =========================================
+// 2. BAŞLATMA VE ELEMENT OLUŞTURMA
+// =========================================
 function startExperience() {
     if (getOS() === 'iOS') {
         document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
@@ -156,18 +163,17 @@ function createDynamicElements() {
         document.body.appendChild(dragDiv);
     }
 
-    // --- IPC DINLEYICISI (F11 ICIN) ---
+    // --- SÜRÜM BİLGİSİ (Sadece App) ---
     if (isElectron) {
-        ipcRenderer.on('fullscreen-update', (event, isFullScreen) => {
-            const icon = document.querySelector('.fullscreen-btn i');
-            if(icon) {
-                if(isFullScreen) {
-                    icon.classList.remove('fa-expand');
-                    icon.classList.add('fa-compress');
-                } else {
-                    icon.classList.remove('fa-compress');
-                    icon.classList.add('fa-expand');
-                }
+        // Main process'ten versiyonu iste
+        ipcRenderer.send('get-app-version');
+        
+        // Cevabı dinle ve ekrana yaz
+        ipcRenderer.on('app-version', (event, version) => {
+            const verDisplay = document.getElementById('app-version-display');
+            if(verDisplay) {
+                verDisplay.innerText = `v${version}`;
+                verDisplay.style.display = 'block'; // Görünür yap
             }
         });
     }
@@ -201,6 +207,36 @@ function createDynamicElements() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => console.log(err)); } 
     else { if (document.exitFullscreen) document.exitFullscreen(); }
+}
+
+// IPC'den gelen tam ekran durumu değişikliğini dinle
+if(isElectron) {
+    ipcRenderer.on('fullscreen-update', (event, isFullScreen) => {
+        const icon = document.querySelector('.fullscreen-btn i');
+        if(icon) {
+            if(isFullScreen) {
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+    });
+} else {
+    // Web için standart dinleyici
+    document.addEventListener('fullscreenchange', () => {
+        const icon = document.querySelector('.fullscreen-btn i');
+        if(icon) {
+            if (document.fullscreenElement) {
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+    });
 }
 
 function setupAudioContext() {
@@ -356,8 +392,9 @@ function initRadio() {
 
 function updateMediaSessionMetadata() {
     if ('mediaSession' in navigator) {
-        const artUrl = new URL('assets/profil.jpg', window.location.href).href;
-        navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/jpeg' }] });
+        // DÜZELTME: Profil resmi .png oldu
+        const artUrl = new URL('assets/profil.png', window.location.href).href;
+        navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/png' }] });
     }
 }
 
