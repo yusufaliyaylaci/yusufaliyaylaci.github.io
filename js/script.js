@@ -97,8 +97,30 @@ function closeDownloadModal(e) {
 }
 
 function showLinuxOptions() {
-    document.getElementById('main-platform-grid').style.display = 'none';
-    document.getElementById('linux-platform-grid').style.display = 'grid';
+    const mainGrid = document.getElementById('main-platform-grid');
+    const linuxGrid = document.getElementById('linux-platform-grid');
+
+    // Ana menüyü gizle
+    mainGrid.style.display = 'none';
+    mainGrid.classList.remove('fade-in'); // Sınıfı temizle ki geri dönünce tekrar çalışsın
+
+    // Linux menüsünü göster
+    linuxGrid.style.display = 'grid';
+    
+    // Animasyonu yeniden tetiklemek için ufak bir trick (gerekirse)
+    // CSS'deki 'backwards' özelliği sayesinde display:grid olduğu an animasyon başlar.
+}
+
+function showMainOptions() {
+    const mainGrid = document.getElementById('main-platform-grid');
+    const linuxGrid = document.getElementById('linux-platform-grid');
+
+    // Linux menüsünü gizle
+    linuxGrid.style.display = 'none';
+
+    // Ana menüyü göster ve animasyonunu oynat
+    mainGrid.style.display = 'grid';
+    mainGrid.classList.add('fade-in'); 
 }
 
 function showMainOptions() {

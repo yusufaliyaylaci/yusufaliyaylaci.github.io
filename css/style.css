@@ -864,3 +864,90 @@ body.view-mode-social .radio-player { cursor: default; }
     pointer-events: none;
     display: none; /* JS ile görünür yapılacak */
 }
+
+/* =========================================
+   LINUX VE İNDİRME MENÜSÜ EFEKTLERİ
+========================================= */
+
+/* --- 1. Ana Linux Butonu (Windows ile Aynı Stil) --- */
+/* Windows butonu gibi sadece yukarı zıplar ve parlar */
+#linux-main-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--theme-color) !important;
+    transform: translateY(-5px) !important; /* Windows butonuyla aynı hareket */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+}
+
+/* --- 2. Linux Menüsü Izgara Yapısı (2x2 Grid) --- */
+#linux-platform-grid {
+    display: none; /* JS ile açılacak */
+    grid-template-columns: repeat(2, 1fr); /* 2 Sütun */
+    gap: 15px;
+}
+
+/* --- 3. Geri Dön Butonu (Diğerleriyle Eşitleme) --- */
+/* Artık ince şerit değil, tam bir kutu */
+#linux-platform-grid .back-btn {
+    grid-column: auto !important; /* Tek sütun kaplasın */
+    background: rgba(255, 255, 255, 0.05) !important;
+    padding: 20px !important;
+    font-size: 1rem !important;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+#linux-platform-grid .back-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-5px); /* Hafif zıplama */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Geri dön ikonuna küçük bir hareket */
+#linux-platform-grid .back-btn:hover i {
+    transform: translateX(-5px);
+    transition: 0.3s;
+}
+
+/* --- 4. Dağıtım Butonları Animasyonları (Farklı ve Renkli) --- */
+
+/* Giriş Animasyonu: Butonlar sırayla belirir */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8) translateY(20px); filter: blur(5px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+#linux-platform-grid .platform-item {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+/* Sıralı Geliş (Stagger) */
+#linux-platform-grid .platform-item:nth-child(1) { animation-delay: 0.05s; } /* Geri */
+#linux-platform-grid .platform-item:nth-child(2) { animation-delay: 0.15s; } /* Ubuntu */
+#linux-platform-grid .platform-item:nth-child(3) { animation-delay: 0.25s; } /* Fedora */
+#linux-platform-grid .platform-item:nth-child(4) { animation-delay: 0.35s; } /* Arch */
+
+/* Ubuntu / Debian (Turuncu Glow) */
+#modal-deb-btn:hover {
+    background: rgba(233, 84, 32, 0.15) !important;
+    border-color: #E95420 !important;
+    box-shadow: 0 10px 30px rgba(233, 84, 32, 0.25) !important;
+}
+#modal-deb-btn:hover i { color: #E95420; transform: scale(1.1) rotate(15deg); transition: 0.3s; }
+
+/* Fedora (Mavi Glow) */
+#modal-rpm-btn:hover {
+    background: rgba(41, 65, 114, 0.2) !important;
+    border-color: #51A2DA !important;
+    box-shadow: 0 10px 30px rgba(81, 162, 218, 0.25) !important;
+}
+#modal-rpm-btn:hover i { color: #51A2DA; transform: scale(1.1) translateY(-3px); transition: 0.3s; }
+
+/* Arch Linux (Turkuaz Glow) */
+#modal-arch-btn:hover {
+    background: rgba(23, 147, 209, 0.15) !important;
+    border-color: #1793D1 !important;
+    box-shadow: 0 10px 30px rgba(23, 147, 209, 0.25) !important;
+}
+#modal-arch-btn:hover i { color: #1793D1; transform: scale(1.1) rotate(-360deg); transition: 0.6s ease-in-out; }
