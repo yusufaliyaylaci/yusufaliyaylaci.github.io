@@ -93,6 +93,35 @@ export function createDynamicElements() {
     if (wrapper && !document.querySelector('.song-popup')) {
         const popup = document.createElement('div'); popup.className = 'song-popup'; popup.id = 'songPopup'; popup.innerHTML = `<div class="popup-icon"><i class="fas fa-music"></i></div><div class="popup-content"><div class="popup-title" id="popupTitle">Dinleniyor...</div><div class="popup-song" id="popupSong">---</div></div>`; wrapper.appendChild(popup); 
     }
+    if (!document.getElementById('resultBubble')) {
+        const bubble = document.createElement('div');
+        bubble.id = 'resultBubble';
+        bubble.className = 'result-bubble';
+// YENİ HTML YAPISI (Ekolayzer Eklendi):
+        bubble.innerHTML = `
+            <div class="bubble-left">
+                <img src="" id="bubbleArt" class="bubble-art" style="display:none">
+                <div class="mini-equalizer">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+            </div>
+            <div class="bubble-info">
+                <span id="bubbleTitle" class="bubble-title">Şarkı Adı</span>
+                <span id="bubbleArtist" class="bubble-artist">Sanatçı</span>
+            </div>
+            <i class="fas fa-times bubble-close" id="bubbleClose"></i>
+        `;
+        document.body.appendChild(bubble);
+        
+        // Kapatma butonu olayı
+        document.getElementById('bubbleClose').addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideBubble();
+        });
+    }
 }
 
 export function updateStatusUI(statusType, msg, customColor) {
@@ -179,6 +208,17 @@ export function changeStage() {
 export function goDefaultPage() { state.stage = isElectron ? 3 : 1; changeStage(); }
 export function lockScroll(duration = 1200) { state.isScrolling = true; setTimeout(() => { state.isScrolling = false; }, duration); }
 export function triggerBump(className) { document.body.classList.add(className); setTimeout(() => document.body.classList.remove(className), 400); }
+export function shakePlayer() {
+    const playerBox = document.getElementById('playerBox');
+    if (playerBox) {
+        playerBox.classList.remove('shake-player-anim');
+        void playerBox.offsetWidth; 
+        playerBox.classList.add('shake-player-anim');
+        setTimeout(() => {
+            playerBox.classList.remove('shake-player-anim');
+        }, 500);
+    }
+}
 export function nextPhoto() { state.photoIndex = (state.photoIndex + 1) % CONFIG.photos.length; updatePhoto(); }
 export function prevPhoto() { state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.length) % CONFIG.photos.length; updatePhoto(); }
 export function updatePhoto() { const img = document.getElementById("profileImg"); img.classList.add("changing"); const newImg = new Image(); newImg.src = CONFIG.photos[state.photoIndex]; newImg.onload = () => { img.src = CONFIG.photos[state.photoIndex]; setTimeout(() => { img.classList.remove("changing"); }, 100); }; }
@@ -193,6 +233,66 @@ export function showLinuxOptions() { document.getElementById('main-platform-grid
 export function showMainOptions() { document.getElementById('linux-platform-grid').style.display = 'none'; document.getElementById('main-platform-grid').style.display = 'grid'; }
 export function toggleLowPowerMode() { state.lowPowerMode = !state.lowPowerMode; const btn = document.getElementById('ecoBtn'); const canvas = document.getElementById('snowCanvas'); if (state.lowPowerMode) { if(btn) { btn.style.color = "#4caf50"; btn.style.borderColor = "#4caf50"; } if(canvas) canvas.style.display = 'none'; } else { if(btn) { btn.style.color = "white"; btn.style.borderColor = ""; } if(canvas) canvas.style.display = 'block'; initSnow(); } }
 export function hideDownloadPrompt(clicked) { const prompt = document.getElementById('downloadPrompt'); if (prompt) { prompt.classList.remove('active'); prompt.setAttribute('aria-hidden', 'true'); } if (clicked) localStorage.setItem('yaliApp_promptShown', 'true'); }
+export function showScanningPopup() {
+    // Önce varsa eski baloncuğu patlat
+    hideBubble();
+
+    const popup = document.getElementById('songPopup');
+    if(popup) {
+        popup.classList.add('active', 'scanning-mode');
+        // İkon ve metni arama moduna al
+        const title = document.getElementById('popupTitle');
+        const song = document.getElementById('popupSong');
+        const icon = document.querySelector('.popup-icon');
+        
+        title.innerText = "Ortam Dinleniyor...";
+        title.style.color = "#ffeb3b";
+        song.innerText = "Ses Analiz Ediliyor...";
+        icon.innerHTML = '<i class="fas fa-microphone-alt fa-pulse"></i>';
+    }
+}
+
+export function hideScanningPopup() {
+    const popup = document.getElementById('songPopup');
+    if(popup) {
+        popup.classList.remove('active', 'scanning-mode');
+    }
+}
+
+export function showBubble(artist, song, artUrl) {
+    // Önce tarama kutusunu kapat
+    hideScanningPopup();
+
+    const bubble = document.getElementById('resultBubble');
+    const bTitle = document.getElementById('bubbleTitle');
+    const bArtist = document.getElementById('bubbleArtist');
+    const bArt = document.getElementById('bubbleArt');
+
+    if(bubble && bTitle && bArtist) {
+        bTitle.innerText = song;
+        bArtist.innerText = artist;
+        
+        if(artUrl) {
+            bArt.src = artUrl;
+            bArt.style.display = "block";
+        } else {
+            bArt.style.display = "none";
+        }
+
+        // Animasyonla yüzeye çıkar (Reflow trigger)
+        bubble.classList.remove('surfaced');
+        void bubble.offsetWidth; 
+        bubble.classList.add('surfaced');
+    }
+}
+
+export function hideBubble() {
+    const bubble = document.getElementById('resultBubble');
+    if(bubble) {
+        bubble.classList.remove('surfaced');
+    }
+}
+
 
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.card') && 

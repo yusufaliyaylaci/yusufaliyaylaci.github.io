@@ -67,7 +67,20 @@ function setupEventListeners() {
     document.getElementById('navRight')?.addEventListener('click', UI.nextPhoto);
     document.getElementById('btnCityChange')?.addEventListener('click', enableSearchMode);
     document.getElementById('btnCityCancel')?.addEventListener('click', disableSearchMode);
-    document.getElementById('btnModalClose')?.addEventListener('click', () => UI.toggleDownloadModal());
+    
+    const closeBtn = document.getElementById('btnModalClose');
+    if (closeBtn) {
+
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        
+        newCloseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            UI.toggleDownloadModal();
+        });
+    }
+
     document.querySelector('.modal-overlay')?.addEventListener('click', UI.closeDownloadModal);
     document.getElementById('linux-main-btn')?.addEventListener('click', UI.showLinuxOptions);
     document.getElementById('btnLinuxBack')?.addEventListener('click', UI.showMainOptions);

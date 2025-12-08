@@ -1,7 +1,10 @@
 import { CONFIG } from './config.js';
 import { state, timers, audioCtx, setAudioContext, setAnalyzer, setDataArray, analyzer } from './state.js';
-import { updateStatusUI, updateBackground, updateThemeColors, getOS, triggerRadioCard } from './ui.js';
+// Importları güncelledik: Yeni UI fonksiyonları eklendi
+import { updateStatusUI, updateBackground, updateThemeColors, getOS, triggerRadioCard, shakePlayer, showScanningPopup, hideScanningPopup, showBubble, hideBubble } from './ui.js';
 import { isElectron, ipcRenderer } from './main.js';
+
+let connectionTimeout = null; // 4 Saniye kuralı için sayaç
 
 // --- YARDIMCI FONKSİYONLAR ---
 function getActivePlayer() { return document.getElementById(`bgMusic${state.activePlayerId}`); }
@@ -24,6 +27,8 @@ export function setupAudioContext() {
 
 // --- BAŞLATMA ---
 export function initRadio() {
+    state.lastDirection = 1; // Varsayılan yön
+
     const player1 = document.getElementById("bgMusic1");
     if ('mediaSession' in navigator) {
         navigator.mediaSession.setActionHandler('play', () => playRadio());
@@ -37,6 +42,38 @@ export function initRadio() {
     if (isElectron) { ipcRenderer.on('media-toggle', () => { togglePlay(); }); }
 }
 
+// --- ZAMANLAYICI FONKSİYONU ---
+function startConnectionTimer() {
+    if (connectionTimeout) clearTimeout(connectionTimeout);
+    
+    // 4.5 Saniye sonra kontrol et
+    connectionTimeout = setTimeout(() => {
+        const sText = document.getElementById("statusText");
+        const isStillConnecting = sText && (sText.innerText.includes("Bağlanılıyor") || sText.innerText.includes("Değiştiriliyor"));
+        
+        if (!state.isPlaying && isStillConnecting) {
+            console.warn("Bağlantı zaman aşımı (4.5sn).");
+            handleConnectionError();
+        }
+    }, 4500);
+}
+
+// --- SIFIRLAMA YARDIMCISI ---
+function resetErrorState() {
+    clearTimeout(connectionTimeout);
+    clearTimeout(timers.connection);
+    clearTimeout(timers.retry);
+    
+    state.isRetrying = false;
+    state.isSwitching = false;
+    
+    const pBox = document.getElementById("playerBox");
+    if(pBox) pBox.classList.remove('player-error');
+    
+    const errOverlay = document.getElementById("error-overlay");
+    if(errOverlay) errOverlay.classList.remove('active-error');
+}
+
 // --- OYNAT / DURDUR ---
 export function togglePlay() {
     const active = getActivePlayer(); if(!active) return;
@@ -44,6 +81,7 @@ export function togglePlay() {
     if (active.paused) { playRadio(); } 
     else {
         updateStatusUI(null, "Durduruluyor...", "#aaa"); clearInterval(timers.fade);
+        clearTimeout(connectionTimeout); 
         timers.fade = setInterval(() => {
             if (active.volume > 0.02) { active.volume -= 0.02; } 
             else { active.pause(); active.volume = 0; clearInterval(timers.fade); state.isPlaying = false; resetPlayerUI(); }
@@ -52,37 +90,65 @@ export function togglePlay() {
 }
 
 export function playRadio() {
+    resetErrorState();
+
     const active = getActivePlayer(); if(!active) return;
     if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (!active.src || active.src === "") { active.src = CONFIG.stations[state.currentStation].url; }
+    
+    if (!active.src || active.src === "" || active.src !== CONFIG.stations[state.currentStation].url) { 
+        active.src = CONFIG.stations[state.currentStation].url; 
+    }
+    
     updateStatusUI("connecting", "Radyo Başlatılıyor...");
+    startConnectionTimer(); 
+
     active.volume = 0;
     const playPromise = active.play();
+    
     if (playPromise !== undefined) {
-        playPromise.then(() => { fadeIn(active); onRadioStarted(); }).catch(error => { console.warn("Oynatma hatası:", error); resetPlayerUI(); });
+        playPromise.then(() => { 
+            fadeIn(active); 
+            onRadioStarted(); 
+        }).catch(error => { 
+            console.warn("Play Promise Hatası:", error);
+            handleConnectionError(); 
+        });
     }
 }
 
 function onRadioStarted() {
-    state.isPlaying = true; updateBackground('station'); updateThemeColors(false); updateStatusUI("live", "CANLI YAYIN");
+    clearTimeout(connectionTimeout);
     
-    // Müzik Tarama Döngüsünü Başlat (Her istasyon değişiminde burası çalışır ve süreyi sıfırlar)
+    state.isPlaying = true; 
+    state.isRetrying = false; 
+    
+    updateBackground('station'); 
+    updateThemeColors(false); 
+    updateStatusUI("live", "CANLI YAYIN");
+    
     startSongDetectionLoop(); 
-    
     updateMediaSessionMetadata();
-    document.getElementById("playerBox").classList.add("playing", "active-glow"); document.getElementById("playerBox").classList.remove("player-error");
-    document.getElementById("playIcon").classList.replace("fa-play", "fa-pause"); document.body.classList.remove("shake-active");
+    
+    const pBox = document.getElementById("playerBox");
+    if(pBox) {
+        pBox.classList.add("playing", "active-glow"); 
+        pBox.classList.remove("player-error");
+    }
+    
+    document.getElementById("playIcon").classList.replace("fa-play", "fa-pause"); 
+    document.body.classList.remove("shake-active");
+    
     document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
     document.documentElement.style.setProperty('--spin-speed', '5s');
     
     if (isElectron) { 
         ipcRenderer.send('update-discord-activity', { details: CONFIG.stations[state.currentStation].name, state: "Canlı Yayında 🎧" });
-        // Sadece Uygulamada Radyo Kartını Aç (Web sitesinde açmaz)
         triggerRadioCard();
     }
 }
 
 function resetPlayerUI() {
+    clearTimeout(connectionTimeout);
     updateStatusUI(null, "Durduruldu", "#aaa"); updateBackground('default'); updateThemeColors(false);
     document.getElementById("playerBox").classList.remove("playing", "active-glow"); document.getElementById("playIcon").classList.replace("fa-pause", "fa-play");
     document.title = "Yusuf Ali - Kişisel Blog"; document.documentElement.style.setProperty('--spin-speed', '30s');
@@ -91,14 +157,34 @@ function resetPlayerUI() {
 
 export function triggerChangeStation(direction) {
     if(state.isSwitching) return;
-    state.isSwitching = true; stopPopupSequence();
+    
+    state.lastDirection = direction; // Yönü kaydet
+
+    resetErrorState();
+    state.isSwitching = true; 
+    stopPopupSequence();
+    
     state.currentStation = (state.currentStation + (direction === 1 ? 1 : -1) + CONFIG.stations.length) % CONFIG.stations.length;
+    
     updateStatusUI("connecting", "Değiştiriliyor...");
+    startConnectionTimer(); 
+
     const currentPlayer = getActivePlayer(); const nextPlayer = getInactivePlayer();
     nextPlayer.src = CONFIG.stations[state.currentStation].url; nextPlayer.volume = 0; 
+    
     const playPromise = nextPlayer.play();
-    if (playPromise !== undefined) { playPromise.then(() => { performCrossfade(currentPlayer, nextPlayer); }).catch(err => { handleConnectionError(); forceSkipStation(); }); }
-    clearTimeout(timers.connection); timers.connection = setTimeout(() => { if(state.isSwitching) { handleConnectionError(); forceSkipStation(); } }, 10000);
+    if (playPromise !== undefined) { 
+        playPromise.then(() => { 
+            performCrossfade(currentPlayer, nextPlayer); 
+        }).catch(err => { 
+            console.warn("Crossfade Play Hatası:", err);
+            handleConnectionError(); 
+        }); 
+    }
+    
+    timers.connection = setTimeout(() => { 
+        if(state.isSwitching) { handleConnectionError(); } 
+    }, 6000); 
 }
 
 function performCrossfade(oldPlayer, newPlayer) {
@@ -111,7 +197,11 @@ function performCrossfade(oldPlayer, newPlayer) {
     }, 100); 
 }
 
-function finishSwitch() { state.isSwitching = false; clearTimeout(timers.connection); onRadioStarted(); }
+function finishSwitch() { 
+    state.isSwitching = false; 
+    clearTimeout(timers.connection); 
+    onRadioStarted(); 
+}
 
 export function setupVolumeControl() {
     const slider = document.getElementById("volRange"); slider.value = state.lastVolume; updateVolFill(state.lastVolume);
@@ -125,8 +215,42 @@ export function setupVolumeControl() {
 export function toggleMute(e) { if(e) e.stopPropagation(); const active = getActivePlayer(); const slider = document.getElementById("volRange"); if(slider.value > 0) { state.lastVolume = parseFloat(slider.value); if(active) active.volume = 0; slider.value = 0; updateVolFill(0); document.getElementById("volIcon").className = "fas fa-volume-mute"; } else { let restore = state.lastVolume > 0 ? state.lastVolume : 0.5; if(active) active.volume = Math.pow(restore, 2); slider.value = restore; updateVolFill(restore); document.getElementById("volIcon").className = "fas fa-volume-up"; } }
 function updateVolFill(val) { const fill = document.getElementById("volFill"); if(fill) fill.style.width = (val * 100) + "%"; }
 function fadeIn(audio) { const targetVol = Math.pow(state.lastVolume, 2) || 0.25; audio.volume = 0; clearInterval(timers.fade); timers.fade = setInterval(() => { if (audio.volume < targetVol - 0.02) audio.volume += 0.02; else { audio.volume = targetVol; clearInterval(timers.fade); } }, 100); }
-function handleConnectionError() { clearTimeout(timers.connection); clearTimeout(timers.retry); state.isRetrying = false; updateStatusUI("error", "Sinyal Yok, Değiştiriliyor...", "red"); document.getElementById("error-overlay").classList.add('active-error'); document.getElementById("playerBox").classList.add('player-error'); document.body.classList.add("shake-active"); updateBackground('error'); updateThemeColors(true); setTimeout(() => { document.getElementById("error-overlay").classList.remove('active-error'); document.getElementById("playerBox").classList.remove('player-error'); document.body.classList.remove("shake-active"); }, 1200); }
-function forceSkipStation() { state.isSwitching = false; const active = getActivePlayer(); if(active) { active.pause(); active.src = ""; } state.currentStation = (state.currentStation + 1) % CONFIG.stations.length; playRadio(); }
+
+// --- HATA YÖNETİMİ ---
+function handleConnectionError() {
+    if (state.isRetrying) return; 
+    state.isRetrying = true;
+
+    clearTimeout(connectionTimeout);
+    clearTimeout(timers.connection);
+    clearTimeout(timers.retry);
+
+    updateStatusUI("error", "Hata! Geçiliyor...", "red");
+    const pBox = document.getElementById("playerBox");
+    if(pBox) pBox.classList.add('player-error');
+    
+    shakePlayer(); 
+    
+    updateBackground('error');
+    updateThemeColors(true);
+    
+    setTimeout(() => {
+        forceSkipStation();
+    }, 1500);
+}
+
+function forceSkipStation() { 
+    resetErrorState();
+    
+    const active = getActivePlayer(); 
+    if(active) { active.pause(); active.src = ""; } 
+    
+    const direction = state.lastDirection || 1; 
+
+    state.currentStation = (state.currentStation + direction + CONFIG.stations.length) % CONFIG.stations.length; 
+    
+    playRadio(); 
+}
 
 // ==========================================================
 // 1:30 DAKİKA ARAYLA TARAMA SİSTEMİ
@@ -134,26 +258,19 @@ function forceSkipStation() { state.isSwitching = false; const active = getActiv
 
 function startSongDetectionLoop() {
     clearInterval(timers.detection);
-    
-    // 1:30 Dakika (90.000 ms) Döngü
-    // Radyo her değiştiğinde clearInterval çalıştığı için süre sıfırlanmış olur.
     timers.detection = setInterval(() => { 
         if(state.stage === 3 && state.isPlaying && !state.isSwitching) triggerPopupSequence(); 
     }, 90000); 
-    
-    // Radyo açıldığında/değiştiğinde 3.5 saniye sonra İLK TARAMAYI yap
     setTimeout(() => { 
         if(state.stage === 3 && state.isPlaying) triggerPopupSequence(); 
     }, 3500);
 }
 
 function triggerPopupSequence() {
-    stopPopupSequence(); const popup = document.getElementById('songPopup'); if(!popup) return;
-    const title = document.getElementById('popupTitle'); const song = document.getElementById('popupSong'); const icon = document.querySelector('.popup-icon');
+    stopPopupSequence();
     
-    popup.classList.add('active'); title.innerText = "Ortam Dinleniyor..."; title.style.color = "#ffeb3b"; 
-    song.innerHTML = "Ses Analiz Ediliyor..."; song.style.color = "white";
-    icon.innerHTML = '<i class="fas fa-microphone-alt fa-pulse"></i>'; icon.style.color = "white";
+    // UI: Sadece tarama kutusunu aç
+    showScanningPopup();
     
     captureAudioAndIdentify();
 }
@@ -168,10 +285,7 @@ async function captureAudioAndIdentify() {
         const blob = new Blob(chunks, { 'type' : 'audio/webm; codecs=opus' });
         const formData = new FormData(); 
         formData.append("file", blob); 
-        
-        // --- API KEY BURAYA ---
-        formData.append("api_token", "f7c031d5e37ebdfceeb5a3294b00bdef"); // AudD.io Key
-        
+        formData.append("api_token", "f7c031d5e37ebdfceeb5a3294b00bdef"); 
         formData.append("return", "apple_music,spotify");
         try {
             const titleEl = document.getElementById('popupTitle'); if(titleEl) titleEl.innerText = "Bulunuyor...";
@@ -190,50 +304,33 @@ async function captureAudioAndIdentify() {
     setTimeout(() => { if(mediaRecorder.state === "recording") { mediaRecorder.stop(); } }, 4500);
 }
 
-// 3. ADIM: Sonucu Göster ve Discord'u Güncelle
 function showPopupResult(found, artist, trackName, artUrl) {
-    const popup = document.getElementById('songPopup'); if(!popup) return;
-    const title = document.getElementById('popupTitle'); 
-    const song = document.getElementById('popupSong'); 
-    const icon = document.querySelector('.popup-icon');
-
-    // --- DISCORD RPC GÜNCELLEMESİ BAŞLANGIÇ ---
     if (isElectron) {
         if (found) {
-            // Şarkı bulunduysa:
-            // Details: Şarkı Adı - Sanatçı (Eski radyo adının olduğu yer)
-            // State: Radyo İstasyonu Adı
-            ipcRenderer.send('update-discord-activity', {
-                details: `${artist} - ${trackName}`,
-                state: `Dinleniyor: ${CONFIG.stations[state.currentStation].name}`
-            });
+            ipcRenderer.send('update-discord-activity', { details: `${artist} - ${trackName}`, state: `Dinleniyor: ${CONFIG.stations[state.currentStation].name}` });
         } else {
-            // Şarkı bulunamadıysa varsayılan radyo durumuna dön
-            ipcRenderer.send('update-discord-activity', {
-                details: CONFIG.stations[state.currentStation].name,
-                state: "Canlı Yayında 🎧"
-            });
+            ipcRenderer.send('update-discord-activity', { details: CONFIG.stations[state.currentStation].name, state: "Canlı Yayında 🎧" });
         }
     }
-    // --- DISCORD RPC GÜNCELLEMESİ BİTİŞ ---
 
-    if (found && artUrl) {
-        // Kapak Resmi Varsa İkon yerine onu koy
-        icon.innerHTML = `<img src="${artUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; animation: spin 10s linear infinite;">`;
-        title.innerText = "Şu An Çalıyor"; 
-        title.style.color = "#4caf50"; // Yeşil (Başarılı)
+    if (found) {
+        // Bulunduysa: Baloncuğu göster
+        // (Süre sınırını kaldırdık, artık hep kalacak)
+        showBubble(artist, trackName, artUrl);
+        
     } else {
-        // Bulunamadıysa Standart Müzik İkonu
-        icon.innerHTML = '<i class="fas fa-broadcast-tower"></i>';
-        title.innerText = "Yayın Akışı"; 
-        title.style.color = "var(--theme-color)";
+        // Bulunamadıysa: Sadece tarama kutusunu kapat
+        hideScanningPopup();
     }
-
-    song.innerHTML = `<span style="color:var(--theme-color); font-size:0.85em; display:block; margin-bottom:2px;">${artist}</span>${trackName}`;
-    
-    // 6 saniye sonra pop-up kapat (Discord durumu kalıcı olur, sadece pop-up kapanır)
-    timers.popupClose = setTimeout(() => { popup.classList.remove('active'); }, 6000);
 }
 
-function stopPopupSequence() { clearTimeout(timers.popupSearch); clearTimeout(timers.popupResult); clearTimeout(timers.popupClose); const popup = document.getElementById('songPopup'); if(popup) popup.classList.remove('active'); }
+function stopPopupSequence() { 
+    clearTimeout(timers.popupSearch); 
+    clearTimeout(timers.popupResult); 
+    clearTimeout(timers.popupClose); 
+    
+    hideScanningPopup();
+    hideBubble();
+}
+
 function updateMediaSessionMetadata() { if ('mediaSession' in navigator) { const artUrl = new URL('assets/profil.webp', window.location.href).href; navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); } }

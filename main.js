@@ -47,16 +47,29 @@ function createWindow() {
 }
 
 function createTray() {
-    tray = new Tray(path.join(__dirname, 'assets/icon.ico'));
-    const contextMenu = Menu.buildFromTemplate([
-        { label: 'Göster', click: () => mainWindow.show() },
-        { label: 'Durdur/Oynat', click: () => mainWindow.webContents.send('media-toggle') },
-        { type: 'separator' },
-        { label: 'Çıkış', click: () => { isQuitting = true; app.quit(); }}
-    ]);
-    tray.setToolTip('YaliApp - Blog & Radyo');
-    tray.setContextMenu(contextMenu);
-    tray.on('double-click', () => mainWindow.show());
+    try {
+        // İkon yolunu belirle
+        const iconPath = path.join(__dirname, 'assets/icon.ico');
+        
+        // Tray'i oluştur
+        tray = new Tray(path.join(__dirname, 'assets/yaliapp.png'));
+        
+        const contextMenu = Menu.buildFromTemplate([
+            { label: 'Göster', click: () => mainWindow.show() },
+            { label: 'Durdur/Oynat', click: () => mainWindow.webContents.send('media-toggle') },
+            { type: 'separator' },
+            { label: 'Çıkış', click: () => { isQuitting = true; app.quit(); }}
+        ]);
+        
+        tray.setToolTip('YaliApp - Radyo');
+        tray.setContextMenu(contextMenu);
+        tray.on('double-click', () => mainWindow.show());
+        
+    } catch (error) {
+        console.error("Tray oluşturulurken hata:", error);
+        // Hata olsa bile uygulamanın çalışmaya devam etmesi için burayı boş bırakıyoruz
+        // veya alternatif bir ikon yüklemeyi deneyebilirsiniz.
+    }
 }
 
 // --- DISCORD RPC BAŞLATMA ---
