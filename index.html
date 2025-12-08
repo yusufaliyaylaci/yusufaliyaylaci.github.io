@@ -13,7 +13,7 @@
     
     <meta property="og:title" content="Yusuf Ali - Kişisel Blog & Radyo">
     <meta property="og:description" content="Dokuz Eylül Üni. & Musician. Teknolojinin teknik dünyasını müziğin ritmiyle harmanlayan interaktif portfolyo.">
-    <meta property="og:image" content="https://yusufaliyaylaci.com/assets/profil.png">
+    <meta property="og:image" content="https://yusufaliyaylaci.com/assets/profil.webp">
     <meta property="og:url" content="https://yusufaliyaylaci.com">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
@@ -26,10 +26,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=v1.5.8">
+    <link rel="stylesheet" href="css/style.css?v=v1.7.0">
 
     <style>
-        /* Animasyon ve Gecisler icin Ek Stiller */
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -45,18 +44,6 @@
 </head>
 <body>
 
-    <div id="downloadPrompt" aria-hidden="true">
-        <p>Bu siteyi uygulama olarak kullanmak ister misiniz?</p>
-        <a id="downloadButton" 
-           href="https://github.com/yusufaliyaylaci/yusufaliyaylaci.github.io/releases/latest" 
-           target="_blank"
-           rel="noopener noreferrer"
-           onclick="hideDownloadPrompt(true)"
-           aria-label="Windows Uygulamasını İndir">
-           <i class="fab fa-windows"></i> Windows için İndir
-        </a>
-    </div>
-
     <div class="bg-layer active" id="bg-layer-1"></div>
     <div class="bg-layer" id="bg-layer-2"></div>
     <div id="error-overlay"></div>
@@ -67,9 +54,10 @@
     <div id="clock-minute" class="big-clock-num">00</div>
     <div id="date-display">Yükleniyor...</div>
 
-    <audio id="bgMusic" crossorigin="anonymous" preload="none"></audio>
+    <audio id="bgMusic1" crossorigin="anonymous" preload="none"></audio>
+    <audio id="bgMusic2" crossorigin="anonymous" preload="none"></audio>
 
-    <div id="overlay" onclick="startExperience()">
+    <div id="overlay">
         <div class="overlay-content">
             <h1>Hoş Geldiniz</h1>
             <p>Giriş yapmak için dokunun</p>
@@ -90,7 +78,7 @@
         <div class="weather-details" id="weatherDetails">
             <div class="detail-item"><span>Rüzgar:</span><span id="w-wind">-- km/s</span></div>
             <div class="detail-item"><span>Nem:</span><span id="w-hum">--%</span></div>
-            <div class="change-city-text" onclick="enableSearchMode(event)" role="button" tabindex="0">Şehir değiştir</div>
+            <div class="change-city-text" id="btnCityChange" role="button" tabindex="0">Şehir değiştir</div>
         </div>
 
         <div class="extended-info" id="extendedInfo">
@@ -109,15 +97,15 @@
             <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Ara:</div>
             <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off" aria-label="Şehir Ara">
             <div class="suggestions-list" id="suggestionsList"></div>
-            <div style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" onclick="disableSearchMode(event)" role="button" tabindex="0">İptal</div>
+            <div id="btnCityCancel" style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" role="button" tabindex="0">İptal</div>
         </div>
     </div>
 
     <div class="card" id="mainCard" data-state="1">
-        <div class="album-nav nav-left" onclick="prevPhoto()" role="button" aria-label="Önceki Fotoğraf" tabindex="0"><i class="fas fa-chevron-left"></i></div>
-        <div class="album-nav nav-right" onclick="nextPhoto()" role="button" aria-label="Sonraki Fotoğraf" tabindex="0"><i class="fas fa-chevron-right"></i></div>
+        <div class="album-nav nav-left" id="navLeft" role="button" aria-label="Önceki Fotoğraf" tabindex="0"><i class="fas fa-chevron-left"></i></div>
+        <div class="album-nav nav-right" id="navRight" role="button" aria-label="Sonraki Fotoğraf" tabindex="0"><i class="fas fa-chevron-right"></i></div>
         
-        <img src="profil.png" alt="Yusuf Ali Portre" class="profile-img" id="profileImg">
+        <img src="assets/profil.webp" alt="Yusuf Ali Portre" class="profile-img" id="profileImg">
         
         <div class="info-box">
             <h2>Yusuf Ali</h2>
@@ -145,13 +133,13 @@
             
             <div class="controls">
                 <div class="main-buttons">
-                    <button class="control-btn" onclick="triggerChangeStation(-1)" aria-label="Önceki İstasyon"><i class="fas fa-step-backward"></i></button>
-                    <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()" aria-label="Oynat / Durdur"><i class="fas fa-play" id="playIcon"></i></button>
-                    <button class="control-btn" onclick="triggerChangeStation(1)" aria-label="Sonraki İstasyon"><i class="fas fa-step-forward"></i></button>
+                    <button class="control-btn" id="btnPrevStation" aria-label="Önceki İstasyon"><i class="fas fa-step-backward"></i></button>
+                    <button class="control-btn play-btn" id="playBtn" aria-label="Oynat / Durdur"><i class="fas fa-play" id="playIcon"></i></button>
+                    <button class="control-btn" id="btnNextStation" aria-label="Sonraki İstasyon"><i class="fas fa-step-forward"></i></button>
                 </div>
                 
                 <div class="volume-group" id="volGroup">
-                    <button class="control-btn vol-btn" onclick="toggleMute(event)" aria-label="Sesi Kapat/Aç">
+                    <button class="control-btn vol-btn" id="btnVolMute" aria-label="Sesi Kapat/Aç">
                         <i class="fas fa-volume-up" id="volIcon"></i>
                     </button>
                     <div class="vol-slider-wrapper">
@@ -184,15 +172,15 @@
             </div>
             <h2>Bağlantı Koptu</h2>
             <p>İnternet bağlantınız kontrol ediliyor...</p>
-            <button onclick="checkConnection(true)" class="retry-btn">Tekrar Dene</button>
+            <button id="btnRetryConnection" class="retry-btn">Tekrar Dene</button>
         </div>
     </div>
 
-    <div id="download-modal" class="modal-overlay" onclick="closeDownloadModal(event)">
+    <div id="download-modal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <h3>Uygulamayı İndir</h3>
-                <i class="fas fa-times close-modal" onclick="toggleDownloadModal()"></i>
+                <i class="fas fa-times close-modal" id="btnModalClose"></i>
             </div>
             
             <div class="platforms-grid fade-in" id="main-platform-grid">
@@ -201,12 +189,11 @@
                     <span>Windows</span>
                     <small id="win-ver-tag">Sürüm Aranıyor...</small>
                 </a>
-            <div id="linux-main-btn" class="platform-item" onclick="showLinuxOptions()" style="cursor: pointer;">
-                <i class="fab fa-linux"></i>
-                   <span>Linux</span>
-                   <small id="linux-main-tag">Dağıtım Seçin</small>
-            </div>    
-
+                <div id="linux-main-btn" class="platform-item" style="cursor: pointer;">
+                    <i class="fab fa-linux"></i>
+                    <span>Linux</span>
+                    <small id="linux-main-tag">Dağıtım Seçin</small>
+                </div>    
 
                 <div class="platform-item disabled">
                     <i class="fab fa-android"></i>
@@ -222,7 +209,7 @@
             </div>
 
             <div class="platforms-grid fade-in" id="linux-platform-grid" style="display: none;">
-                <div class="platform-item back-btn" onclick="showMainOptions()">
+                <div class="platform-item back-btn" id="btnLinuxBack">
                     <i class="fas fa-arrow-left"></i>
                     <span>Geri Dön</span>
                 </div>
@@ -249,6 +236,6 @@
         </div>
     </div>
 
-    <script src="js/script.js?v=v1.5.6"></script>
+    <script type="module" src="js/main.js?v=v1.7.0"></script>
 </body>
 </html>

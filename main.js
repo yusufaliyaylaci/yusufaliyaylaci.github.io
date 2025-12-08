@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron'); // globalShortcut eklendi
+const { app, BrowserWindow, ipcMain, dialog, globalShortcut } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
@@ -14,8 +14,11 @@ function createWindow() {
         title: "YaliApp",
         icon: path.join(__dirname, 'assets/icon.ico'),
         webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
+            // GÜVENLİK GÜNCELLEMESİ BAŞLANGICI
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js'),
+            sandbox: false
         },
         autoHideMenuBar: true,
         frame: false,
@@ -40,7 +43,7 @@ ipcMain.on('close-app', () => { if (mainWindow) mainWindow.close(); });
 
 // --- SÜRÜM BİLGİSİ İSTEĞİ ---
 ipcMain.on('get-app-version', (event) => {
-    event.sender.send('app-version', app.getVersion());
+    if (mainWindow) mainWindow.webContents.send('app-version', app.getVersion());
 });
 
 // --- GÜNCELLEME OLAYLARI ---
@@ -89,7 +92,6 @@ app.whenReady().then(() => {
 });
 
 app.on('will-quit', () => {
-    // Uygulama kapanırken kısayolları temizle
     globalShortcut.unregisterAll();
 });
 

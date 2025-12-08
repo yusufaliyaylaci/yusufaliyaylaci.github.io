@@ -951,3 +951,102 @@ body.view-mode-social .radio-player { cursor: default; }
     box-shadow: 0 10px 30px rgba(23, 147, 209, 0.25) !important;
 }
 #modal-arch-btn:hover i { color: #1793D1; transform: scale(1.1) rotate(-360deg); transition: 0.6s ease-in-out; }
+
+/* --- STATUS METİN ANİMASYONU --- */
+@keyframes statusSlideIn {
+    0% { opacity: 0; transform: translateY(10px) scale(0.95); filter: blur(2px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.status-animate {
+    display: inline-block;
+    animation: statusSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Hata durumunda titreme efekti */
+@keyframes statusShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); color: #ff4d4d; }
+    75% { transform: translateX(3px); color: #ff4d4d; }
+}
+
+.status-error-anim {
+    display: inline-block;
+    animation: statusSlideIn 0.4s ease, statusShake 0.5s ease 0.2s;
+}
+
+/* =========================================
+   14. RENK GEÇİŞLERİNİ YUMUŞATMA (SOFT COLORS)
+========================================= */
+
+/* --- TEMEL RENK TANIMLAMALARI --- */
+/* Artık renkleri JS ile direkt basmak yerine bu değişkene bağlıyoruz */
+
+#playBtn {
+    color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: color 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, transform 0.2s !important;
+}
+
+.control-btn:hover {
+    color: var(--theme-color) !important; /* Hover olunca tema rengini al */
+}
+
+/* Radyo Kutusu (Kenarlık) */
+.radio-player {
+    border-color: rgba(255, 255, 255, 0.15); /* Varsayılan */
+    transition: 
+        transform 0.1s ease-out, 
+        width 0.5s, 
+        height 0.5s, 
+        border-color 1s ease,
+        box-shadow 0.1s linear !important; /* Box-shadow JS ile yönetiliyor, CSS transition'ı kapattık */
+}
+
+/* Hata durumunda border rengi */
+.radio-player.player-error {
+    border-color: #ff0000 !important;
+}
+
+/* Equalizer Çubukları */
+.equalizer .bar {
+    background-color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: height 0.3s ease, background-color 1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Durum Yazısı */
+.status-live {
+    color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: color 1s ease !important;
+}
+
+/* Ses Çubuğu Doluluk */
+.vol-fill {
+    background-color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: width 0.1s linear, background-color 1s ease !important;
+}
+
+/* --- CANLI YAYIN DİNAMİK ANİMASYONU --- */
+@keyframes liveEntrance {
+    0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes livePulse {
+    0% { text-shadow: 0 0 5px rgba(255,255,255,0.1); }
+    50% { text-shadow: 0 0 15px var(--theme-color); } /* Parlama efekti */
+    100% { text-shadow: 0 0 5px rgba(255,255,255,0.1); }
+}
+
+.status-live-text {
+    display: inline-block;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    /* Giriş Animasyonu (0.6s) + Sürekli Nefes Alma (3s) */
+    animation: liveEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards, 
+               livePulse 3s infinite ease-in-out 0.6s;
+}
+
+/* Durum kutusunun kendisi de renk geçişine sahip olsun */
+#statusText {
+    transition: color 1s ease-in-out !important;
+}

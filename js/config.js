@@ -1,0 +1,36 @@
+export const CONFIG = {
+    stations: [
+        { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
+        { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #000428, #004e92, #000428, #004e92)", accent: "#004e92" },
+        { name: "Virgin Radio", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/VIRGIN_RADIO.mp3", gradient: "linear-gradient(45deg, #870000, #190a05, #870000, #190a05)", accent: "#d32f2f" },
+        { name: "Metro FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3", gradient: "linear-gradient(45deg, #11998e, #38ef7d, #11998e, #38ef7d)", accent: "#38ef7d" },
+        { name: "Number 1 FM", url: "https://n10101m.mediatriple.net/numberone", gradient: "linear-gradient(45deg, #8E2DE2, #4A00E0, #8E2DE2, #4A00E0)", accent: "#8E2DE2" },
+        { name: "Power Pop", url: "https://listen.powerapp.com.tr/powerpop/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e53935, #e35d5b, #e53935, #e35d5b)", accent: "#e53935" },
+        { name: "Power Türk", url: "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #e52d27, #b31217, #e52d27, #b31217)", accent: "#e52d27" },
+        { name: "Süper FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3", gradient: "linear-gradient(45deg, #FF416C, #FF4B2B, #FF416C, #FF4B2B)", accent: "#FF4B2B" },
+        { name: "Joy Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK.mp3", gradient: "linear-gradient(45deg, #DA22FF, #9733EE, #DA22FF, #9733EE)", accent: "#DA22FF" },
+        { name: "Number 1 Türk", url: "https://n10101m.mediatriple.net/numberoneturk", gradient: "linear-gradient(45deg, #00c6ff, #0072ff, #00c6ff, #0072ff)", accent: "#00c6ff" },
+        { name: "Show Radyo", url: "https://windows.showradyo.com.tr/;", gradient: "linear-gradient(45deg, #8360c3, #2ebf91, #8360c3, #2ebf91)", accent: "#8360c3" },
+        { name: "Joy FM", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_FM.mp3", gradient: "linear-gradient(45deg, #134e5e, #71b280, #134e5e, #71b280)", accent: "#71b280" },
+        { name: "Power Love", url: "https://listen.powerapp.com.tr/powerlove/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #ff9a9e, #fecfef, #ff9a9e, #fecfef)", accent: "#ff9a9e" },
+        { name: "Joy Türk Akustik", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOYTURK_AKUSTIK.mp3", gradient: "linear-gradient(45deg, #8e9eab, #eef2f3, #8e9eab, #eef2f3)", accent: "#b0bec5" },
+        { name: "Joy Jazz", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_JAZZ.mp3", gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", accent: "#d7ccc8" },
+        { name: "Number 1 Slow", url: "https://n10101m.mediatriple.net/numberoneslow", gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", accent: "#78909c" },
+        { name: "Radyo Voyage", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADYO_VOYAGE.mp3", gradient: "linear-gradient(45deg, #000000, #0f9b0f, #000000, #0f9b0f)", accent: "#00e676" },
+        { name: "Power XL", url: "https://listen.powerapp.com.tr/powerxl/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #3E5151, #DECBA4, #3E5151, #DECBA4)", accent: "#DECBA4" },
+        { name: "Power Italy", url: "https://listen.powerapp.com.tr/poweritaly/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #009246, #ffffff, #ce2b37, #009246)", accent: "#009246" },
+        { name: "Power Salsa", url: "https://listen.powerapp.com.tr/powersalsa/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", accent: "#ff5722" },
+        { name: "Fenomen Rap", url: "https://listen.radyofenomen.com/fenomenrap/128/icecast.audio", gradient: "linear-gradient(45deg, #000000, #434343, #000000, #434343)", accent: "#ffffff" },
+        { name: "Power Dance", url: "https://listen.powerapp.com.tr/powerdance/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", accent: "#f5af19" },
+        { name: "Number 1 Deep", url: "https://n10101m.mediatriple.net/numberonedeephouse", gradient: "linear-gradient(45deg, #2b5876, #4e4376, #2b5876, #4e4376)", accent: "#4e4376" },
+        { name: "Retro Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RETROTURK.mp3", gradient: "linear-gradient(45deg, #e1eec3, #f05053, #e1eec3, #f05053)", accent: "#f05053" },
+        { name: "Power Gold", url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", accent: "#d4af37" },
+        { name: "Kafa Radyo", url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", accent: "#4CA1AF" }
+    ],
+    photos: [
+        "assets/profil.webp", "assets/photo1.webp", "assets/photo2.webp", "assets/photo3.webp",
+        "assets/photo4.webp", "assets/photo5.webp", "assets/photo6.webp", "assets/photo7.webp",
+    ],
+    weatherApi: "https://api.open-meteo.com/v1/forecast",
+    geoApi: "https://geocoding-api.open-meteo.com/v1/search"
+};

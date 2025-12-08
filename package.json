@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.5.8",
+  "version": "1.7.0",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -49,7 +49,7 @@
         "rpm",
         "pacman"
       ],
-      "icon": "assets/profil.png",
+      "icon": "assets/icon.ico",
       "category": "Audio",
       "description": "Yusuf Ali Blog & Radyo Player",
       "maintainer": "Yusuf Ali Yaylaci"
