@@ -8,6 +8,7 @@ let lastBgStation = null;
 // Renk Yumuşatma Değişkeni
 let currentVisualizerColor = { r: 255, g: 255, b: 255 }; 
 
+// --- YARDIMCI FONKSİYONLAR ---
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -15,6 +16,19 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : { r: 255, g: 255, b: 255 };
+}
+
+// Radyo Kartını Otomatik Tetikleme Fonksiyonu
+function triggerRadioCard() {
+    const playerBox = document.getElementById('playerBox');
+    if (playerBox) {
+        // Player kutusunun bulunduğu kartı bul
+        const radioCard = playerBox.closest('.card');
+        // Eğer kart varsa ve zaten açık ("active") değilse tıkla
+        if (radioCard && !radioCard.classList.contains('active')) {
+            radioCard.click();
+        }
+    }
 }
 
 export function getOS() {
@@ -81,7 +95,6 @@ export function createDynamicElements() {
     }
 }
 
-// --- GÜNCELLENMİŞ STATUS FONKSİYONU ---
 export function updateStatusUI(statusType, msg, customColor) {
     const nameEl = document.getElementById("stationName");
     if(nameEl && CONFIG.stations[state.currentStation]) { 
@@ -91,29 +104,18 @@ export function updateStatusUI(statusType, msg, customColor) {
     const sText = document.getElementById("statusText"); 
     if(!sText) return;
 
-    // Renk ve sınıfları temizle
     sText.classList.remove("status-connecting", "status-live", "status-retrying");
     
-    // Status Tipi Belirle
     if(statusType === "connecting") sText.classList.add("status-connecting");
     else if(statusType === "live") sText.classList.add("status-live");
     else if(statusType === "retrying") sText.classList.add("status-retrying");
 
-    const accentColor = CONFIG.stations[state.currentStation].accent;
-
-    // İÇERİK OLUŞTURMA
-    // Canlı Yayın için farklı bir sınıf (.status-live-text) kullanıyoruz.
-    // Bu sayede 'connecting'den 'live'a geçince animasyon BAŞTAN başlar.
-    
     let contentHTML = "";
     if (statusType === 'live') {
-        // Canlı yayın özel animasyonu
         contentHTML = `<span class="status-live-text">${msg}</span>`;
-        // Rengi CSS değişkenine bırakıyoruz (Smooth transition için)
         sText.style.color = ""; 
     } 
     else if (statusType === "connecting") {
-        // Yükleniyor animasyonu
         contentHTML = `<div class="connecting-dots"><span></span><span></span><span></span></div><span class="status-animate">${msg}</span>`;
         sText.style.color = customColor || "";
     } 
@@ -157,10 +159,8 @@ export function updateBackground(mode) {
 
 export function updateThemeColors(isError) {
     const color = isError ? "red" : CONFIG.stations[state.currentStation].accent;
-    // Sadece CSS Değişkenini güncelliyoruz
     document.documentElement.style.setProperty('--theme-color', color);
     
-    // Inline stilleri temizliyoruz ki CSS transition çalışsın
     const playBtn = document.getElementById("playBtn");
     if(playBtn) playBtn.style.color = ""; 
     
@@ -212,7 +212,6 @@ export function initSnow() {
                     if(player) {
                         player.style.transform = `scale(${scaleAmount})`; 
                         
-                        // --- RENK YUMUŞATMA (LERP) ---
                         const targetHex = CONFIG.stations[state.currentStation].accent;
                         const targetRGB = hexToRgb(targetHex);
                         
@@ -345,3 +344,47 @@ export function hideDownloadPrompt(clicked) {
     }
     if (clicked) localStorage.setItem('yaliApp_promptShown', 'true');
 }
+
+// --- YENİ EKLENEN ÖZELLİKLER (HOŞ GELDİN VE BOŞLUK TIKLAMA) ---
+
+// 1. Hoş Geldin Ekranı Mantığı
+export function initWelcomeScreen() {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const enterBtn = document.getElementById('enter-btn');
+
+    if (welcomeScreen && enterBtn) {
+        enterBtn.addEventListener('click', () => {
+            // Önce yavaşça görünmez yap
+            welcomeScreen.style.opacity = '0';
+            
+            // Animasyon bitince tamamen kaldır
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+                
+                // --- 2 SANİYE BEKLE VE RADYO KARTINI AÇ ---
+                setTimeout(() => {
+                    triggerRadioCard();
+                }, 2000); 
+                // ------------------------------------------
+
+            }, 800); // 0.8 saniye opacity geçiş süresiyle uyumlu
+        });
+    }
+}
+
+// 2. Global Tıklama Dinleyicisi (Boşluğa tıklayınca Radyo açılsın)
+document.addEventListener('click', (e) => {
+    // Tıklanan yer:
+    // - Bir kartın içi değilse
+    // - Bir kontrol butonu değilse (eco mod, tam ekran vb.)
+    // - Hoş geldin ekranı değilse
+    // - Ve şarkı popup'ı değilse
+    if (!e.target.closest('.card') && 
+        !e.target.closest('.control-box-btn') && 
+        !e.target.closest('#welcome-screen') &&
+        !e.target.closest('.song-popup')) {
+        
+        // Boşluğa tıklandı -> Radyo Kartını Aç
+        triggerRadioCard();
+    }
+});

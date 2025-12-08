@@ -1,19 +1,17 @@
-// preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('ipcRenderer', {
     send: (channel, data) => {
-        // Sadece izin verilen kanallardan mesaj gönderilmesine izin ver
-        const validChannels = ['minimize-app', 'close-app', 'get-app-version'];
+        // İzin verilen kanallar (Discord güncellemesi eklendi)
+        const validChannels = ['minimize-app', 'close-app', 'get-app-version', 'update-discord-activity'];
         if (validChannels.includes(channel)) {
             ipcRenderer.send(channel, data);
         }
     },
     on: (channel, func) => {
-        // Sadece izin verilen kanallardan gelen mesajları dinle
-        const validChannels = ['app-version', 'fullscreen-update'];
+        // Dinlenen kanallar (Medya kontrolü eklendi)
+        const validChannels = ['app-version', 'fullscreen-update', 'media-toggle'];
         if (validChannels.includes(channel)) {
-            // Güvenlik için orijinal 'event' nesnesini göndermek yerine boş bir obje gönderiyoruz
             ipcRenderer.on(channel, (event, ...args) => func({}, ...args));
         }
     }
