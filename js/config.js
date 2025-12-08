@@ -1,5 +1,5 @@
 export const CONFIG = {
-    stations: [
+stations: [
         { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
         { name: "Power FM", url: "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #000428, #004e92, #000428, #004e92)", accent: "#004e92" },
         { name: "Virgin Radio", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/VIRGIN_RADIO.mp3", gradient: "linear-gradient(45deg, #870000, #190a05, #870000, #190a05)", accent: "#d32f2f" },
@@ -15,17 +15,17 @@ export const CONFIG = {
         { name: "Power Love", url: "https://listen.powerapp.com.tr/powerlove/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #ff9a9e, #fecfef, #ff9a9e, #fecfef)", accent: "#ff9a9e" },
         { name: "Joy Türk Akustik", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOYTURK_AKUSTIK.mp3", gradient: "linear-gradient(45deg, #8e9eab, #eef2f3, #8e9eab, #eef2f3)", accent: "#b0bec5" },
         { name: "Joy Jazz", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_JAZZ.mp3", gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", accent: "#d7ccc8" },
-        { name: "Number 1 Slow", url: "https://n10101m.mediatriple.net/numberoneslow", gradient: "linear-gradient(45deg, #232526, #414345, #232526, #414345)", accent: "#78909c" },
-        { name: "Radyo Voyage", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADYO_VOYAGE.mp3", gradient: "linear-gradient(45deg, #000000, #0f9b0f, #000000, #0f9b0f)", accent: "#00e676" },
-        { name: "Power XL", url: "https://listen.powerapp.com.tr/powerxl/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #3E5151, #DECBA4, #3E5151, #DECBA4)", accent: "#DECBA4" },
         { name: "Power Italy", url: "https://listen.powerapp.com.tr/poweritaly/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #009246, #ffffff, #ce2b37, #009246)", accent: "#009246" },
         { name: "Power Salsa", url: "https://listen.powerapp.com.tr/powersalsa/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", accent: "#ff5722" },
-        { name: "Fenomen Rap", url: "https://listen.radyofenomen.com/fenomenrap/128/icecast.audio", gradient: "linear-gradient(45deg, #000000, #434343, #000000, #434343)", accent: "#ffffff" },
         { name: "Power Dance", url: "https://listen.powerapp.com.tr/powerdance/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #f12711, #f5af19, #f12711, #f5af19)", accent: "#f5af19" },
-        { name: "Number 1 Deep", url: "https://n10101m.mediatriple.net/numberonedeephouse", gradient: "linear-gradient(45deg, #2b5876, #4e4376, #2b5876, #4e4376)", accent: "#4e4376" },
         { name: "Retro Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/RETROTURK.mp3", gradient: "linear-gradient(45deg, #e1eec3, #f05053, #e1eec3, #f05053)", accent: "#f05053" },
         { name: "Power Gold", url: "https://listen.powerapp.com.tr/powergold/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7)", accent: "#d4af37" },
-        { name: "Kafa Radyo", url: "https://stream.kafaradyo.com/kafaradyo/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #2C3E50, #4CA1AF, #2C3E50, #4CA1AF)", accent: "#4CA1AF" }
+        { name: "Power Türk Akustik", url: "https://listen.powerapp.com.tr/powerturkakustik/mpeg/icecast.audio", gradient: "linear-gradient(45deg, #5D4157, #A8CABA, #5D4157, #A8CABA)", accent: "#A8CABA" },
+        { name: "Mydonose Türk", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/MYDONOSE_TURK.mp3", gradient: "linear-gradient(45deg, #ee0979, #ff6a00, #ee0979, #ff6a00)", accent: "#ee0979" },
+        { name: "Efkar", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/EFKAR.mp3", gradient: "linear-gradient(45deg, #3E5151, #DECBA4, #3E5151, #DECBA4)", accent: "#DECBA4" },
+        { name: "Pop 90", url: "https://playerservices.streamtheworld.com/api/livestream-redirect/POP90.mp3", gradient: "linear-gradient(45deg, #FC466B, #3F5EFB, #FC466B, #3F5EFB)", accent: "#FC466B" },
+        { name: "İstanbul FM", url: "https://yayin.istanbulfm.com.tr/istanbulfm", gradient: "linear-gradient(45deg, #be93c5, #7bc6cc, #be93c5, #7bc6cc)", accent: "#be93c5" },
+        { name: "Alem FM", url: "https://turkmedya.radyotvonline.net/alemfmaac", gradient: "linear-gradient(45deg, #c21500, #ffc500, #c21500, #ffc500)", accent: "#ffc500" },
     ],
     photos: [
         "assets/profil.webp", "assets/photo1.webp", "assets/photo2.webp", "assets/photo3.webp",

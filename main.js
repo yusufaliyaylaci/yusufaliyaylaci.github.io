@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, globalShortcut, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, globalShortcut, Tray, Menu, nativeImage } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const DiscordRPC = require('discord-rpc');
@@ -48,11 +48,11 @@ function createWindow() {
 
 function createTray() {
     try {
-        // İkon yolunu belirle
-        const iconPath = path.join(__dirname, 'assets/icon.ico');
+
+        const iconPath = path.join(__dirname, 'assets', 'icon.ico');
         
-        // Tray'i oluştur
-        tray = new Tray(path.join(__dirname, 'assets/yaliapp.png'));
+        const trayIcon = nativeImage.createFromPath(iconPath);
+        tray = new Tray(trayIcon);
         
         const contextMenu = Menu.buildFromTemplate([
             { label: 'Göster', click: () => mainWindow.show() },
@@ -63,12 +63,11 @@ function createTray() {
         
         tray.setToolTip('YaliApp - Radyo');
         tray.setContextMenu(contextMenu);
+        
         tray.on('double-click', () => mainWindow.show());
         
     } catch (error) {
         console.error("Tray oluşturulurken hata:", error);
-        // Hata olsa bile uygulamanın çalışmaya devam etmesi için burayı boş bırakıyoruz
-        // veya alternatif bir ikon yüklemeyi deneyebilirsiniz.
     }
 }
 
