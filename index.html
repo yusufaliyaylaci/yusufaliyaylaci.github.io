@@ -26,7 +26,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=v1.7.3">
+    <link rel="stylesheet" href="css/style.css?v=v1.7.4">
 
     <style>
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
@@ -57,11 +57,11 @@
     <audio id="bgMusic1" crossorigin="anonymous" preload="none"></audio>
     <audio id="bgMusic2" crossorigin="anonymous" preload="none"></audio>
 
-    <div id="overlay">
+    <div id="overlay" id="welcome-screen">
         <div class="overlay-content">
             <h1>Hoş Geldiniz</h1>
             <p>Giriş yapmak için dokunun</p>
-            <i class="fas fa-chevron-down click-icon"></i>
+            <i class="fas fa-chevron-down click-icon" id="enter-btn"></i>
         </div>
     </div>
 
@@ -176,7 +176,21 @@
         </div>
     </div>
 
-    <div id="download-modal" class="modal-overlay">
+    <div id="update-overlay" class="update-overlay">
+        <div class="update-box">
+            <div class="update-icon">
+                <i class="fas fa-cloud-download-alt fa-bounce"></i>
+            </div>
+            <h2>Yeni Sürüm İndiriliyor</h2>
+            <p>YaliApp güncelleniyor, lütfen bekleyin...</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="updateProgressBar"></div>
+            </div>
+            <div class="update-status" id="updateStatusText">Hazırlanıyor...</div>
+        </div>
+    </div>
+
+<div id="download-modal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <h3>Uygulamayı İndir</h3>
@@ -236,6 +250,6 @@
         </div>
     </div>
 
-    <script type="module" src="js/main.js?v=v1.7.4"></script>
+    <script type="module" src="js/main.js?v=v1.8.1"></script>
 </body>
 </html>
