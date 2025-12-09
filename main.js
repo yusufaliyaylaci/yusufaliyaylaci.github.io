@@ -126,7 +126,13 @@ autoUpdater.on('download-progress', (progressObj) => {
 autoUpdater.on('update-downloaded', (info) => {
     if (mainWindow) {
         mainWindow.webContents.send('update-downloaded', info);
-        setTimeout(() => { autoUpdater.quitAndInstall(); }, 3000);
+        
+        // DEĞİŞİKLİK BURADA:
+        // quitAndInstall(isSilent, isForceRunAfter)
+        // true, true parametreleri kurulum sihirbazını gizler ve otomatik restart atar.
+        setTimeout(() => { 
+            autoUpdater.quitAndInstall(true, true); 
+        }, 3000);
     }
 });
 
