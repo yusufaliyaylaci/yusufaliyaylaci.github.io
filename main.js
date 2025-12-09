@@ -39,6 +39,8 @@ function createWindow() {
     mainWindow.loadFile('index.html');
 
     mainWindow.on('close', (event) => {
+        // Eğer kullanıcı çarpıya bastıysa gizle, ama
+        // sistem/update kapatıyorsa (isQuitting=true) engelleme, kapanmasına izin ver.
         if (!isQuitting) {
             event.preventDefault();
             mainWindow.hide();
@@ -139,6 +141,7 @@ autoUpdater.on('update-downloaded', (info) => {
     if (mainWindow) {
         mainWindow.webContents.send('update-downloaded', info);
         setTimeout(() => { 
+            // Sessiz modda kur ve uygulamayı yeniden başlat
             autoUpdater.quitAndInstall(true, true); 
         }, 3000);
     }
@@ -153,6 +156,13 @@ app.whenReady().then(() => {
     setTimeout(() => { autoUpdater.checkForUpdatesAndNotify(); }, 3000);
 
     app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+});
+
+// --- ÖNEMLİ EKLEME: GÜNCELLEME/KAPATMA İZNİ ---
+// Uygulama tamamen kapanmaya hazırlanırken (Update veya CMD+Q ile)
+// isQuitting bayrağını true yapıyoruz ki 'close' olayı engellemesin.
+app.on('before-quit', () => {
+    isQuitting = true;
 });
 
 app.on('will-quit', () => { globalShortcut.unregisterAll(); });
