@@ -16,18 +16,20 @@ let tray = null;
 let isQuitting = false;
 
 function createWindow() {
+    // Pencere ikonu için de platform kontrolü yapalım
+    const iconName = process.platform === 'win32' ? 'assets/icon.ico' : 'assets/yaliapp.png';
+    
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         title: "YaliApp",
-        // __dirname ile assets birleştirilirken güvenli yol oluşturma
-        icon: path.join(__dirname, 'assets/icon.ico'),
+        icon: path.join(__dirname, iconName),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
             sandbox: false,
-            webSecurity: true // Resimlerin güvenli yüklenmesi için (default true ama explicit olsun)
+            webSecurity: true 
         },
         autoHideMenuBar: true,
         frame: false,
@@ -48,17 +50,28 @@ function createWindow() {
     mainWindow.on('leave-full-screen', () => { mainWindow.webContents.send('fullscreen-update', false); });
 }
 
-// main.js içindeki createTray fonksiyonu
-
 function createTray() {
     try {
-        // asarUnpack sayesinde bu yol artık fiziksel olarak diskte mevcut olacak
-        const iconPath = path.join(__dirname, 'assets', 'yaliapp.png');
+        // --- KRİTİK DÜZELTME ---
+        // İşletim sistemine göre doğru ikonu seçiyoruz
+        let iconPath;
+        if (process.platform === 'win32') {
+            iconPath = path.join(__dirname, 'assets/icon.ico');
+        } else {
+            // Linux ve macOS için PNG kullan
+            iconPath = path.join(__dirname, 'assets/yaliapp.png');
+        }
         
+        // NativeImage oluştururken hata olursa yakalamak için kontrol
         const trayIcon = nativeImage.createFromPath(iconPath);
-        const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
         
-        tray = new Tray(resizedIcon);
+        // Linux'ta ikon boyutunu ayarlamak gerekebilir (genelde 32x32 veya sistem varsayılanı)
+        // Windows .ico dosyası içinden uygun boyutu kendi seçer.
+        if (process.platform !== 'win32') {
+             // trayIcon.resize({ width: 24, height: 24 }); // Gerekirse açılabilir
+        }
+        
+        tray = new Tray(trayIcon);
         
         const contextMenu = Menu.buildFromTemplate([
             { label: 'Göster', click: () => mainWindow.show() },
@@ -86,7 +99,6 @@ function initDiscordRPC() {
         setActivity('Ana Sayfa', 'Geziniyor');
     });
 
-    // Login hatası olursa çökmesin
     rpc.login({ clientId }).catch(err => {
         console.warn('Discord RPC Bağlanamadı:', err);
     });
@@ -99,7 +111,7 @@ function setActivity(details, state, smallImageKey = 'icon') {
         state: state,
         startTimestamp: new Date(),
         largeImageKey: 'yaliapp_logo',
-        largeImageText: 'YaliApp - Radyo', // BURASI GÜNCELLENDİ
+        largeImageText: 'YaliApp - Radyo',
         smallImageKey: smallImageKey,
         instance: false,
     }).catch(console.error);
@@ -126,10 +138,6 @@ autoUpdater.on('download-progress', (progressObj) => {
 autoUpdater.on('update-downloaded', (info) => {
     if (mainWindow) {
         mainWindow.webContents.send('update-downloaded', info);
-        
-        // DEĞİŞİKLİK BURADA:
-        // quitAndInstall(isSilent, isForceRunAfter)
-        // true, true parametreleri kurulum sihirbazını gizler ve otomatik restart atar.
         setTimeout(() => { 
             autoUpdater.quitAndInstall(true, true); 
         }, 3000);
@@ -148,4 +156,4 @@ app.whenReady().then(() => {
 });
 
 app.on('will-quit', () => { globalShortcut.unregisterAll(); });
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') { /* Tray modu için boş bırakıldı */ } });
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') { } });

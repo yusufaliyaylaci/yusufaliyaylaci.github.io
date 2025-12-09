@@ -1,11 +1,12 @@
 {
   "name": "yali-app",
-  "version": "1.8.7",
+  "version": "1.8.8",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "prebuild": "taskkill /F /IM YaliApp.exe /T || exit 0",
+    "dist": "npm run prebuild && electron-builder"
   },
   "author": "Yusuf Ali Yaylaci",
   "license": "ISC",
@@ -13,9 +14,6 @@
     "appId": "com.yaliapp.desktop",
     "productName": "YaliApp",
     "asar": true,
-    "asarUnpack": [
-      "assets/**"
-    ],
     "artifactName": "${productName}-${version}-linux.${ext}",
     "publish": [
       {
@@ -45,7 +43,8 @@
       "license": "build/license.txt",
       "deleteAppDataOnUninstall": true,
       "displayLanguageSelector": false,
-      "language": "1033"
+      "language": "1033",
+      "runAfterFinish": false
     },
     "linux": {
       "target": [
