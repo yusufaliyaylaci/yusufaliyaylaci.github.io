@@ -20,12 +20,14 @@ function createWindow() {
         width: 1200,
         height: 800,
         title: "YaliApp",
+        // __dirname ile assets birleştirilirken güvenli yol oluşturma
         icon: path.join(__dirname, 'assets/icon.ico'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
-            sandbox: false
+            sandbox: false,
+            webSecurity: true // Resimlerin güvenli yüklenmesi için (default true ama explicit olsun)
         },
         autoHideMenuBar: true,
         frame: false,
@@ -50,10 +52,10 @@ function createWindow() {
 
 function createTray() {
     try {
+        // asarUnpack sayesinde bu yol artık fiziksel olarak diskte mevcut olacak
         const iconPath = path.join(__dirname, 'assets', 'yaliapp.png');
         
         const trayIcon = nativeImage.createFromPath(iconPath);
-        
         const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
         
         tray = new Tray(resizedIcon);

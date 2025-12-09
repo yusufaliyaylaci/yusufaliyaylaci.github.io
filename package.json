@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.8.6",
+  "version": "1.8.7",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -12,6 +12,10 @@
   "build": {
     "appId": "com.yaliapp.desktop",
     "productName": "YaliApp",
+    "asar": true,
+    "asarUnpack": [
+      "assets/**"
+    ],
     "artifactName": "${productName}-${version}-linux.${ext}",
     "publish": [
       {
