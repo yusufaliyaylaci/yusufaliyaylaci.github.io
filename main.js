@@ -16,14 +16,15 @@ let tray = null;
 let isQuitting = false;
 
 function createWindow() {
-    // Pencere ikonu için de platform kontrolü yapalım
+    // asar: false yaptığımız için __dirname artık her yerde güvenli çalışır
     const iconName = process.platform === 'win32' ? 'assets/icon.ico' : 'assets/yaliapp.png';
+    const iconPath = path.join(__dirname, iconName);
     
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         title: "YaliApp",
-        icon: path.join(__dirname, iconName),
+        icon: iconPath,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -38,9 +39,8 @@ function createWindow() {
 
     mainWindow.loadFile('index.html');
 
+    // Kapanma isteği geldiğinde kontrol et
     mainWindow.on('close', (event) => {
-        // Eğer kullanıcı çarpıya bastıysa gizle, ama
-        // sistem/update kapatıyorsa (isQuitting=true) engelleme, kapanmasına izin ver.
         if (!isQuitting) {
             event.preventDefault();
             mainWindow.hide();
@@ -54,24 +54,11 @@ function createWindow() {
 
 function createTray() {
     try {
-        // --- KRİTİK DÜZELTME ---
-        // İşletim sistemine göre doğru ikonu seçiyoruz
-        let iconPath;
-        if (process.platform === 'win32') {
-            iconPath = path.join(__dirname, 'assets/icon.ico');
-        } else {
-            // Linux ve macOS için PNG kullan
-            iconPath = path.join(__dirname, 'assets/yaliapp.png');
-        }
+        // Platforma göre ikon seçimi
+        const iconName = process.platform === 'win32' ? 'assets/icon.ico' : 'assets/yaliapp.png';
+        const iconPath = path.join(__dirname, iconName);
         
-        // NativeImage oluştururken hata olursa yakalamak için kontrol
         const trayIcon = nativeImage.createFromPath(iconPath);
-        
-        // Linux'ta ikon boyutunu ayarlamak gerekebilir (genelde 32x32 veya sistem varsayılanı)
-        // Windows .ico dosyası içinden uygun boyutu kendi seçer.
-        if (process.platform !== 'win32') {
-             // trayIcon.resize({ width: 24, height: 24 }); // Gerekirse açılabilir
-        }
         
         tray = new Tray(trayIcon);
         
@@ -92,7 +79,7 @@ function createTray() {
     }
 }
 
-// --- DISCORD RPC BAŞLATMA ---
+// --- DISCORD RPC ---
 function initDiscordRPC() {
     rpc = new DiscordRPC.Client({ transport: 'ipc' });
     
@@ -125,9 +112,19 @@ ipcMain.on('close-app', () => { if (mainWindow) mainWindow.hide(); });
 ipcMain.on('get-app-version', (event) => { if (mainWindow) mainWindow.webContents.send('app-version', app.getVersion()); });
 ipcMain.on('update-discord-activity', (event, data) => { setActivity(data.details, data.state); });
 
-// --- GÜNCELLEME OLAYLARI ---
+// --- GÜNCELLEME SİSTEMİ ---
 autoUpdater.on('update-available', (info) => {
     if (mainWindow) mainWindow.webContents.send('update-available', info);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+    if (mainWindow) {
+        mainWindow.webContents.send('update-downloaded', info);
+        setTimeout(() => { 
+            // Sessiz kurulum ve otomatik restart
+            autoUpdater.quitAndInstall(true, true); 
+        }, 3000);
+    }
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -135,16 +132,6 @@ autoUpdater.on('download-progress', (progressObj) => {
         percent: progressObj.percent,
         speed: progressObj.bytesPerSecond
     });
-});
-
-autoUpdater.on('update-downloaded', (info) => {
-    if (mainWindow) {
-        mainWindow.webContents.send('update-downloaded', info);
-        setTimeout(() => { 
-            // Sessiz modda kur ve uygulamayı yeniden başlat
-            autoUpdater.quitAndInstall(true, true); 
-        }, 3000);
-    }
 });
 
 app.whenReady().then(() => {
@@ -158,12 +145,10 @@ app.whenReady().then(() => {
     app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 
-// --- ÖNEMLİ EKLEME: GÜNCELLEME/KAPATMA İZNİ ---
-// Uygulama tamamen kapanmaya hazırlanırken (Update veya CMD+Q ile)
-// isQuitting bayrağını true yapıyoruz ki 'close' olayı engellemesin.
+// Güncelleme veya tam çıkış komutu geldiğinde bayrağı kaldır
 app.on('before-quit', () => {
     isQuitting = true;
 });
 
 app.on('will-quit', () => { globalShortcut.unregisterAll(); });
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') { } });
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') { /* Tray için boş */ } });

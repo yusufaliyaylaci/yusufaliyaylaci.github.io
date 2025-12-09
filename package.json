@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.8.9",
+  "version": "1.9.0",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "build": {
     "appId": "com.yaliapp.desktop",
     "productName": "YaliApp",
-    "asar": true,
+    "asar": false,
     "artifactName": "${productName}-${version}-linux.${ext}",
     "publish": [
       {
@@ -23,7 +23,7 @@
       }
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "build"
     },
     "win": {
       "target": "nsis",
