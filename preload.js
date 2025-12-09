@@ -1,5 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+contextBridge.exposeInMainWorld('electronAPI', {
+    onFullscreenChanged: (callback) => ipcRenderer.on('ui-fullscreen-changed', (_event, value) => callback(value))
+});
+
 contextBridge.exposeInMainWorld('ipcRenderer', {
     send: (channel, data) => {
         const validChannels = ['minimize-app', 'close-app', 'get-app-version', 'update-discord-activity'];
@@ -19,5 +23,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
         if (validChannels.includes(channel)) {
             ipcRenderer.on(channel, (event, ...args) => func({}, ...args));
         }
+    },
+    removeAllListeners: (channel) => {
+        ipcRenderer.removeAllListeners(channel);
     }
 });
