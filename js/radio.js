@@ -333,4 +333,4 @@ function stopPopupSequence() {
     hideBubble();
 }
 
-function updateMediaSessionMetadata() { if ('mediaSession' in navigator) { const artUrl = new URL('assets/profil.webp', window.location.href).href; navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); } }
+function updateMediaSessionMetadata() { if ('mediaSession' in navigator) { const artUrl = new URL('https://yusufaliyaylaci.github.io/assets/profil.webp').href; navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); } }

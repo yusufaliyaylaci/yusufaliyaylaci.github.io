@@ -46,13 +46,17 @@ function createWindow() {
     mainWindow.on('leave-full-screen', () => { mainWindow.webContents.send('fullscreen-update', false); });
 }
 
+// main.js içindeki createTray fonksiyonu
+
 function createTray() {
     try {
-
-        const iconPath = path.join(__dirname, 'assets', 'icon.ico');
+        const iconPath = path.join(__dirname, 'assets', 'yaliapp.png');
         
         const trayIcon = nativeImage.createFromPath(iconPath);
-        tray = new Tray(trayIcon);
+        
+        const resizedIcon = trayIcon.resize({ width: 16, height: 16 });
+        
+        tray = new Tray(resizedIcon);
         
         const contextMenu = Menu.buildFromTemplate([
             { label: 'Göster', click: () => mainWindow.show() },
