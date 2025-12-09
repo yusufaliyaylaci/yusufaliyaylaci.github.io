@@ -31,6 +31,24 @@ stations: [
         "assets/profil.webp", "assets/photo1.webp", "assets/photo2.webp", "assets/photo3.webp",
         "assets/photo4.webp", "assets/photo5.webp", "assets/photo6.webp", "assets/photo7.webp",
     ],
+    acrKeys: [
+        { 
+            host: "identify-ap-southeast-1.acrcloud.com",
+            access_key: "dcecaf2899935b51406178d954e72d9b", 
+            access_secret: "q2G3yzwWFKXVbY1XWZqWt2OZ30Ei0IVnqXHB6Ov5" 
+        },
+        { 
+            host: "identify-ap-southeast-1.acrcloud.com", 
+            access_key: "b0195e0212b124ffe1a3c3a3d9a08dec", 
+            access_secret: "bgcGA3AYnuJMP59jRs7DtUlOIBvdibS8fHlv293D" 
+        },
+                { 
+            host: "identify-ap-southeast-1.acrcloud.com", 
+            access_key: "b47fd0bfc0df43539d8eb04d191e89d5", 
+            access_secret: "s5Hde4t5Hs0HoTPhRVGSTwU0XmYPtMt8dv4P3pp8" 
+        },
+    ],
+
     weatherApi: "https://api.open-meteo.com/v1/forecast",
     geoApi: "https://geocoding-api.open-meteo.com/v1/search"
 };
