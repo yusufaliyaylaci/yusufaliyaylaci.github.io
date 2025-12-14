@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "1.9.3",
+  "version": "1.9.5",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -15,6 +15,14 @@
     "productName": "YaliApp",
     "asar": false,
     "artifactName": "${productName}-${version}-linux.${ext}",
+    "protocols": [
+      {
+        "name": "YaliApp Protocol",
+        "schemes": [
+          "yaliapp"
+        ]
+      }
+    ],
     "publish": [
       {
         "provider": "github",

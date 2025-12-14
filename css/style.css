@@ -1257,3 +1257,31 @@ body.view-mode-social .radio-player { cursor: default; }
     0%, 100% { transform: translateX(-50%) translateY(0); }
     50% { transform: translateX(-50%) translateY(-8px); }
 }
+
+/* =========================================
+   DİNLEYİCİ MODU (SEN DE KATIL)
+========================================= */
+
+/* Kontrol butonlarını gizle */
+body.listener-mode .main-buttons,
+body.listener-mode .volume-group, 
+body.listener-mode .change-city-text, 
+body.listener-mode .search-input {
+    pointer-events: none;
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+/* Bilgi mesajı */
+body.listener-mode .radio-player::after {
+    content: 'Dinleyici Modu: Kontrol Yayıncıda';
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.5);
+    background: rgba(0,0,0,0.5);
+    padding: 2px 8px;
+    border-radius: 10px;
+}

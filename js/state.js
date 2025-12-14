@@ -1,34 +1,37 @@
-export let state = {
+export let audioCtx = null;
+export let analyzer = null;
+export let dataArray = null;
+
+export const state = {
+    stage: 0, 
+    photoIndex: 0,
     currentStation: 0,
-    stage: 1,
-    timeZone: 'Europe/Istanbul',
-    isScrolling: false,
+    activePlayerId: 1,
+    lastVolume: 0.5,
     isPlaying: false,
     isSwitching: false,
     isRetrying: false,
-    photoIndex: 0,
     activeBgLayer: 1,
+    timeZone: 'Europe/Istanbul',
+    isScrolling: false,
     kickImpulse: 0,
-    lastVolume: 0.5,
     lowPowerMode: false,
-    activePlayerId: 1
+    lastDirection: 1,
+    gainNodes: null, // GainNode'ları saklamak için
+    isListenerMode: false // YENİ: Dinleyici modu kontrolü
 };
 
-export let timers = {
+export const timers = {
     fade: null,
     connection: null,
-    debounce: null,
     retry: null,
+    debounce: null,
     detection: null,
     popupSearch: null,
     popupResult: null,
-    popupClose: null,
-    promptClose: null
+    popupClose: null
 };
-
-// Bu nesneler diğer dosyalarda da kullanılacağı için export ediyoruz.
-export let audioCtx, analyzer, dataArray;
 
 export function setAudioContext(ctx) { audioCtx = ctx; }
 export function setAnalyzer(node) { analyzer = node; }
-export function setDataArray(array) { dataArray = array; }
+export function setDataArray(arr) { dataArray = arr; }

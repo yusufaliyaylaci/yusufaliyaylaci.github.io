@@ -28,8 +28,8 @@ stations: [
         { name: "Alem FM", url: "https://turkmedya.radyotvonline.net/alemfmaac", gradient: "linear-gradient(45deg, #c21500, #ffc500, #c21500, #ffc500)", accent: "#ffc500" },
     ],
     photos: [
-        "assets/profil.webp", "assets/photo1.webp", "assets/photo2.webp", "assets/photo3.webp",
-        "assets/photo4.webp", "assets/photo5.webp", "assets/photo6.webp", "assets/photo7.webp",
+        "assets/profil.webp", "assets/photo1.webp", "assets/photo2.webp", "assets/photo3.webp","assets/photo8.webp",
+        "assets/photo4.webp", "assets/photo5.webp", "assets/photo6.webp", "assets/photo7.webp","assets/photo9.webp",
     ],
     acrKeys: [
         { 

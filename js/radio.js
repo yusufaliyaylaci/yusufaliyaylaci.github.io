@@ -18,9 +18,25 @@ export function setupAudioContext() {
         const ctx = new AudioContext(); setAudioContext(ctx);
         const node = ctx.createAnalyser(); setAnalyzer(node);
         node.fftSize = 256; setDataArray(new Uint8Array(node.frequencyBinCount));
-        const audio1 = document.getElementById("bgMusic1"); const audio2 = document.getElementById("bgMusic2");
-        const source1 = ctx.createMediaElementSource(audio1); const source2 = ctx.createMediaElementSource(audio2);
-        source1.connect(node); source2.connect(node); node.connect(ctx.destination);
+
+        const audio1 = document.getElementById("bgMusic1"); 
+        const audio2 = document.getElementById("bgMusic2");
+
+        const gain1 = ctx.createGain();
+        const gain2 = ctx.createGain();
+
+        const source1 = ctx.createMediaElementSource(audio1); 
+        source1.connect(gain1).connect(node);
+
+        const source2 = ctx.createMediaElementSource(audio2); 
+        source2.connect(gain2).connect(node);
+
+        node.connect(ctx.destination);
+
+        state.gainNodes = { 1: gain1, 2: gain2 };
+        gain1.gain.value = 1;
+        gain2.gain.value = 1;
+
     } catch(e) { console.warn("Audio Context Hatası:", e); }
 }
 
@@ -105,14 +121,27 @@ function onRadioStarted() {
     state.isPlaying = true; state.isRetrying = false; 
     updateBackground('station'); updateThemeColors(false); updateStatusUI("live", "CANLI YAYIN");
     startSongDetectionLoop(); updateMediaSessionMetadata();
+    
+    setTimeout(preloadNextStation, 2000);
+
     const pBox = document.getElementById("playerBox");
     if(pBox) { pBox.classList.add("playing", "active-glow"); pBox.classList.remove("player-error"); }
     document.getElementById("playIcon").classList.replace("fa-play", "fa-pause"); 
     document.body.classList.remove("shake-active");
     document.title = `Yusuf Ali - ${CONFIG.stations[state.currentStation].name}`;
     document.documentElement.style.setProperty('--spin-speed', '5s');
+    
     if (isElectron) { 
-        ipcRenderer.send('update-discord-activity', { details: CONFIG.stations[state.currentStation].name, state: "Canlı Yayında 🎧" });
+        // YENİ: Dinleyici Modu Kontrolü
+        let detailsText = CONFIG.stations[state.currentStation].name;
+        let stateText = "Canlı Yayında 🎧";
+
+        if (state.isListenerMode) {
+            detailsText = "Yusuf Ali ile Birlikte 🎧";
+            stateText = "Birlikte Dinle ✨";
+        }
+
+        ipcRenderer.send('update-discord-activity', { details: detailsText, state: stateText });
         triggerRadioCard();
     }
 }
@@ -128,30 +157,103 @@ function resetPlayerUI() {
 export function triggerChangeStation(direction) {
     if(state.isSwitching) return;
     state.lastDirection = direction;
-    resetErrorState(); state.isSwitching = true; stopPopupSequence();
+    state.isSwitching = true; 
+
     state.currentStation = (state.currentStation + (direction === 1 ? 1 : -1) + CONFIG.stations.length) % CONFIG.stations.length;
+    const targetUrl = CONFIG.stations[state.currentStation].url;
+
     updateStatusUI("connecting", "Değiştiriliyor...");
-    startConnectionTimer(); 
-    const currentPlayer = getActivePlayer(); const nextPlayer = getInactivePlayer();
-    nextPlayer.src = CONFIG.stations[state.currentStation].url; nextPlayer.volume = 0; 
-    const playPromise = nextPlayer.play();
-    if (playPromise !== undefined) { 
-        playPromise.then(() => { performCrossfade(currentPlayer, nextPlayer); }).catch(err => { console.warn("Crossfade Play Hatası:", err); handleConnectionError(); }); 
+    
+    const currentPlayer = getActivePlayer(); 
+    const nextPlayer = getInactivePlayer();
+    
+    const isPreloaded = (nextPlayer.src === targetUrl && !nextPlayer.paused);
+
+    if (isPreloaded) {
+        console.log("Hızlı geçiş yapılıyor! (Ön yükleme aktif)");
+        performCrossfade(currentPlayer, nextPlayer);
+    } else {
+        startConnectionTimer(); 
+        nextPlayer.src = targetUrl; 
+        nextPlayer.volume = 0; 
+        
+        const nextId = state.activePlayerId === 1 ? 2 : 1;
+        if (state.gainNodes && state.gainNodes[nextId]) {
+            state.gainNodes[nextId].gain.value = 0; 
+        }
+
+        const playPromise = nextPlayer.play();
+        if (playPromise !== undefined) { 
+            playPromise.then(() => { performCrossfade(currentPlayer, nextPlayer); })
+            .catch(err => { console.warn("Hata:", err); handleConnectionError(); }); 
+        }
     }
+    
     timers.connection = setTimeout(() => { if(state.isSwitching) { handleConnectionError(); } }, 6000); 
 }
 
 function performCrossfade(oldPlayer, newPlayer) {
     if(getOS() === 'iOS') { oldPlayer.pause(); oldPlayer.currentTime = 0; newPlayer.volume = state.lastVolume; finishSwitch(); return; }
-    const targetVol = Math.pow(state.lastVolume, 2);
+
+    const targetVol = Math.pow(state.lastVolume, 2); 
+    const activeId = state.activePlayerId;           
+    const nextId = activeId === 1 ? 2 : 1;           
+
+    const fadeDuration = 500;  
+    const intervalTime = 50;   
+    
+    const totalSteps = fadeDuration / intervalTime;
+    const stepAmount = targetVol / totalSteps;
+
     const fadeInterval = setInterval(() => {
-        if(newPlayer.volume < targetVol) newPlayer.volume = Math.min(newPlayer.volume + 0.05, targetVol);
-        if(oldPlayer.volume > 0) oldPlayer.volume = Math.max(oldPlayer.volume - 0.05, 0);
-        if(newPlayer.volume >= targetVol && oldPlayer.volume <= 0) { clearInterval(fadeInterval); oldPlayer.pause(); oldPlayer.currentTime = 0; oldPlayer.src = ""; swapActivePlayer(); finishSwitch(); }
-    }, 100); 
+        if(newPlayer.volume < targetVol) {
+            newPlayer.volume = Math.min(newPlayer.volume + stepAmount, targetVol);
+            if(state.gainNodes && state.gainNodes[nextId]) state.gainNodes[nextId].gain.value = 1; 
+        }
+        
+        if(oldPlayer.volume > 0) {
+            oldPlayer.volume = Math.max(oldPlayer.volume - stepAmount, 0);
+        }
+        
+        const isNewReady = newPlayer.volume >= (targetVol - stepAmount);
+        const isOldDone = oldPlayer.volume <= stepAmount;
+
+        if(isNewReady && isOldDone) { 
+            clearInterval(fadeInterval); 
+            oldPlayer.pause(); oldPlayer.currentTime = 0; oldPlayer.src = ""; 
+            if(state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = 0; 
+            newPlayer.volume = targetVol;
+            swapActivePlayer(); 
+            finishSwitch(); 
+        }
+    }, intervalTime); 
 }
 
 function finishSwitch() { state.isSwitching = false; clearTimeout(timers.connection); onRadioStarted(); }
+
+function preloadNextStation() {
+    if (!state.isPlaying || state.isSwitching) return;
+
+    const nextIndex = (state.currentStation + 1) % CONFIG.stations.length;
+    const nextUrl = CONFIG.stations[nextIndex].url;
+
+    const inactive = getInactivePlayer();
+    const inactiveId = state.activePlayerId === 1 ? 2 : 1;
+    const inactiveGain = state.gainNodes ? state.gainNodes[inactiveId] : null;
+
+    if (inactive.src === nextUrl && !inactive.paused) return;
+
+    console.log("Ön yükleme başlatılıyor: " + CONFIG.stations[nextIndex].name);
+
+    if (inactiveGain) inactiveGain.gain.value = 0;
+    inactive.volume = 0; 
+    inactive.src = nextUrl;
+    
+    const playPromise = inactive.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(e => console.log("Ön yükleme hatası (önemsiz):", e));
+    }
+}
 
 export function setupVolumeControl() {
     const slider = document.getElementById("volRange"); slider.value = state.lastVolume; updateVolFill(state.lastVolume);
@@ -183,20 +285,11 @@ function forceSkipStation() {
     playRadio(); 
 }
 
-// ==========================================================
-// ŞARKI BULMA VE TARAMA SİSTEMİ (ACRCloud Entegrasyonu)
-// ==========================================================
-
 function startSongDetectionLoop() {
     clearInterval(timers.detection);
-    
-    // NOT: Çok kullanıcılı ortamda kotanın hemen bitmemesi için
-    // otomatik döngüyü isteğe bağlı açıp kapatabilirsiniz.
-    // Şimdilik 90 saniyede bir tarama yapacak şekilde ayarladım.
     timers.detection = setInterval(() => { 
         if(state.stage === 3 && state.isPlaying && !state.isSwitching) triggerPopupSequence(); 
-    }, 90000); // 90 saniye
-
+    }, 90000); 
     setTimeout(() => { 
         if(state.stage === 3 && state.isPlaying) triggerPopupSequence(); 
     }, 3500);
@@ -208,7 +301,6 @@ function triggerPopupSequence() {
     captureAudioAndIdentify();
 }
 
-// --- ANA ŞARKI TANIMA FONKSİYONU ---
 async function captureAudioAndIdentify() {
     if (!audioCtx || !analyzer) { showPopupResult(false, null, null, null); return; }
     
@@ -230,52 +322,29 @@ async function captureAudioAndIdentify() {
         const blob = new Blob(chunks, { 'type' : 'audio/webm; codecs=opus' });
         if(titleEl) titleEl.innerText = "Analiz ediliyor...";
 
-        // --- ACRCLOUD ÇOKLU KEY ROTASYONU ---
         let foundResult = null;
-        
-        // Config'deki tüm keyleri sırayla dene
         if (!CONFIG.acrKeys || CONFIG.acrKeys.length === 0) {
-            console.warn("ACRCloud anahtarları bulunamadı!");
-            showPopupResult(false, null, null, null);
-            return;
+            showPopupResult(false, null, null, null); return;
         }
 
         for (let i = 0; i < CONFIG.acrKeys.length; i++) {
             const currentKey = CONFIG.acrKeys[i];
-            
             try {
                 const result = await identifyWithACRCloud(blob, currentKey);
-                
                 if (result && result.status) {
-                    if (result.status.code === 0) { // BAŞARILI
-                        foundResult = result;
-                        break; 
-                    } else if (result.status.code === 1001) { // ŞARKI YOK
-                        break; 
-                    } else if (result.status.code === 3001) { // KOTA DOLU / YETKİ YOK
-                        console.warn(`Key ${i+1} kotası dolmuş veya hatalı, sıradakine geçiliyor...`);
-                        continue; 
-                    }
+                    if (result.status.code === 0) { foundResult = result; break; } 
+                    else if (result.status.code === 1001) { break; } 
+                    else if (result.status.code === 3001) { continue; }
                 }
             } catch (e) { console.error("API Hatası:", e); }
         }
 
-        // Sonucu Göster
-if (foundResult && foundResult.status.code === 0 && foundResult.metadata && foundResult.metadata.music && foundResult.metadata.music.length > 0) {
+        if (foundResult && foundResult.status.code === 0 && foundResult.metadata && foundResult.metadata.music && foundResult.metadata.music.length > 0) {
             const music = foundResult.metadata.music[0];
             const artist = music.artists ? music.artists.map(a => a.name).join(", ") : "Bilinmiyor";
             const title = music.title;
-            
-            // --- KAPAK RESMİ AYARI ---
-            // Varsayılan olarak kendi logonuzu ayarlayalım
             let artUrl = "assets/yaliapp.png"; 
-            
-            // Eğer API'den geçerli bir kapak resmi gelirse onu kullanalım
-            if (music.album && music.album.image && music.album.image.url) {
-                artUrl = music.album.image.url;
-            }
-            // -------------------------
-
+            if (music.album && music.album.image && music.album.image.url) { artUrl = music.album.image.url; }
             showPopupResult(true, artist, title, artUrl);
         } else {
             showPopupResult(false, null, null, null);
@@ -283,11 +352,9 @@ if (foundResult && foundResult.status.code === 0 && foundResult.metadata && foun
     };
     
     mediaRecorder.start();
-    // ACRCloud en iyi sonucu 5-6 saniyede verir
     setTimeout(() => { if(mediaRecorder.state === "recording") { mediaRecorder.stop(); } }, 6000);
 }
 
-// --- ACRCloud Fetch Yardımcısı ---
 async function identifyWithACRCloud(audioBlob, keyData) {
     const timestamp = Math.floor(Date.now() / 1000);
     const stringToSign = `POST\n/v1/identify\n${keyData.access_key}\naudio\n1\n${timestamp}`;
@@ -302,15 +369,10 @@ async function identifyWithACRCloud(audioBlob, keyData) {
     formData.append('sample_bytes', audioBlob.size);
     formData.append('timestamp', timestamp);
 
-    const response = await fetch(`https://${keyData.host}/v1/identify`, {
-        method: 'POST',
-        body: formData
-    });
-
+    const response = await fetch(`https://${keyData.host}/v1/identify`, { method: 'POST', body: formData });
     return await response.json();
 }
 
-// --- İmza Oluşturucu (HMAC-SHA1) ---
 async function hmacSha1(key, message) {
     const encoder = new TextEncoder();
     const keyData = encoder.encode(key);
@@ -322,8 +384,29 @@ async function hmacSha1(key, message) {
 
 function showPopupResult(found, artist, trackName, artUrl) {
     if (isElectron) {
-        if (found) { ipcRenderer.send('update-discord-activity', { details: `${artist} - ${trackName}`, state: `Dinleniyor: ${CONFIG.stations[state.currentStation].name}` }); } 
-        else { ipcRenderer.send('update-discord-activity', { details: CONFIG.stations[state.currentStation].name, state: "Canlı Yayında 🎧" }); }
+        // YENİ: Dinleyici modundaysa şarkı bilgisini ezmesin (veya özel formatlasın)
+        // Şimdilik dinleyici modunda da şarkı bilgisi göstersin ama "Birlikte" ibaresi kalsın istiyorsak:
+        // Ancak genelde şarkı bulununca şarkı adı yazması daha iyidir.
+        // Eğer özel istek varsa burayı da if(state.isListenerMode) ile ayırabiliriz.
+        
+        let detailsText = `${artist} - ${trackName}`;
+        let stateText = `Dinleniyor: ${CONFIG.stations[state.currentStation].name}`;
+
+        if(state.isListenerMode) {
+            stateText = "Yusuf Ali ile Birlikte 🎧"; // Alt metin değişti
+        }
+
+        if (found) { ipcRenderer.send('update-discord-activity', { details: detailsText, state: stateText }); } 
+        else { 
+            // Şarkı bulunamadıysa varsayılana dön
+            let defDetails = CONFIG.stations[state.currentStation].name;
+            let defState = "Canlı Yayında 🎧";
+            if(state.isListenerMode) {
+                 defDetails = "Yusuf Ali ile Birlikte 🎧";
+                 defState = "Birlikte Dinle ✨";
+            }
+            ipcRenderer.send('update-discord-activity', { details: defDetails, state: defState }); 
+        }
     }
     if (found) { showBubble(artist, trackName, artUrl); } 
     else { hideScanningPopup(); }
@@ -334,4 +417,10 @@ function stopPopupSequence() {
     hideScanningPopup(); hideBubble();
 }
 
-function updateMediaSessionMetadata() { if ('mediaSession' in navigator) { const artUrl = new URL('https://yusufaliyaylaci.github.io/assets/profil.webp').href; navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); } }
+function updateMediaSessionMetadata() { 
+    if ('mediaSession' in navigator) { 
+        // YENİ DOMAIN URL
+        const artUrl = new URL('https://yusufaliyaylaci.com/assets/profil.webp').href; 
+        navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); 
+    } 
+}

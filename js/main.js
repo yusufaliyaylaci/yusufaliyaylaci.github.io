@@ -15,7 +15,6 @@ if (window.ipcRenderer) {
 }
 
 function startExperience() {
-    // iOS için ses kilidini açma
     if (UI.getOS() === 'iOS') { 
         document.body.addEventListener('touchstart', setupAudioContext, { once: true }); 
     } else { 
@@ -35,7 +34,6 @@ function startExperience() {
     setupInteractions(); 
     UI.initOnlineCounter();
 
-    // RADYO BAŞLATMA
     setTimeout(() => { playRadio(); }, 100);
     
     setTimeout(() => {
@@ -46,13 +44,11 @@ function startExperience() {
         UI.initPageIndicators();
     }, 100);
     
-    // --- GÜNCELLEME: SADECE UYGULAMADA OTOMATİK AÇILIS ---
     if (isElectron) {
         setTimeout(() => {
             UI.triggerRadioCard();
         }, 2000);
     }
-    // -----------------------------------------------------
     
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500);
 }
@@ -70,10 +66,8 @@ function setupEventListeners() {
     
     const closeBtn = document.getElementById('btnModalClose');
     if (closeBtn) {
-
         const newCloseBtn = closeBtn.cloneNode(true);
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-        
         newCloseBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -88,7 +82,6 @@ function setupEventListeners() {
 }
 
 function setupInteractions() {
-    // 1. Profil Resmi Tıklama
     const profileImg = document.getElementById("profileImg");
     if(profileImg) {
         profileImg.style.cursor = "pointer";
@@ -98,7 +91,6 @@ function setupInteractions() {
         });
     }
 
-    // 2. Hava Durumu Genişletme
     const wWidget = document.getElementById("weatherWidget");
     if(wWidget) {
         wWidget.addEventListener('click', (e) => {
@@ -108,7 +100,6 @@ function setupInteractions() {
         });
     }
 
-    // 3. Radyo Player Genişletme
     const rPlayer = document.getElementById("playerBox");
     if(rPlayer) {
         rPlayer.addEventListener('click', (e) => {
@@ -118,7 +109,6 @@ function setupInteractions() {
         });
     }
 
-    // 4. Boşluğa Tıklama (Geri Dön)
     document.addEventListener('click', (e) => {
         if(state.stage === 3 || state.stage === 4) {
             const insideRadio = e.target.closest('.radio-player');
@@ -132,11 +122,9 @@ function setupInteractions() {
         }
     });
 
-    // 5. Scroll (Tekerlek) Kontrolü
     window.addEventListener('wheel', (e) => {
         if(state.isScrolling) return;
         if (isElectron) {
-            // Electron'da scroll mantığı
             if(e.deltaY > 0) { 
                 if(state.stage === 1) { state.stage = 3; UI.changeStage(); UI.lockScroll(); } 
                 else if(state.stage === 3) { state.stage = 4; UI.changeStage(); UI.lockScroll(); } 
@@ -145,7 +133,6 @@ function setupInteractions() {
                 else if(state.stage === 3) { state.stage = 1; UI.changeStage(); UI.lockScroll(); } 
             }
         } else {
-            // Web'de scroll mantığı
             if(e.deltaY > 0) { 
                 if(state.stage < 4) { state.stage++; UI.changeStage(); UI.lockScroll(); } 
                 else { UI.triggerBump('bump-up'); UI.lockScroll(400); }
@@ -156,7 +143,6 @@ function setupInteractions() {
         }
     });
 
-    // 6. Dokunmatik (Touch) Kontrolü
     let touchStartY = 0;
     document.addEventListener('touchstart', (e) => { touchStartY = e.changedTouches[0].screenY; }, {passive: false});
     document.addEventListener('touchend', (e) => {
@@ -184,10 +170,6 @@ function setupInteractions() {
     }, {passive: false});
 }
 
-// -------------------------------------------------------------------------
-// BAĞLANTI KONTROLÜ VE İNDİRME LİNKLERİ
-// -------------------------------------------------------------------------
-
 const offlineOverlay = document.getElementById('offline-overlay');
 
 function updateOnlineStatus(isOnline) {
@@ -209,7 +191,7 @@ async function checkConnection(manual = false) {
     if (!navigator.onLine) { updateOnlineStatus(false); return; }
     try {
         const checkUrl = isElectron 
-            ? 'https://yusufaliyaylaci.github.io/assets/icon.ico?' + new Date().getTime() 
+            ? 'https://yusufaliyaylaci.com/assets/icon.ico?' + new Date().getTime() 
             : 'assets/icon.ico?' + new Date().getTime();
 
         const resp = await fetch(checkUrl, { method: 'HEAD', cache: 'no-store' });
@@ -237,7 +219,6 @@ async function updateDownloadButton() {
     const repo = "yusufaliyaylaci.github.io"; 
     const winBtn = document.getElementById('modal-win-btn');
     const winVerTag = document.getElementById('win-ver-tag');
-    // ... Diğer değişkenler ...
 
     if (!winBtn) return;
     const fallbackUrl = `https://github.com/${user}/${repo}/releases/latest`;
@@ -254,17 +235,48 @@ async function updateDownloadButton() {
             if(winVerTag) winVerTag.innerText = versionLabel;
         } else if(winBtn) { winBtn.href = fallbackUrl; }
 
-        // Diğer işletim sistemleri kodları buradaydı, aynen korunuyor...
-        // ...
-
     } catch (error) {
         if(winBtn) winBtn.href = fallbackUrl;
     }
 }
 
-// -------------------------------------------------------------------------
-// BAŞLATMA
-// -------------------------------------------------------------------------
+if (isElectron && ipcRenderer) {
+    ipcRenderer.on('app-mode-listener', () => {
+        activateListenerMode();
+    });
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('action') === 'join') {
+    window.location.href = "yaliapp://join"; 
+    setTimeout(() => { activateListenerMode(); }, 1000); 
+}
+
+function activateListenerMode() {
+    console.log("Dinleyici Modu Aktif: Kontroller Gizleniyor.");
+    document.body.classList.add('listener-mode');
+    
+    // YENİ: Durumu güncelle
+    state.isListenerMode = true; 
+    
+    // YENİ: Discord'a anında bildir
+    if(isElectron && ipcRenderer) {
+        ipcRenderer.send('update-discord-activity', { 
+            details: "Yusuf Ali ile Birlikte 🎧", 
+            state: "Sen de Katıl ✨" 
+        });
+    }
+
+    const statusText = document.getElementById('statusText');
+    if(statusText) statusText.innerText = "Yayın Sahibine Katıldınız";
+    
+    if(state && !state.isPlaying) {
+        setTimeout(() => {
+            const playBtn = document.getElementById('playBtn');
+            if(playBtn) playBtn.click();
+        }, 500);
+    }
+}
 
 function initApp() {
     setupEventListeners(); 
