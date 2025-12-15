@@ -7,7 +7,8 @@ const DiscordRPC = require('discord-rpc');
 autoUpdater.verifyUpdateCodeSignature = false;
 autoUpdater.autoDownload = true;
 
-// --- PROTOKOL TANIMLAMASI ---
+// --- PROTOKOL TANIMLAMASI (KRİTİK) ---
+// Bu kod uygulamanın "yaliapp://" linklerini tanımasını sağlar
 if (process.defaultApp) {
     if (process.argv.length >= 2) {
         app.setAsDefaultProtocolClient('yaliapp', process.execPath, [path.resolve(process.argv[1])]);
@@ -24,7 +25,9 @@ let mainWindow;
 let tray = null;
 let isQuitting = false;
 
-// --- YARDIMCI FONKSİYON: PENCERE ANİMASYONU ---
+// ... (animateWindow, createWindow, createTray fonksiyonları AYNEN KALSIN) ...
+// (Kod tekrarı olmasın diye buraları kısaltıyorum, mevcut kodunu koru)
+
 function animateWindow(win, targetOpacity, callback) {
     if (!win || win.isDestroyed()) return;
     let opacity = win.getOpacity();
@@ -147,15 +150,22 @@ function startAutoUpdateCheck() {
     }, 30 * 60 * 1000);
 }
 
-// --- DEEP LINK İŞLEME ---
+// --- DEEP LINK İŞLEME (GÜNCELLENDİ) ---
 function processDeepLink(url) {
     console.log("Link algılandı:", url);
     if (url && url.includes('join')) {
         if(mainWindow) {
+            // Eğer pencere minimize veya gizliyse geri getir
             if (mainWindow.isMinimized()) mainWindow.restore();
             mainWindow.show();
+            mainWindow.setOpacity(1); // Opaklığı düzelt
             mainWindow.focus();
-            mainWindow.webContents.send('app-mode-listener');
+            
+            // Frontend'e 'Dinleyici Moduna Geç' emri gönder
+            // Bir gecikme ekliyoruz ki pencere kendine gelsin
+            setTimeout(() => {
+                mainWindow.webContents.send('app-mode-listener');
+            }, 1000);
         }
     }
 }
@@ -182,13 +192,12 @@ function setActivity(details, state, smallImageKey = 'icon') {
     rpc.setActivity({
         details: details,
         state: state,
-        // startTimestamp: new Date(),  <-- BU SATIR ARTIK YOK, SAYAC ÇIKMAZ
         largeImageKey: 'yaliapp_logo',
         largeImageText: 'YaliApp - Radyo',
         smallImageKey: smallImageKey,
         instance: false,
         buttons: [
-            { label: "Birlikte Dinle", url: siteUrl }
+            { label: "Sen de Katıl", url: siteUrl }
         ]
     }).catch(console.error);
 }
@@ -226,16 +235,21 @@ autoUpdater.on('download-progress', (progressObj) => {
     if (mainWindow) mainWindow.webContents.send('update-progress', { percent: progressObj.percent, speed: progressObj.bytesPerSecond });
 });
 
-// --- SINGLE INSTANCE LOCK ---
+// --- SINGLE INSTANCE LOCK (ÇOK ÖNEMLİ) ---
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
     app.quit();
 } else {
+    // İkinci kez açılmaya çalışıldığında (Linke tıklandığında burası çalışır)
     app.on('second-instance', (event, commandLine, workingDirectory) => {
         if (mainWindow) {
             if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.setOpacity(1);
             mainWindow.focus();
+            
+            // Windows'ta link commandLine içinde gelir
             const url = commandLine.find(arg => arg.startsWith('yaliapp://'));
             if (url) processDeepLink(url);
         }
@@ -247,6 +261,7 @@ if (!gotTheLock) {
         initDiscordRPC();
         startAutoUpdateCheck();
         
+        // Windows'ta ilk açılışta link varsa (Uygulama kapalıyken tıklandıysa)
         if (process.platform === 'win32') {
             const url = process.argv.find(arg => arg.startsWith('yaliapp://'));
             if (url) {
@@ -259,6 +274,7 @@ if (!gotTheLock) {
         globalShortcut.register('F11', () => { return false; });
         app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
         
+        // macOS Link Yakalama
         app.on('open-url', (event, url) => {
             event.preventDefault();
             processDeepLink(url);

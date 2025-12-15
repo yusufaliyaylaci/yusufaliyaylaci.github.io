@@ -11,10 +11,7 @@ function hexToRgb(hex) {
     return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 255, g: 255, b: 255 };
 }
 
-// --- GÜNCELLENMİŞ FONKSİYON ---
-// Radyo kartını (Player'ı) tam ekran/varsayılan moduna geçirir
 export function triggerRadioCard() {
-    // Eğer zaten Radyo modunda (3) değilsek, oraya geçir
     if (state.stage !== 3) {
         state.stage = 3;
         changeStage();
@@ -55,10 +52,6 @@ export function initUpdateHandler() {
     });
 }
 
-export function initWelcomeScreen() {
-    // Ana mantık main.js içinde
-}
-
 export function createDynamicElements() {
     if (isElectron && !document.querySelector('.drag-region')) {
         const dragDiv = document.createElement('div'); dragDiv.className = 'drag-region'; document.body.appendChild(dragDiv);
@@ -97,30 +90,8 @@ export function createDynamicElements() {
         const bubble = document.createElement('div');
         bubble.id = 'resultBubble';
         bubble.className = 'result-bubble';
-// YENİ HTML YAPISI (Ekolayzer Eklendi):
-        bubble.innerHTML = `
-            <div class="bubble-left">
-                <img src="" id="bubbleArt" class="bubble-art" style="display:none">
-                <div class="mini-equalizer">
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                    <div class="bar"></div>
-                </div>
-            </div>
-            <div class="bubble-info">
-                <span id="bubbleTitle" class="bubble-title">Şarkı Adı</span>
-                <span id="bubbleArtist" class="bubble-artist">Sanatçı</span>
-            </div>
-            <i class="fas fa-times bubble-close" id="bubbleClose"></i>
-        `;
+        bubble.innerHTML = ``; 
         document.body.appendChild(bubble);
-        
-        // Kapatma butonu olayı
-        document.getElementById('bubbleClose').addEventListener('click', (e) => {
-            e.stopPropagation();
-            hideBubble();
-        });
     }
 }
 
@@ -234,17 +205,13 @@ export function showMainOptions() { document.getElementById('linux-platform-grid
 export function toggleLowPowerMode() { state.lowPowerMode = !state.lowPowerMode; const btn = document.getElementById('ecoBtn'); const canvas = document.getElementById('snowCanvas'); if (state.lowPowerMode) { if(btn) { btn.style.color = "#4caf50"; btn.style.borderColor = "#4caf50"; } if(canvas) canvas.style.display = 'none'; } else { if(btn) { btn.style.color = "white"; btn.style.borderColor = ""; } if(canvas) canvas.style.display = 'block'; initSnow(); } }
 export function hideDownloadPrompt(clicked) { const prompt = document.getElementById('downloadPrompt'); if (prompt) { prompt.classList.remove('active'); prompt.setAttribute('aria-hidden', 'true'); } if (clicked) localStorage.setItem('yaliApp_promptShown', 'true'); }
 export function showScanningPopup() {
-    // Önce varsa eski baloncuğu patlat
     hideBubble();
-
     const popup = document.getElementById('songPopup');
     if(popup) {
         popup.classList.add('active', 'scanning-mode');
-        // İkon ve metni arama moduna al
         const title = document.getElementById('popupTitle');
         const song = document.getElementById('popupSong');
         const icon = document.querySelector('.popup-icon');
-        
         title.innerText = "Ortam Dinleniyor...";
         title.style.color = "#ffeb3b";
         song.innerText = "Ses Analiz Ediliyor...";
@@ -259,31 +226,62 @@ export function hideScanningPopup() {
     }
 }
 
-export function showBubble(artist, song, artUrl) {
-    // Önce tarama kutusunu kapat
+export function showBubble(artist, song, artUrl, links) {
     hideScanningPopup();
 
     const bubble = document.getElementById('resultBubble');
-    const bTitle = document.getElementById('bubbleTitle');
-    const bArtist = document.getElementById('bubbleArtist');
-    const bArt = document.getElementById('bubbleArt');
-
-    if(bubble && bTitle && bArtist) {
-        bTitle.innerText = song;
-        bArtist.innerText = artist;
+    
+bubble.innerHTML = `
+        <div class="bubble-hub">
+            <div class="hub-circle">
+                <a href="${links && links.spotify ? links.spotify : '#'}" 
+                   target="_blank" 
+                   class="hub-slice spotify ${!links || !links.spotify ? 'disabled' : ''}" 
+                   title="Spotify'da Aç">
+                   <i class="fab fa-spotify"></i>
+                </a>
+                
+                <a href="${links && links.youtube ? links.youtube : '#'}" 
+                   target="_blank" 
+                   class="hub-slice youtube ${!links || !links.youtube ? 'disabled' : ''}"
+                   title="YouTube'da Aç">
+                   <i class="fab fa-youtube"></i>
+                </a>
+                
+                <a href="${links && links.deezer ? links.deezer : '#'}" 
+                   target="_blank" 
+                   class="hub-slice deezer ${!links || !links.deezer ? 'disabled' : ''}"
+                   title="Deezer'da Aç">
+                   <i class="fab fa-deezer"></i>
+                </a>
+                
+                <a href="${links && links.google ? links.google : '#'}" 
+                   target="_blank" 
+                   class="hub-slice google"
+                   title="Google'da Ara">
+                   <i class="fab fa-google"></i>
+                </a>
+            </div>
+        </div>
         
-        if(artUrl) {
-            bArt.src = artUrl;
-            bArt.style.display = "block";
-        } else {
-            bArt.style.display = "none";
-        }
+        <div class="bubble-info">
+            <span id="bubbleTitle" class="bubble-title">${song}</span>
+            <span id="bubbleArtist" class="bubble-artist">${artist}</span>
+        </div>
+        
+        <div class="bubble-close" id="bubbleClose">
+            <i class="fas fa-times"></i>
+        </div>
+    `;
 
-        // Animasyonla yüzeye çıkar (Reflow trigger)
-        bubble.classList.remove('surfaced');
-        void bubble.offsetWidth; 
-        bubble.classList.add('surfaced');
-    }
+    document.getElementById('bubbleClose').addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideBubble();
+    });
+
+    bubble.classList.remove('surfaced');
+    void bubble.offsetWidth; 
+    bubble.classList.add('surfaced');
 }
 
 export function hideBubble() {
@@ -293,14 +291,14 @@ export function hideBubble() {
     }
 }
 
-
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.card') && 
         !e.target.closest('.control-box-btn') && 
         !e.target.closest('#overlay') && 
         !e.target.closest('.song-popup') &&
         !e.target.closest('.weather-widget') &&
-        !e.target.closest('.radio-wrapper')) {
+        !e.target.closest('.radio-wrapper') &&
+        !e.target.closest('#resultBubble')) {
         
         triggerRadioCard();
     }

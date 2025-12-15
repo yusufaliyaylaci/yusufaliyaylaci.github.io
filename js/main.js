@@ -34,7 +34,23 @@ function startExperience() {
     setupInteractions(); 
     UI.initOnlineCounter();
 
-    setTimeout(() => { playRadio(); }, 100);
+    // --- KRİTİK DÜZELTME: WEB'DE OTOMATİK OYNATMA ---
+    // Eğer web sitesindeysek ve ?action=join varsa MÜZİĞİ BAŞLATMA.
+    // Çünkü tarayıcı bunu engeller ve radyo atlama döngüsüne girer.
+    const urlParams = new URLSearchParams(window.location.search);
+    const isJoinAction = urlParams.get('action') === 'join';
+
+    if (isElectron) {
+        // Uygulamadaysak hemen başlat
+        setTimeout(() => { playRadio(); }, 100);
+        setTimeout(() => { UI.triggerRadioCard(); }, 2000);
+    } else {
+        // Web'deysek ve katılma isteği yoksa başlat (Normal giriş)
+        if (!isJoinAction) {
+            setTimeout(() => { playRadio(); }, 100);
+        }
+        // Eğer join action varsa, playRadio() yapmıyoruz! Sadece uygulamayı açmaya odaklanıyoruz.
+    }
     
     setTimeout(() => {
         UI.initClock();
@@ -43,12 +59,6 @@ function startExperience() {
         setupVolumeControl();
         UI.initPageIndicators();
     }, 100);
-    
-    if (isElectron) {
-        setTimeout(() => {
-            UI.triggerRadioCard();
-        }, 2000);
-    }
     
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500);
 }
@@ -245,40 +255,54 @@ async function updateDownloadButton() {
 // -------------------------------------------------------------------------
 
 if (isElectron && ipcRenderer) {
+    // APP TARAFI: Electron main process'ten gelen sinyali dinle
     ipcRenderer.on('app-mode-listener', () => {
         activateListenerMode();
     });
 }
 
+// WEB TARAFI: ?action=join parametresi varsa
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('action') === 'join') {
+    
     if (!isElectron) {
-        console.log("Uygulama açılmaya çalışılıyor: yaliapp://join");
+        // Web'deyiz. Önce Masaüstü uygulamasını tetikle.
+        console.log("Uygulama tetikleniyor: yaliapp://join");
+        
+        // Bu işlem tarayıcıda "Uygulamayı aç?" uyarısı çıkartır.
+        // Kullanıcı kabul ederse uygulama açılır, etmezse web'de kalır.
         window.location.href = "yaliapp://join"; 
-        setTimeout(() => { activateListenerMode(); }, 2000); 
+        
+        // Not: Web'de activateListenerMode() ÇAĞIRMIYORUZ.
+        // Çünkü tarayıcıda müzik çalmaya çalışırsa hata verir ve döngüye girer.
+        // Sadece uygulamayı açma komutu gönderip bırakıyoruz.
+        
     } else {
+        // Electron içindeyiz ama URL parametresiyle gelmiş (Nadir durum ama önlem)
         activateListenerMode();
     }
 }
 
 function activateListenerMode() {
-    console.log("Dinleyici Modu Aktif: Oynatma butonları gizleniyor, ses açık.");
+    console.log("Dinleyici Modu Aktif.");
     
+    // Tasarımı kilitle (CSS'teki opacity devreye girer)
     document.body.classList.add('listener-mode');
+    
     state.isListenerMode = true;
 
-    // Discord durumu hemen güncellenir
+    // Electron için Discord güncellemesi
     if(isElectron && ipcRenderer) {
-        // İlk etapta radyo adı bilinmiyorsa genel mesaj
         ipcRenderer.send('update-discord-activity', { 
-            details: "Canlı Yayın 🎧", 
-            state: "Yusuf Ali ile Birlikte Dinliyor" 
+            details: CONFIG.stations[state.currentStation].name, 
+            state: "Yusuf Ali ile Birlikte 🎧" 
         });
     }
 
     const statusText = document.getElementById('statusText');
-    if(statusText) statusText.innerText = "Yayın Sahibine Katıldınız";
+    if(statusText) statusText.innerText = "Birlikte Dinleniyor";
     
+    // Eğer müzik çalmıyorsa başlat (Uygulama içinde olduğumuz için autoplay sorunu olmaz)
     if(state && !state.isPlaying) {
         setTimeout(() => {
             const playBtn = document.getElementById('playBtn');

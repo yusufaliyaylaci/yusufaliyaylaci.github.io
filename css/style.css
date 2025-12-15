@@ -1128,174 +1128,190 @@ body.view-mode-social .radio-player { cursor: default; }
     box-shadow: 0 0 15px rgba(255, 68, 68, 0.5) !important;
 }
 
-/* --- css/style.css EN ALTINA --- */
+/* =========================================
+   SONUÇ BALONCUĞU (DYNAMIC ISLAND V3 - FINAL)
+========================================= */
 
-/* Sonuç Baloncuğu */
 .result-bubble {
     position: fixed;
-    top: 15%;
+    /* DYNAMIC ISLAND: Ekranın tepesinde */
+    top: 30px; 
     left: 50%;
-    transform: translateX(-50%) translateY(150px) scale(0.8);
-    background: rgba(20, 20, 20, 0.65); /* Daha koyu, modern zemin */
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    transform: translateX(-50%) translateY(-150px); /* Başlangıçta yukarıda gizli */
+    
+    /* Premium Glassmorphism (Koyu) */
+    background: rgba(15, 15, 15, 0.95); 
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    
+    /* Modern Kenarlık ve Gölge */
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 
-        0 15px 40px -10px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    border-radius: 60px; /* Hap şeklinde */
-    padding: 8px 20px 8px 8px; /* Sol taraf resim için dar */
+        0 25px 50px -12px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    
+    border-radius: 100px; /* Hap Şekli */
+    
+    padding: 6px 15px 6px 6px; /* İç boşluklar: Sol taraf Hub için dar, sağ taraf geniş */
     display: flex;
     align-items: center;
     gap: 15px;
+    
     opacity: 0;
     visibility: hidden;
-    z-index: 9999;
+    z-index: 99999;
+    
     transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    min-width: 280px;
-    max-width: 90%;
+    
+    min-width: 320px;
+    max-width: 90vw;
 }
 
-/* Baloncuk Aktif */
 .result-bubble.surfaced {
     visibility: visible;
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-    /* Hafif süzülme efekti */
-    animation: bubbleFloat 6s ease-in-out infinite; 
+    transform: translateX(-50%) translateY(0); /* Sahneye iniş */
 }
 
-/* Sol Taraf (Resim ve Ekolayzer) */
-.bubble-left {
+/* --- TAM YUVARLAK HUB (SOL KONTROL PANELİ) --- */
+.bubble-hub {
+    width: 80px; 
+    height: 80px;
+    flex-shrink: 0;
     position: relative;
-    width: 50px;
-    height: 50px;
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.05));
 }
 
-.bubble-art {
+.hub-circle {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    position: relative;
+    border-radius: 50%; /* TAM YUVARLAK */
+    
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.05); 
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    /* Giriş Animasyonu */
+    animation: spinEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards 0.1s;
+}
+
+@keyframes spinEntrance {
+    from { transform: rotate(-90deg) scale(0.5); opacity: 0; }
+    to { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+/* --- DİLİMLER (BUTONLAR) --- */
+.hub-slice {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.3rem;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+}
+
+.hub-slice:hover {
+    color: white;
+    filter: brightness(1.2);
+    font-size: 1.5rem; 
     z-index: 2;
 }
 
-/* Mini Ekolayzer (Müzik Çubukları) */
-.mini-equalizer {
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 20px;
-    z-index: 3;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 3px;
-    border-radius: 6px;
-    backdrop-filter: blur(4px);
+/* Marka Renkleri */
+.hub-slice.spotify:hover { background: #1db954; color: white; }
+.hub-slice.youtube:hover { background: #ff0000; color: white; }
+.hub-slice.deezer:hover { background: linear-gradient(45deg, #FF0092, #FFC200, #00C7F2); color: white; }
+.hub-slice.google:hover { background: #4285F4; color: white; }
+
+.hub-slice.disabled {
+    pointer-events: none;
+    opacity: 0.15;
+    background: rgba(0,0,0,0.4);
+    color: #444;
 }
 
-.mini-equalizer .bar {
-    width: 3px;
-    background: #4caf50; /* Yeşil (Spotify/Müzik rengi) */
-    border-radius: 2px;
-    animation: equalize 1s ease-in-out infinite;
-}
-
-/* Çubukların Animasyonları (Rastgelelik hissi) */
-.mini-equalizer .bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
-.mini-equalizer .bar:nth-child(2) { height: 12px; animation-delay: 0.2s; background: #8bc34a; }
-.mini-equalizer .bar:nth-child(3) { height: 8px; animation-delay: 0.4s; }
-.mini-equalizer .bar:nth-child(4) { height: 14px; animation-delay: 0.3s; background: #cddc39; }
-
-@keyframes equalize {
-    0%, 100% { height: 4px; }
-    50% { height: 14px; }
-}
-
-/* Bilgi Alanı */
+/* --- BİLGİ ALANI --- */
 .bubble-info {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+    margin-right: 10px; /* Kapat butonu ile mesafe */
 }
 
 .bubble-title {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
+    margin-bottom: 2px;
+    letter-spacing: -0.3px;
 }
 
 .bubble-artist {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
     font-weight: 500;
-}
-
-/* Kapat Butonu */
-.bubble-close {
-    margin-left: auto; /* En sağa iter */
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 1rem;
-    padding: 5px;
-    transition: 0.3s;
-}
-.bubble-close:hover { 
-    color: #ff5252; 
-    transform: rotate(90deg); 
-}
-
-@keyframes bubbleFloat {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-8px); }
-}
-
-/* =========================================
-   DİNLEYİCİ MODU (SEN DE KATIL)
-========================================= */
-
-/* Ana kontrol butonlarını (Play/Pause, İleri, Geri) GİZLE VE TIKLANAMAZ YAP */
-body.listener-mode .main-buttons {
-    pointer-events: none;
-    opacity: 0.3;
-    filter: grayscale(100%);
-}
-
-/* Hava durumu ve arama kısımlarını kısıtla */
-body.listener-mode .change-city-text, 
-body.listener-mode .search-input {
-    pointer-events: none;
-    opacity: 0.3;
-    filter: grayscale(100%);
-}
-
-/* SES KONTROLÜ (VOLUME) SERBEST KALSIN */
-body.listener-mode .volume-group {
-    pointer-events: auto !important;
-    opacity: 1 !important;
-    filter: none !important;
-}
-
-/* Bilgi mesajı */
-body.listener-mode .radio-player::after {
-    content: 'Dinleyici Modu: Ses Kontrolü Sizde';
-    position: absolute;
-    bottom: -25px; /* Radyo kutusunun hemen altına al */
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.6);
-    background: rgba(0,0,0,0.6);
-    padding: 4px 10px;
-    border-radius: 10px;
     white-space: nowrap;
-    z-index: 100;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bubble-artist::before {
+    content: '\f001'; 
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 0.7rem;
+    color: var(--theme-color, #fff);
+    opacity: 0.7;
+}
+
+/* --- GÖMÜLÜ KAPAT BUTONU (EN SAĞDA) --- */
+.bubble-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    /* Transparan arka plan (Gömülü hissi için) */
+    background: transparent; 
+    color: rgba(255, 255, 255, 0.4);
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    /* En sağa yasla */
+    margin-left: auto;
+}
+
+.bubble-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ff5252; /* Kırmızı uyarı rengi */
+    transform: rotate(90deg);
+}
+
+/* --- MOBİL --- */
+@media (max-width: 480px) {
+    .result-bubble {
+        top: 20px;
+        min-width: 90vw;
+        padding: 5px 12px 5px 5px;
+    }
+    .bubble-hub { width: 70px; height: 70px; }
+    .bubble-title { font-size: 1rem; }
+    .bubble-artist { font-size: 0.8rem; }
 }

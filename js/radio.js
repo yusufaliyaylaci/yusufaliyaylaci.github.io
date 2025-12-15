@@ -132,11 +132,10 @@ function onRadioStarted() {
     document.documentElement.style.setProperty('--spin-speed', '5s');
     
     if (isElectron) { 
-        let detailsText = CONFIG.stations[state.currentStation].name; // Radyo Adı
+        let detailsText = CONFIG.stations[state.currentStation].name; 
         let stateText = "Canlı Yayında 🎧";
 
         if (state.isListenerMode) {
-            // Radyo adı üstte kalsın, alt taraf değişsin
             stateText = "Yusuf Ali ile Dinliyor 🎧";
         }
 
@@ -301,7 +300,7 @@ function triggerPopupSequence() {
 }
 
 async function captureAudioAndIdentify() {
-    if (!audioCtx || !analyzer) { showPopupResult(false, null, null, null); return; }
+    if (!audioCtx || !analyzer) { showPopupResult(false, null, null, null, null); return; }
     
     const titleEl = document.getElementById('popupTitle'); 
     if(titleEl) titleEl.innerText = "Dinleniyor...";
@@ -313,7 +312,7 @@ async function captureAudioAndIdentify() {
     const chunks = [];
     
     try { mediaRecorder = new MediaRecorder(dest.stream); } 
-    catch (err) { console.error(err); showPopupResult(false, null, null, null); return; }
+    catch (err) { console.error(err); showPopupResult(false, null, null, null, null); return; }
 
     mediaRecorder.ondataavailable = function(evt) { chunks.push(evt.data); };
     
@@ -323,7 +322,7 @@ async function captureAudioAndIdentify() {
 
         let foundResult = null;
         if (!CONFIG.acrKeys || CONFIG.acrKeys.length === 0) {
-            showPopupResult(false, null, null, null); return;
+            showPopupResult(false, null, null, null, null); return;
         }
 
         for (let i = 0; i < CONFIG.acrKeys.length; i++) {
@@ -342,11 +341,31 @@ async function captureAudioAndIdentify() {
             const music = foundResult.metadata.music[0];
             const artist = music.artists ? music.artists.map(a => a.name).join(", ") : "Bilinmiyor";
             const title = music.title;
-            let artUrl = "assets/yaliapp.png"; 
-            if (music.album && music.album.image && music.album.image.url) { artUrl = music.album.image.url; }
-            showPopupResult(true, artist, title, artUrl);
+            
+            // --- GÜNCELLEME: Tüm Linkleri ve Google Search'ü Hazırla ---
+            let links = { spotify: null, youtube: null, deezer: null, google: null };
+            
+            // ACRCloud Metadata'dan çek
+            if (music.external_metadata) {
+                if (music.external_metadata.spotify?.track?.id) {
+                    links.spotify = `https://open.spotify.com/track/${music.external_metadata.spotify.track.id}`;
+                }
+                if (music.external_metadata.youtube?.vid) {
+                    links.youtube = `https://www.youtube.com/watch?v=${music.external_metadata.youtube.vid}`;
+                }
+                if (music.external_metadata.deezer?.track?.id) {
+                    links.deezer = `https://www.deezer.com/track/${music.external_metadata.deezer.track.id}`;
+                }
+            }
+            
+            // Her zaman Google Search linki oluştur (Fallback olarak)
+            const query = encodeURIComponent(`${artist} ${title}`);
+            links.google = `https://www.google.com/search?q=${query}`;
+            // ---------------------------------------------------------
+
+            showPopupResult(true, artist, title, null, links); // Artık görsel URL göndermiyoruz (null)
         } else {
-            showPopupResult(false, null, null, null);
+            showPopupResult(false, null, null, null, null);
         }
     };
     
@@ -381,13 +400,12 @@ async function hmacSha1(key, message) {
     return btoa(String.fromCharCode(...new Uint8Array(signature)));
 }
 
-function showPopupResult(found, artist, trackName, artUrl) {
+function showPopupResult(found, artist, trackName, artUrl, links) {
     if (isElectron) {
         let detailsText = `${artist} - ${trackName}`;
         let stateText = `Dinleniyor: ${CONFIG.stations[state.currentStation].name}`;
 
         if(state.isListenerMode) {
-            // Şarkı adı varsa onu göster, altında Yusuf Ali yazsın
             stateText = "Yusuf Ali ile Dinliyor 🎧"; 
         }
 
@@ -401,7 +419,7 @@ function showPopupResult(found, artist, trackName, artUrl) {
             ipcRenderer.send('update-discord-activity', { details: defDetails, state: defState }); 
         }
     }
-    if (found) { showBubble(artist, trackName, artUrl); } 
+    if (found) { showBubble(artist, trackName, artUrl, links); } 
     else { hideScanningPopup(); }
 }
 
