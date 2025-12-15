@@ -1262,9 +1262,14 @@ body.view-mode-social .radio-player { cursor: default; }
    DİNLEYİCİ MODU (SEN DE KATIL)
 ========================================= */
 
-/* Kontrol butonlarını gizle */
-body.listener-mode .main-buttons,
-body.listener-mode .volume-group, 
+/* Ana kontrol butonlarını (Play/Pause, İleri, Geri) GİZLE VE TIKLANAMAZ YAP */
+body.listener-mode .main-buttons {
+    pointer-events: none;
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+/* Hava durumu ve arama kısımlarını kısıtla */
 body.listener-mode .change-city-text, 
 body.listener-mode .search-input {
     pointer-events: none;
@@ -1272,16 +1277,25 @@ body.listener-mode .search-input {
     filter: grayscale(100%);
 }
 
+/* SES KONTROLÜ (VOLUME) SERBEST KALSIN */
+body.listener-mode .volume-group {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
 /* Bilgi mesajı */
 body.listener-mode .radio-player::after {
-    content: 'Dinleyici Modu: Kontrol Yayıncıda';
+    content: 'Dinleyici Modu: Ses Kontrolü Sizde';
     position: absolute;
-    bottom: 10px;
+    bottom: -25px; /* Radyo kutusunun hemen altına al */
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.6rem;
-    color: rgba(255,255,255,0.5);
-    background: rgba(0,0,0,0.5);
-    padding: 2px 8px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.6);
+    background: rgba(0,0,0,0.6);
+    padding: 4px 10px;
     border-radius: 10px;
+    white-space: nowrap;
+    z-index: 100;
 }

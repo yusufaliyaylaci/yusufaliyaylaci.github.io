@@ -132,13 +132,12 @@ function onRadioStarted() {
     document.documentElement.style.setProperty('--spin-speed', '5s');
     
     if (isElectron) { 
-        // YENİ: Dinleyici Modu Kontrolü
-        let detailsText = CONFIG.stations[state.currentStation].name;
+        let detailsText = CONFIG.stations[state.currentStation].name; // Radyo Adı
         let stateText = "Canlı Yayında 🎧";
 
         if (state.isListenerMode) {
-            detailsText = "Yusuf Ali ile Birlikte 🎧";
-            stateText = "Birlikte Dinle ✨";
+            // Radyo adı üstte kalsın, alt taraf değişsin
+            stateText = "Yusuf Ali ile Dinliyor 🎧";
         }
 
         ipcRenderer.send('update-discord-activity', { details: detailsText, state: stateText });
@@ -384,26 +383,20 @@ async function hmacSha1(key, message) {
 
 function showPopupResult(found, artist, trackName, artUrl) {
     if (isElectron) {
-        // YENİ: Dinleyici modundaysa şarkı bilgisini ezmesin (veya özel formatlasın)
-        // Şimdilik dinleyici modunda da şarkı bilgisi göstersin ama "Birlikte" ibaresi kalsın istiyorsak:
-        // Ancak genelde şarkı bulununca şarkı adı yazması daha iyidir.
-        // Eğer özel istek varsa burayı da if(state.isListenerMode) ile ayırabiliriz.
-        
         let detailsText = `${artist} - ${trackName}`;
         let stateText = `Dinleniyor: ${CONFIG.stations[state.currentStation].name}`;
 
         if(state.isListenerMode) {
-            stateText = "Yusuf Ali ile Birlikte 🎧"; // Alt metin değişti
+            // Şarkı adı varsa onu göster, altında Yusuf Ali yazsın
+            stateText = "Yusuf Ali ile Dinliyor 🎧"; 
         }
 
         if (found) { ipcRenderer.send('update-discord-activity', { details: detailsText, state: stateText }); } 
         else { 
-            // Şarkı bulunamadıysa varsayılana dön
             let defDetails = CONFIG.stations[state.currentStation].name;
             let defState = "Canlı Yayında 🎧";
             if(state.isListenerMode) {
-                 defDetails = "Yusuf Ali ile Birlikte 🎧";
-                 defState = "Birlikte Dinle ✨";
+                 defState = "Yusuf Ali ile Dinliyor 🎧";
             }
             ipcRenderer.send('update-discord-activity', { details: defDetails, state: defState }); 
         }
@@ -419,7 +412,6 @@ function stopPopupSequence() {
 
 function updateMediaSessionMetadata() { 
     if ('mediaSession' in navigator) { 
-        // YENİ DOMAIN URL
         const artUrl = new URL('https://yusufaliyaylaci.com/assets/profil.webp').href; 
         navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); 
     } 

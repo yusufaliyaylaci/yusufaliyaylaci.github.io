@@ -240,6 +240,10 @@ async function updateDownloadButton() {
     }
 }
 
+// -------------------------------------------------------------------------
+// DİNLEYİCİ MODU (LISTENER MODE)
+// -------------------------------------------------------------------------
+
 if (isElectron && ipcRenderer) {
     ipcRenderer.on('app-mode-listener', () => {
         activateListenerMode();
@@ -248,22 +252,27 @@ if (isElectron && ipcRenderer) {
 
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('action') === 'join') {
-    window.location.href = "yaliapp://join"; 
-    setTimeout(() => { activateListenerMode(); }, 1000); 
+    if (!isElectron) {
+        console.log("Uygulama açılmaya çalışılıyor: yaliapp://join");
+        window.location.href = "yaliapp://join"; 
+        setTimeout(() => { activateListenerMode(); }, 2000); 
+    } else {
+        activateListenerMode();
+    }
 }
 
 function activateListenerMode() {
-    console.log("Dinleyici Modu Aktif: Kontroller Gizleniyor.");
+    console.log("Dinleyici Modu Aktif: Oynatma butonları gizleniyor, ses açık.");
+    
     document.body.classList.add('listener-mode');
-    
-    // YENİ: Durumu güncelle
-    state.isListenerMode = true; 
-    
-    // YENİ: Discord'a anında bildir
+    state.isListenerMode = true;
+
+    // Discord durumu hemen güncellenir
     if(isElectron && ipcRenderer) {
+        // İlk etapta radyo adı bilinmiyorsa genel mesaj
         ipcRenderer.send('update-discord-activity', { 
-            details: "Yusuf Ali ile Birlikte 🎧", 
-            state: "Sen de Katıl ✨" 
+            details: "Canlı Yayın 🎧", 
+            state: "Yusuf Ali ile Birlikte Dinliyor" 
         });
     }
 
@@ -278,6 +287,9 @@ function activateListenerMode() {
     }
 }
 
+// -------------------------------------------------------------------------
+// BAŞLATMA
+// -------------------------------------------------------------------------
 function initApp() {
     setupEventListeners(); 
     checkConnection();
