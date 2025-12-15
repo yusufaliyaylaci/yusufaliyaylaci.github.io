@@ -85,7 +85,8 @@ body {
 .bg-layer {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
+
+    animation: gradientBG var(--bg-speed, 15s) ease infinite;
     transition: opacity 3s ease-in-out; opacity: 0; z-index: -5;
 }
 .bg-layer.active { opacity: 1; z-index: -4; }
@@ -1314,4 +1315,44 @@ body.view-mode-social .radio-player { cursor: default; }
     .bubble-hub { width: 70px; height: 70px; }
     .bubble-title { font-size: 1rem; }
     .bubble-artist { font-size: 0.8rem; }
+}
+
+/* Mobil uyumluluk düzenlemeleri */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .glass-panel {
+        padding: 1.5rem;
+    }
+
+    /* Sonuç Baloncuğu Mobil Düzenlemesi */
+    .result-bubble {
+        width: 90% !important;          /* Ekranın tamamını değil, %90'ını kaplasın */
+        max-width: 350px !important;    /* Çok genişlemesini engelle */
+        height: auto !important;        /* Yüksekliği içeriğe göre ayarla (tüm ekranı kaplamasın) */
+        
+        position: fixed !important;     /* Sabit pozisyon */
+        top: 20px !important;           /* Üstten biraz boşluk bırak */
+        left: 50% !important;           /* Yatayda ortala */
+        transform: translateX(-50%) !important; /* Tam ortalamak için */
+        
+        bottom: auto !important;        /* Alta yapışmasın */
+        border-radius: 16px !important; /* Köşeleri daha oval yap */
+        padding: 15px !important;       /* İçeriği sıkıştırma */
+        z-index: 10000;                 /* En üstte görünsün */
+        
+        /* Mobilde daha şık görünmesi için gölge */
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    /* Mobilde metinleri biraz küçültelim */
+    .result-content h3 {
+        font-size: 1rem;
+    }
+    
+    .result-content p {
+        font-size: 0.9rem;
+    }
 }

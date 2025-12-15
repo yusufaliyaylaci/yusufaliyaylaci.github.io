@@ -6,6 +6,9 @@ let lastBgMode = null;
 let lastBgStation = null;
 let currentVisualizerColor = { r: 255, g: 255, b: 255 }; 
 
+// Warp (Rüzgar) Değişkeni
+let warpFactor = 0;      
+
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 255, g: 255, b: 255 };
@@ -118,9 +121,20 @@ export function updateBackground(mode) {
     if (mode === 'default') newGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)"; 
     else if (mode === 'error') newGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)"; 
     else newGradient = CONFIG.stations[state.currentStation].gradient;
+    
     const layer1 = document.getElementById("bg-layer-1"); const layer2 = document.getElementById("bg-layer-2");
     const activeLayer = layer1.classList.contains('active') ? layer1 : layer2; const nextLayer = activeLayer === layer1 ? layer2 : layer1;
-    nextLayer.style.backgroundImage = newGradient; activeLayer.classList.remove('active'); nextLayer.classList.add('active');
+    
+    // JS Kontrolünü İptal Et, CSS'e Bırak (Düzeltme)
+    activeLayer.style.animation = '';
+    nextLayer.style.animation = '';
+    activeLayer.style.backgroundPosition = ''; // Varsa temizle
+    nextLayer.style.backgroundPosition = '';
+    
+    nextLayer.style.backgroundImage = newGradient; 
+    activeLayer.classList.remove('active'); 
+    nextLayer.classList.add('active');
+    
     state.activeBgLayer = nextLayer.id === 'bg-layer-1' ? 1 : 2; lastBgMode = mode; lastBgStation = state.currentStation;
 }
 
@@ -135,33 +149,109 @@ export function updateThemeColors(isError) {
 export function initSnow() {
     if (state.lowPowerMode) return;
     const canvas = document.getElementById("snowCanvas"); if(!canvas) return; 
-    const ctx = canvas.getContext("2d"); let snowflakes = [];
+    const ctx = canvas.getContext("2d"); 
+    let snowflakes = [];
+    let warpLines = [];
+
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; } 
     window.addEventListener('resize', resize); resize();
-    class Snowflake { constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; this.angleSpeed = Math.random() * 0.01 + 0.005; this.swing = Math.random() * 1.5 + 0.5; } reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * -canvas.height; this.size = Math.random() * 3 + 1; this.speed = Math.random() * 0.5 + 0.3; this.opacity = Math.random() * 0.5 + 0.3; } update() { this.y += this.speed + state.kickImpulse; this.angle += this.angleSpeed; this.x += Math.cos(this.angle) * this.swing * 0.3; if (this.y > canvas.height) this.reset(); if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width; } draw() { ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } }
+    
+    class Snowflake { 
+        constructor() { this.reset(); this.angle = Math.random() * Math.PI * 2; this.angleSpeed = Math.random() * 0.01 + 0.005; this.swing = Math.random() * 1.5 + 0.5; } 
+        reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * -canvas.height; this.size = Math.random() * 3 + 1; this.speed = Math.random() * 0.5 + 0.3; this.opacity = Math.random() * 0.5 + 0.3; } 
+        update() { this.y += this.speed + state.kickImpulse; this.angle += this.angleSpeed; this.x += Math.cos(this.angle) * this.swing * 0.3; if (this.y > canvas.height) this.reset(); if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width; } 
+        draw() { ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } 
+    }
+    
+    class WarpLine {
+        constructor() { this.reset(); }
+        reset() {
+            this.angle = Math.random() * Math.PI * 2; 
+            this.dist = Math.random() * 100 + 20;     
+            this.length = Math.random() * 20 + 10;    
+            this.speed = Math.random() * 2 + 1;       
+            this.opacity = 0;                         
+            this.thickness = Math.random() * 1.5 + 0.5;
+        }
+        update(intensity) {
+            this.dist += this.speed * (1 + intensity * 20); 
+            this.length = 10 + (this.dist * 0.1) * (intensity * 5);
+            if (intensity > 0.1) { if(this.opacity < 0.8) this.opacity += 0.1; } else { this.opacity -= 0.05; }
+            const cx = canvas.width / 2; const cy = canvas.height / 2;
+            const x = cx + Math.cos(this.angle) * this.dist; const y = cy + Math.sin(this.angle) * this.dist;
+            if ((x < -100 || x > canvas.width + 100 || y < -100 || y > canvas.height + 100 || this.opacity <= 0) && intensity > 0.01) { this.reset(); }
+        }
+        draw() {
+            if (this.opacity <= 0) return;
+            const cx = canvas.width / 2; const cy = canvas.height / 2;
+            const headX = cx + Math.cos(this.angle) * this.dist; const headY = cy + Math.sin(this.angle) * this.dist;
+            const tailX = headX - Math.cos(this.angle) * this.length; const tailY = headY - Math.sin(this.angle) * this.length;
+            ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(headX, headY);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.lineWidth = this.thickness; ctx.lineCap = "round"; ctx.stroke();
+        }
+    }
+
     for (let i = 0; i < 90; i++) snowflakes.push(new Snowflake());
+    for (let i = 0; i < 50; i++) warpLines.push(new WarpLine()); 
+    
     function animate() { 
         if (state.lowPowerMode) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        if (analyzer && state.isPlaying) { 
-            try { analyzer.getByteFrequencyData(dataArray); let bassSum = dataArray[0] + dataArray[1] + dataArray[2]; 
-                if ((bassSum / 3) > 210) state.kickImpulse = 2.0; 
+        
+        // Müzik çalsa da çalmasa da karlar düşsün.
+        // Eğer müzik yoksa bassIntensity = 0 olacak, karlar yavaş yağacak.
+        
+        let bassIntensity = 0;
+        let targetWarp = 0;
+
+        if (analyzer && state.isPlaying && state.lastVolume > 0) { 
+            try { 
+                analyzer.getByteFrequencyData(dataArray); 
+                
+                // --- SUBWOOFER MODU & HASSASİYET AYARI ---
+                // Sadece 0. bant (En derin bass)
+                let rawBass = dataArray[0]; 
+                
+                // NOISE GATE: 150 (Bir tık düşürdük, daha kolay algılasın)
+                // Daha önce 200'dü, bu yüzden tepki vermiyordu.
+                bassIntensity = rawBass > 150 ? rawBass : 0;
+                
+                // THRESHOLD: 215 (Bir tık düşürdük)
+                if(bassIntensity > 215) {
+                    targetWarp = 1;     
+                    state.kickImpulse = 2.5; // Zıplama gücü
+                }
+
+                // Warp Geçişi
+                let warpSmoothing = (targetWarp > warpFactor) ? 0.2 : 0.05;
+                warpFactor += (targetWarp - warpFactor) * warpSmoothing;
+
+                // --- PLAYER GÖRSEL EFEKTLERİ ---
                 if (state.stage === 3) { 
                     const player = document.getElementById("playerBox"); 
-                    let visualSum = 0; for(let i = 0; i < 20; i++) visualSum += dataArray[i]; let avg = visualSum / 20; 
-                    const scaleAmount = 1 + (avg / 255) * 0.05; 
+                    let visualVal = bassIntensity; 
+                    const scaleAmount = 1 + (visualVal / 255) * 0.12; 
+                    
                     if(player) {
                         player.style.transform = `scale(${scaleAmount})`; 
                         const targetHex = CONFIG.stations[state.currentStation].accent; const targetRGB = hexToRgb(targetHex);
                         currentVisualizerColor.r += (targetRGB.r - currentVisualizerColor.r) * 0.05; currentVisualizerColor.g += (targetRGB.g - currentVisualizerColor.g) * 0.05; currentVisualizerColor.b += (targetRGB.b - currentVisualizerColor.b) * 0.05;
                         const r = Math.round(currentVisualizerColor.r); const g = Math.round(currentVisualizerColor.g); const b = Math.round(currentVisualizerColor.b);
-                        const shadowOpacity = Math.floor((avg / 255) * 100) / 100; const shadowSize = 20 + (avg * 0.2); 
+                        const shadowOpacity = Math.floor((visualVal / 255) * 100) / 100; const shadowSize = 20 + (visualVal * 0.4); 
                         player.style.boxShadow = `0 10px ${shadowSize}px rgba(${r}, ${g}, ${b}, ${shadowOpacity})`; 
                     }
                 } else { const player = document.getElementById("playerBox"); if(player) { if(player.style.transform) player.style.transform = ""; if(player.style.boxShadow) player.style.boxShadow = ""; } } 
             } catch(e) {} 
         } 
-        state.kickImpulse *= 0.90; snowflakes.forEach(flake => { flake.update(); flake.draw(); }); requestAnimationFrame(animate); 
+        
+        state.kickImpulse *= 0.85; 
+        
+        // Karları ve Rüzgar Çizgilerini Her Zaman Çiz
+        snowflakes.forEach(flake => { flake.update(); flake.draw(); });
+        if (warpFactor > 0.01) { warpLines.forEach(line => { line.update(warpFactor); line.draw(); }); }
+
+        requestAnimationFrame(animate); 
     } 
     animate();
 }
@@ -231,7 +321,7 @@ export function showBubble(artist, song, artUrl, links) {
 
     const bubble = document.getElementById('resultBubble');
     
-bubble.innerHTML = `
+    bubble.innerHTML = `
         <div class="bubble-hub">
             <div class="hub-circle">
                 <a href="${links && links.spotify ? links.spotify : '#'}" 
@@ -296,7 +386,7 @@ document.addEventListener('click', (e) => {
         !e.target.closest('.control-box-btn') && 
         !e.target.closest('#overlay') && 
         !e.target.closest('.song-popup') &&
-        !e.target.closest('.weather-widget') &&
+        !e.target.closest('.weather-widget') && 
         !e.target.closest('.radio-wrapper') &&
         !e.target.closest('#resultBubble')) {
         

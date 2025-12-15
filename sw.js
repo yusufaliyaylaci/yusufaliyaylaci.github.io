@@ -1,7 +1,7 @@
 // sw.js
 
 // NOT: deploy.bat buradaki versiyonu otomatik degistiriyor, buna dokunma.
-const CACHE_NAME = 'yali-blog-v1.9.9'; // Örnek versiyon
+const CACHE_NAME = 'yali-blog-v2.0.0'; // Örnek versiyon
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

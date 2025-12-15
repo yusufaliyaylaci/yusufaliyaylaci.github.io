@@ -15,12 +15,26 @@ if (window.ipcRenderer) {
 }
 
 function startExperience() {
+    // 1. APPLE CİHAZ DÜZELTMESİ (CORS Hatasını Önler)
+    if (UI.getOS() === 'iOS' || UI.getOS() === 'Mac OS') {
+        const audio1 = document.getElementById("bgMusic1");
+        const audio2 = document.getElementById("bgMusic2");
+
+        if(audio1) audio1.removeAttribute("crossorigin");
+        if(audio2) audio2.removeAttribute("crossorigin");
+
+        console.log("Apple cihazı için CORS modu kapatıldı.");
+    }
+
+    // 2. EKSİK OLAN PARÇA: SES MOTORUNU BAŞLATMA (Visualizer İçin Şart!)
+    // iOS'ta ses motoru sadece dokunma ile başlar, diğerlerinde hemen başlar.
     if (UI.getOS() === 'iOS') { 
         document.body.addEventListener('touchstart', setupAudioContext, { once: true }); 
     } else { 
-        setupAudioContext(); 
+        setupAudioContext(); // <-- BU SATIR EKSİKTİ!
     }
 
+    // 3. ARAYÜZ BAŞLATMA
     const overlay = document.getElementById("overlay");
     if(overlay) overlay.classList.add('slide-down-active');
     
@@ -34,22 +48,17 @@ function startExperience() {
     setupInteractions(); 
     UI.initOnlineCounter();
 
-    // --- KRİTİK DÜZELTME: WEB'DE OTOMATİK OYNATMA ---
-    // Eğer web sitesindeysek ve ?action=join varsa MÜZİĞİ BAŞLATMA.
-    // Çünkü tarayıcı bunu engeller ve radyo atlama döngüsüne girer.
+    // 4. OTOMATİK OYNATMA MANTIĞI
     const urlParams = new URLSearchParams(window.location.search);
     const isJoinAction = urlParams.get('action') === 'join';
 
     if (isElectron) {
-        // Uygulamadaysak hemen başlat
         setTimeout(() => { playRadio(); }, 100);
         setTimeout(() => { UI.triggerRadioCard(); }, 2000);
     } else {
-        // Web'deysek ve katılma isteği yoksa başlat (Normal giriş)
         if (!isJoinAction) {
             setTimeout(() => { playRadio(); }, 100);
         }
-        // Eğer join action varsa, playRadio() yapmıyoruz! Sadece uygulamayı açmaya odaklanıyoruz.
     }
     
     setTimeout(() => {
@@ -272,10 +281,6 @@ if (urlParams.get('action') === 'join') {
         // Bu işlem tarayıcıda "Uygulamayı aç?" uyarısı çıkartır.
         // Kullanıcı kabul ederse uygulama açılır, etmezse web'de kalır.
         window.location.href = "yaliapp://join"; 
-        
-        // Not: Web'de activateListenerMode() ÇAĞIRMIYORUZ.
-        // Çünkü tarayıcıda müzik çalmaya çalışırsa hata verir ve döngüye girer.
-        // Sadece uygulamayı açma komutu gönderip bırakıyoruz.
         
     } else {
         // Electron içindeyiz ama URL parametresiyle gelmiş (Nadir durum ama önlem)

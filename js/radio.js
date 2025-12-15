@@ -10,14 +10,35 @@ function getActivePlayer() { return document.getElementById(`bgMusic${state.acti
 function getInactivePlayer() { const inactiveId = state.activePlayerId === 1 ? 2 : 1; return document.getElementById(`bgMusic${inactiveId}`); }
 function swapActivePlayer() { state.activePlayerId = state.activePlayerId === 1 ? 2 : 1; }
 
-// --- AUDIO CONTEXT ---
+// --- AUDIO CONTEXT (SES MOTORU) ---
 export function setupAudioContext() {
+    const os = getOS();
+    if (os === 'iOS' || os === 'Mac OS') { 
+        console.log("Apple cihazı: Visualizer devre dışı.");
+        return; 
+    }
+
     if (audioCtx) { if (audioCtx.state === 'suspended') audioCtx.resume(); return; }
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext(); setAudioContext(ctx);
-        const node = ctx.createAnalyser(); setAnalyzer(node);
-        node.fftSize = 256; setDataArray(new Uint8Array(node.frequencyBinCount));
+        
+        const node = ctx.createAnalyser(); 
+        setAnalyzer(node);
+        
+        // --- KRİTİK AYARLAR (HASSASİYET İÇİN) ---
+        node.fftSize = 256; 
+        
+        // BU SATIR ÇOK ÖNEMLİ: 
+        // 0.8 (Varsayılan) -> Çok titrek
+        // 0.95 -> Çok yumuşak ve ağırbaşlı
+        node.smoothingTimeConstant = 0.94; 
+        
+        // Desibel aralığını daraltarak gürültüyü engelle
+        node.minDecibels = -90;
+        node.maxDecibels = -10;
+
+        setDataArray(new Uint8Array(node.frequencyBinCount));
 
         const audio1 = document.getElementById("bgMusic1"); 
         const audio2 = document.getElementById("bgMusic2");
@@ -26,16 +47,19 @@ export function setupAudioContext() {
         const gain2 = ctx.createGain();
 
         const source1 = ctx.createMediaElementSource(audio1); 
-        source1.connect(gain1).connect(node);
-
         const source2 = ctx.createMediaElementSource(audio2); 
-        source2.connect(gain2).connect(node);
 
-        node.connect(ctx.destination);
+        // 1. Yol: Hoparlöre (GainNode kontrolünde)
+        source1.connect(gain1).connect(ctx.destination);
+        source2.connect(gain2).connect(ctx.destination);
+
+        // 2. Yol: Visualizer'a (Direkt ham ses)
+        source1.connect(node);
+        source2.connect(node);
 
         state.gainNodes = { 1: gain1, 2: gain2 };
-        gain1.gain.value = 1;
-        gain2.gain.value = 1;
+        gain1.gain.value = Math.pow(state.lastVolume, 2);
+        gain2.gain.value = Math.pow(state.lastVolume, 2);
 
     } catch(e) { console.warn("Audio Context Hatası:", e); }
 }
@@ -51,8 +75,17 @@ export function initRadio() {
         navigator.mediaSession.setActionHandler('nexttrack', () => triggerChangeStation(1));
         navigator.mediaSession.setActionHandler('stop', () => togglePlay());
     }
+    
     player1.src = CONFIG.stations[state.currentStation].url;
-    player1.volume = Math.pow(state.lastVolume, 2);
+    
+    // Visualizer varsa GainNode kullan
+    if (state.gainNodes && state.gainNodes[1]) {
+        state.gainNodes[1].gain.value = Math.pow(state.lastVolume, 2);
+        player1.volume = 1; 
+    } else {
+        player1.volume = Math.pow(state.lastVolume, 2);
+    }
+
     if (isElectron) { ipcRenderer.on('media-toggle', () => { togglePlay(); }); }
 }
 
@@ -85,13 +118,31 @@ function resetErrorState() {
 export function togglePlay() {
     const active = getActivePlayer(); if(!active) return;
     if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    if (active.paused) { playRadio(); } 
-    else {
-        updateStatusUI(null, "Durduruluyor...", "#aaa"); clearInterval(timers.fade);
+    
+    if (active.paused) { 
+        playRadio(); 
+    } else {
+        updateStatusUI(null, "Durduruluyor...", "#aaa"); 
+        clearInterval(timers.fade);
         clearTimeout(connectionTimeout); 
+
         timers.fade = setInterval(() => {
-            if (active.volume > 0.02) { active.volume -= 0.02; } 
-            else { active.pause(); active.volume = 0; clearInterval(timers.fade); state.isPlaying = false; resetPlayerUI(); }
+            const activeId = state.activePlayerId;
+            let currentVol = (state.gainNodes && state.gainNodes[activeId]) ? state.gainNodes[activeId].gain.value : active.volume;
+
+            if (currentVol > 0.02) { 
+                currentVol -= 0.02;
+                if (state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = currentVol;
+                else active.volume = currentVol;
+            } else { 
+                active.pause(); 
+                if (state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = 0;
+                else active.volume = 0;
+                
+                clearInterval(timers.fade); 
+                state.isPlaying = false; 
+                resetPlayerUI(); 
+            }
         }, 50);
     }
 }
@@ -108,7 +159,14 @@ export function playRadio() {
     updateStatusUI("connecting", "Radyo Başlatılıyor...");
     startConnectionTimer(); 
 
-    active.volume = 0;
+    const activeId = state.activePlayerId;
+    if (state.gainNodes && state.gainNodes[activeId]) {
+        state.gainNodes[activeId].gain.value = 0;
+        active.volume = 1; 
+    } else {
+        active.volume = 0;
+    }
+
     const playPromise = active.play();
     
     if (playPromise !== undefined) {
@@ -134,11 +192,7 @@ function onRadioStarted() {
     if (isElectron) { 
         let detailsText = CONFIG.stations[state.currentStation].name; 
         let stateText = "Canlı Yayında 🎧";
-
-        if (state.isListenerMode) {
-            stateText = "Yusuf Ali ile Dinliyor 🎧";
-        }
-
+        if (state.isListenerMode) stateText = "Yusuf Ali ile Dinliyor 🎧";
         ipcRenderer.send('update-discord-activity', { details: detailsText, state: stateText });
         triggerRadioCard();
     }
@@ -173,11 +227,13 @@ export function triggerChangeStation(direction) {
     } else {
         startConnectionTimer(); 
         nextPlayer.src = targetUrl; 
-        nextPlayer.volume = 0; 
         
         const nextId = state.activePlayerId === 1 ? 2 : 1;
         if (state.gainNodes && state.gainNodes[nextId]) {
             state.gainNodes[nextId].gain.value = 0; 
+            nextPlayer.volume = 1;
+        } else {
+            nextPlayer.volume = 0;
         }
 
         const playPromise = nextPlayer.play();
@@ -191,7 +247,17 @@ export function triggerChangeStation(direction) {
 }
 
 function performCrossfade(oldPlayer, newPlayer) {
-    if(getOS() === 'iOS') { oldPlayer.pause(); oldPlayer.currentTime = 0; newPlayer.volume = state.lastVolume; finishSwitch(); return; }
+    if(getOS() === 'iOS') { 
+        oldPlayer.pause(); oldPlayer.currentTime = 0; 
+        const nextId = state.activePlayerId === 1 ? 2 : 1;
+        if (state.gainNodes && state.gainNodes[nextId]) {
+             state.gainNodes[nextId].gain.value = Math.pow(state.lastVolume, 2);
+             newPlayer.volume = 1;
+        } else {
+             newPlayer.volume = Math.pow(state.lastVolume, 2);
+        }
+        swapActivePlayer(); finishSwitch(); return; 
+    }
 
     const targetVol = Math.pow(state.lastVolume, 2); 
     const activeId = state.activePlayerId;           
@@ -199,28 +265,32 @@ function performCrossfade(oldPlayer, newPlayer) {
 
     const fadeDuration = 500;  
     const intervalTime = 50;   
-    
     const totalSteps = fadeDuration / intervalTime;
     const stepAmount = targetVol / totalSteps;
+    
+    let newVol = 0;
+    let oldVol = (state.gainNodes && state.gainNodes[activeId]) ? state.gainNodes[activeId].gain.value : oldPlayer.volume;
 
     const fadeInterval = setInterval(() => {
-        if(newPlayer.volume < targetVol) {
-            newPlayer.volume = Math.min(newPlayer.volume + stepAmount, targetVol);
-            if(state.gainNodes && state.gainNodes[nextId]) state.gainNodes[nextId].gain.value = 1; 
+        if(newVol < targetVol) {
+            newVol = Math.min(newVol + stepAmount, targetVol);
+            if(state.gainNodes && state.gainNodes[nextId]) state.gainNodes[nextId].gain.value = newVol;
+            else newPlayer.volume = newVol;
+        }
+        if(oldVol > 0) {
+            oldVol = Math.max(oldVol - stepAmount, 0);
+            if(state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = oldVol;
+            else oldPlayer.volume = oldVol;
         }
         
-        if(oldPlayer.volume > 0) {
-            oldPlayer.volume = Math.max(oldPlayer.volume - stepAmount, 0);
-        }
-        
-        const isNewReady = newPlayer.volume >= (targetVol - stepAmount);
-        const isOldDone = oldPlayer.volume <= stepAmount;
+        const isNewReady = newVol >= (targetVol - stepAmount);
+        const isOldDone = oldVol <= stepAmount;
 
         if(isNewReady && isOldDone) { 
             clearInterval(fadeInterval); 
             oldPlayer.pause(); oldPlayer.currentTime = 0; oldPlayer.src = ""; 
-            if(state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = 0; 
-            newPlayer.volume = targetVol;
+            if(state.gainNodes && state.gainNodes[nextId]) state.gainNodes[nextId].gain.value = targetVol;
+            else newPlayer.volume = targetVol;
             swapActivePlayer(); 
             finishSwitch(); 
         }
@@ -231,22 +301,18 @@ function finishSwitch() { state.isSwitching = false; clearTimeout(timers.connect
 
 function preloadNextStation() {
     if (!state.isPlaying || state.isSwitching) return;
-
     const nextIndex = (state.currentStation + 1) % CONFIG.stations.length;
     const nextUrl = CONFIG.stations[nextIndex].url;
-
     const inactive = getInactivePlayer();
     const inactiveId = state.activePlayerId === 1 ? 2 : 1;
-    const inactiveGain = state.gainNodes ? state.gainNodes[inactiveId] : null;
-
     if (inactive.src === nextUrl && !inactive.paused) return;
-
-    console.log("Ön yükleme başlatılıyor: " + CONFIG.stations[nextIndex].name);
-
-    if (inactiveGain) inactiveGain.gain.value = 0;
-    inactive.volume = 0; 
+    if (state.gainNodes && state.gainNodes[inactiveId]) {
+        state.gainNodes[inactiveId].gain.value = 0;
+        inactive.volume = 1;
+    } else {
+        inactive.volume = 0;
+    }
     inactive.src = nextUrl;
-    
     const playPromise = inactive.play();
     if (playPromise !== undefined) {
         playPromise.catch(e => console.log("Ön yükleme hatası (önemsiz):", e));
@@ -254,17 +320,85 @@ function preloadNextStation() {
 }
 
 export function setupVolumeControl() {
-    const slider = document.getElementById("volRange"); slider.value = state.lastVolume; updateVolFill(state.lastVolume);
+    const slider = document.getElementById("volRange"); 
+    slider.value = state.lastVolume; 
+    updateVolFill(state.lastVolume);
+    
     slider.addEventListener("input", (e) => {
-        const val = parseFloat(e.target.value); state.lastVolume = val;
-        const active = getActivePlayer(); if(active) active.volume = Math.pow(val, 2);
-        updateVolFill(val); const icon = document.getElementById("volIcon");
-        if(val === 0) icon.className = "fas fa-volume-mute"; else if(val < 0.5) icon.className = "fas fa-volume-down"; else icon.className = "fas fa-volume-up";
+        const val = parseFloat(e.target.value); 
+        state.lastVolume = val;
+        const targetVol = Math.pow(val, 2);
+        const active = getActivePlayer(); 
+        const activeId = state.activePlayerId;
+
+        if (state.gainNodes && state.gainNodes[activeId]) {
+            state.gainNodes[activeId].gain.value = targetVol;
+            if(active) active.volume = 1; 
+        } else {
+            if(active) active.volume = targetVol;
+        }
+
+        updateVolFill(val); 
+        const icon = document.getElementById("volIcon");
+        if(val === 0) icon.className = "fas fa-volume-mute"; 
+        else if(val < 0.5) icon.className = "fas fa-volume-down"; 
+        else icon.className = "fas fa-volume-up";
     });
 }
-export function toggleMute(e) { if(e) e.stopPropagation(); const active = getActivePlayer(); const slider = document.getElementById("volRange"); if(slider.value > 0) { state.lastVolume = parseFloat(slider.value); if(active) active.volume = 0; slider.value = 0; updateVolFill(0); document.getElementById("volIcon").className = "fas fa-volume-mute"; } else { let restore = state.lastVolume > 0 ? state.lastVolume : 0.5; if(active) active.volume = Math.pow(restore, 2); slider.value = restore; updateVolFill(restore); document.getElementById("volIcon").className = "fas fa-volume-up"; } }
+
+export function toggleMute(e) { 
+    if(e) e.stopPropagation(); 
+    const active = getActivePlayer(); 
+    const activeId = state.activePlayerId;
+    const slider = document.getElementById("volRange"); 
+    
+    if(slider.value > 0) { 
+        state.lastVolume = parseFloat(slider.value); 
+        if (state.gainNodes && state.gainNodes[activeId]) {
+            state.gainNodes[activeId].gain.value = 0;
+            if(active) active.volume = 1; 
+        } else {
+            if(active) active.volume = 0;
+        }
+        slider.value = 0; 
+        updateVolFill(0); 
+        document.getElementById("volIcon").className = "fas fa-volume-mute"; 
+    } else { 
+        let restore = state.lastVolume > 0 ? state.lastVolume : 0.5; 
+        const targetVol = Math.pow(restore, 2);
+        if (state.gainNodes && state.gainNodes[activeId]) {
+            state.gainNodes[activeId].gain.value = targetVol;
+            if(active) active.volume = 1;
+        } else {
+            if(active) active.volume = targetVol;
+        }
+        slider.value = restore; 
+        updateVolFill(restore); 
+        document.getElementById("volIcon").className = "fas fa-volume-up"; 
+    } 
+}
+
 function updateVolFill(val) { const fill = document.getElementById("volFill"); if(fill) fill.style.width = (val * 100) + "%"; }
-function fadeIn(audio) { const targetVol = Math.pow(state.lastVolume, 2) || 0.25; audio.volume = 0; clearInterval(timers.fade); timers.fade = setInterval(() => { if (audio.volume < targetVol - 0.02) audio.volume += 0.02; else { audio.volume = targetVol; clearInterval(timers.fade); } }, 100); }
+
+function fadeIn(audio) { 
+    const targetVol = Math.pow(state.lastVolume, 2) || 0.25; 
+    const activeId = state.activePlayerId;
+    if (state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = 0;
+    else audio.volume = 0;
+    clearInterval(timers.fade); 
+    timers.fade = setInterval(() => { 
+        let currentVol = (state.gainNodes && state.gainNodes[activeId]) ? state.gainNodes[activeId].gain.value : audio.volume;
+        if (currentVol < targetVol - 0.02) {
+            currentVol += 0.02;
+            if (state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = currentVol;
+            else audio.volume = currentVol;
+        } else { 
+            if (state.gainNodes && state.gainNodes[activeId]) state.gainNodes[activeId].gain.value = targetVol;
+            else audio.volume = targetVol;
+            clearInterval(timers.fade); 
+        } 
+    }, 100); 
+}
 
 function handleConnectionError() {
     if (state.isRetrying) return; state.isRetrying = true;
@@ -306,7 +440,7 @@ async function captureAudioAndIdentify() {
     if(titleEl) titleEl.innerText = "Dinleniyor...";
 
     const dest = audioCtx.createMediaStreamDestination(); 
-    analyzer.connect(dest);
+    analyzer.connect(dest); 
     
     let mediaRecorder; 
     const chunks = [];
@@ -342,10 +476,8 @@ async function captureAudioAndIdentify() {
             const artist = music.artists ? music.artists.map(a => a.name).join(", ") : "Bilinmiyor";
             const title = music.title;
             
-            // --- GÜNCELLEME: Tüm Linkleri ve Google Search'ü Hazırla ---
             let links = { spotify: null, youtube: null, deezer: null, google: null };
             
-            // ACRCloud Metadata'dan çek
             if (music.external_metadata) {
                 if (music.external_metadata.spotify?.track?.id) {
                     links.spotify = `https://open.spotify.com/track/${music.external_metadata.spotify.track.id}`;
@@ -358,12 +490,10 @@ async function captureAudioAndIdentify() {
                 }
             }
             
-            // Her zaman Google Search linki oluştur (Fallback olarak)
             const query = encodeURIComponent(`${artist} ${title}`);
             links.google = `https://www.google.com/search?q=${query}`;
-            // ---------------------------------------------------------
 
-            showPopupResult(true, artist, title, null, links); // Artık görsel URL göndermiyoruz (null)
+            showPopupResult(true, artist, title, null, links);
         } else {
             showPopupResult(false, null, null, null, null);
         }
@@ -404,18 +534,12 @@ function showPopupResult(found, artist, trackName, artUrl, links) {
     if (isElectron) {
         let detailsText = `${artist} - ${trackName}`;
         let stateText = `Dinleniyor: ${CONFIG.stations[state.currentStation].name}`;
-
-        if(state.isListenerMode) {
-            stateText = "Yusuf Ali ile Dinliyor 🎧"; 
-        }
-
+        if(state.isListenerMode) stateText = "Yusuf Ali ile Dinliyor 🎧"; 
         if (found) { ipcRenderer.send('update-discord-activity', { details: detailsText, state: stateText }); } 
         else { 
             let defDetails = CONFIG.stations[state.currentStation].name;
             let defState = "Canlı Yayında 🎧";
-            if(state.isListenerMode) {
-                 defState = "Yusuf Ali ile Dinliyor 🎧";
-            }
+            if(state.isListenerMode) defState = "Yusuf Ali ile Dinliyor 🎧";
             ipcRenderer.send('update-discord-activity', { details: defDetails, state: defState }); 
         }
     }
@@ -430,7 +554,7 @@ function stopPopupSequence() {
 
 function updateMediaSessionMetadata() { 
     if ('mediaSession' in navigator) { 
-        const artUrl = new URL('https://yusufaliyaylaci.com/assets/profil.webp').href; 
+        const artUrl = new URL('assets/profil.webp', window.location.href).href; 
         navigator.mediaSession.metadata = new MediaMetadata({ title: CONFIG.stations[state.currentStation].name, artist: "Yusuf Ali Blog", album: "Canlı Yayın", artwork: [{ src: artUrl, sizes: '512x512', type: 'image/webp' }] }); 
     } 
 }
