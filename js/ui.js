@@ -1,150 +1,49 @@
 import { CONFIG } from './config.js';
 import { state, timers, analyzer, dataArray } from './state.js';
 import { isElectron, ipcRenderer } from './main.js';
+import { triggerPopupSequence } from './radio.js'; 
 
 let lastBgMode = null;
 let lastBgStation = null;
 let currentVisualizerColor = { r: 255, g: 255, b: 255 }; 
-
-// Warp (Rüzgar) Değişkeni
 let warpFactor = 0;      
+
+// --- ADAPTİF KICK ALGILAMA DEĞİŞKENLERİ ---
+const ENERGY_HISTORY_SIZE = 40; 
+let energyHistory = new Array(ENERGY_HISTORY_SIZE).fill(0);
+let historyIndex = 0;
+let lastKickTime = 0; 
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 255, g: 255, b: 255 };
 }
 
-export function triggerRadioCard() {
-    if (state.stage !== 3) {
-        state.stage = 3;
-        changeStage();
-    }
-}
-
-export function getOS() {
-    if (typeof window === 'undefined') return 'Unknown';
-    const userAgent = window.navigator.userAgent;
-    if (userAgent.indexOf("Win") !== -1) return "Windows";
-    if (userAgent.indexOf("Mac") !== -1) return "MacOS";
-    if (userAgent.indexOf("Linux") !== -1) return "Linux";
-    if (userAgent.indexOf("Android") !== -1) return "Android";
-    if (userAgent.indexOf("like Mac") !== -1) return "iOS";
-    return "Unknown";
-}
-
-export function initUpdateHandler() {
-    if (!isElectron) return;
-    const overlay = document.getElementById('update-overlay');
-    const bar = document.getElementById('updateProgressBar');
-    const status = document.getElementById('updateStatusText');
-    const title = document.querySelector('.update-box h2');
-
-    ipcRenderer.on('update-available', () => { if(overlay) overlay.classList.add('active'); });
-    ipcRenderer.on('update-progress', (event, data) => {
-        if(bar && status) {
-            const percent = Math.round(data.percent);
-            bar.style.width = percent + "%";
-            status.innerText = `%${percent} Tamamlandı`;
-        }
-    });
-    ipcRenderer.on('update-downloaded', () => {
-        if(status && title) {
-            bar.style.width = "100%"; bar.style.boxShadow = "0 0 20px #fff";
-            title.innerText = "Güncelleme Hazır!"; status.innerText = "Yeniden başlatılıyor..."; status.style.color = "#4caf50";
+export function setControlsDisabled(isDisabled) {
+    const ids = ['btnPrevStation', 'playBtn', 'btnNextStation'];
+    ids.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            if (isDisabled) {
+                btn.style.opacity = "0.4"; 
+                btn.style.pointerEvents = "none"; 
+                btn.style.cursor = "not-allowed";
+            } else {
+                btn.style.opacity = "1"; 
+                btn.style.pointerEvents = "auto"; 
+                btn.style.cursor = "pointer";
+            }
         }
     });
 }
 
-export function createDynamicElements() {
-    if (isElectron && !document.querySelector('.drag-region')) {
-        const dragDiv = document.createElement('div'); dragDiv.className = 'drag-region'; document.body.appendChild(dragDiv);
-    }
-    if (isElectron) {
-        ipcRenderer.send('get-app-version');
-        ipcRenderer.on('app-version', (event, version) => {
-            const verDisplay = document.getElementById('app-version-display');
-            if(verDisplay) { verDisplay.innerText = `v${version}`; verDisplay.style.display = 'block'; }
-        });
-    }
-
-    if (!document.querySelector('.app-controls-container') && !document.querySelector('.web-controls-container')) {
-        const container = document.createElement('div');
-        const ecoBtn = document.createElement('div'); ecoBtn.className = 'control-box-btn'; ecoBtn.id = 'ecoBtn'; ecoBtn.innerHTML = '<i class="fas fa-leaf"></i>'; ecoBtn.onclick = toggleLowPowerMode; ecoBtn.title = "Düşük Güç Modu";
-        
-        if (isElectron) {
-            container.className = 'app-controls-container';
-            const closeBtn = document.createElement('div'); closeBtn.className = 'control-box-btn close-app-btn'; closeBtn.innerHTML = '<i class="fas fa-times"></i>'; closeBtn.onclick = () => ipcRenderer.send('close-app'); closeBtn.title = "Gizle"; container.appendChild(closeBtn);
-            const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn);
-            const minBtn = document.createElement('div'); minBtn.className = 'control-box-btn'; minBtn.innerHTML = '<i class="fas fa-minus"></i>'; minBtn.onclick = () => ipcRenderer.send('minimize-app'); minBtn.title = "Küçült"; container.appendChild(minBtn);
-            container.appendChild(ecoBtn);
-        } else {
-            container.className = 'web-controls-container';
-            const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn);
-            container.appendChild(ecoBtn);
-            const dlBtn = document.createElement('div'); dlBtn.className = 'control-box-btn'; dlBtn.innerHTML = '<i class="fas fa-download"></i>'; dlBtn.onclick = toggleDownloadModal; dlBtn.title = "İndir"; container.appendChild(dlBtn);
-        }
-        document.body.appendChild(container);
-    }
-    const wrapper = document.querySelector('.radio-wrapper');
-    if (wrapper && !document.querySelector('.song-popup')) {
-        const popup = document.createElement('div'); popup.className = 'song-popup'; popup.id = 'songPopup'; popup.innerHTML = `<div class="popup-icon"><i class="fas fa-music"></i></div><div class="popup-content"><div class="popup-title" id="popupTitle">Dinleniyor...</div><div class="popup-song" id="popupSong">---</div></div>`; wrapper.appendChild(popup); 
-    }
-    if (!document.getElementById('resultBubble')) {
-        const bubble = document.createElement('div');
-        bubble.id = 'resultBubble';
-        bubble.className = 'result-bubble';
-        bubble.innerHTML = ``; 
-        document.body.appendChild(bubble);
-    }
-}
-
-export function updateStatusUI(statusType, msg, customColor) {
-    const nameEl = document.getElementById("stationName");
-    if(nameEl && CONFIG.stations[state.currentStation]) nameEl.innerText = CONFIG.stations[state.currentStation].name; 
-    const sText = document.getElementById("statusText"); if(!sText) return;
-    sText.classList.remove("status-connecting", "status-live", "status-retrying");
-    if(statusType === "connecting") sText.classList.add("status-connecting");
-    else if(statusType === "live") sText.classList.add("status-live");
-    else if(statusType === "retrying") sText.classList.add("status-retrying");
-
-    let contentHTML = "";
-    if (statusType === 'live') { contentHTML = `<span class="status-live-text">${msg}</span>`; sText.style.color = ""; } 
-    else if (statusType === "connecting") { contentHTML = `<div class="connecting-dots"><span></span><span></span><span></span></div><span class="status-animate">${msg}</span>`; sText.style.color = customColor || ""; } 
-    else if (statusType === "error") { contentHTML = `<span class="status-error-anim">${msg}</span>`; sText.style.color = customColor || "red"; }
-    else { contentHTML = `<span class="status-animate">${msg}</span>`; sText.style.color = customColor || ""; }
-    sText.innerHTML = contentHTML;
-}
-
-export function updateBackground(mode) {
-    if (lastBgMode === mode && (mode !== 'station' || lastBgStation === state.currentStation)) return; 
-    let newGradient;
-    if (mode === 'default') newGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)"; 
-    else if (mode === 'error') newGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)"; 
-    else newGradient = CONFIG.stations[state.currentStation].gradient;
-    
-    const layer1 = document.getElementById("bg-layer-1"); const layer2 = document.getElementById("bg-layer-2");
-    const activeLayer = layer1.classList.contains('active') ? layer1 : layer2; const nextLayer = activeLayer === layer1 ? layer2 : layer1;
-    
-    // JS Kontrolünü İptal Et, CSS'e Bırak (Düzeltme)
-    activeLayer.style.animation = '';
-    nextLayer.style.animation = '';
-    activeLayer.style.backgroundPosition = ''; // Varsa temizle
-    nextLayer.style.backgroundPosition = '';
-    
-    nextLayer.style.backgroundImage = newGradient; 
-    activeLayer.classList.remove('active'); 
-    nextLayer.classList.add('active');
-    
-    state.activeBgLayer = nextLayer.id === 'bg-layer-1' ? 1 : 2; lastBgMode = mode; lastBgStation = state.currentStation;
-}
-
-export function updateThemeColors(isError) {
-    const color = isError ? "red" : CONFIG.stations[state.currentStation].accent;
-    document.documentElement.style.setProperty('--theme-color', color);
-    const playBtn = document.getElementById("playBtn"); if(playBtn) playBtn.style.color = ""; 
-    document.querySelectorAll('.equalizer .bar').forEach(b => b.style.backgroundColor = ""); 
-    const playerBox = document.getElementById("playerBox"); if(playerBox) playerBox.style.borderColor = ""; 
-}
+export function triggerRadioCard() { if (state.stage !== 3) { state.stage = 3; changeStage(); } }
+export function getOS() { if (typeof window === 'undefined') return 'Unknown'; const userAgent = window.navigator.userAgent; if (userAgent.indexOf("Win") !== -1) return "Windows"; if (userAgent.indexOf("Mac") !== -1) return "MacOS"; if (userAgent.indexOf("Linux") !== -1) return "Linux"; if (userAgent.indexOf("Android") !== -1) return "Android"; if (userAgent.indexOf("like Mac") !== -1) return "iOS"; return "Unknown"; }
+export function initUpdateHandler() { if (!isElectron) return; const overlay = document.getElementById('update-overlay'); const bar = document.getElementById('updateProgressBar'); const status = document.getElementById('updateStatusText'); const title = document.querySelector('.update-box h2'); ipcRenderer.on('update-available', () => { if(overlay) overlay.classList.add('active'); }); ipcRenderer.on('update-progress', (event, data) => { if(bar && status) { const percent = Math.round(data.percent); bar.style.width = percent + "%"; status.innerText = `%${percent} Tamamlandı`; } }); ipcRenderer.on('update-downloaded', () => { if(status && title) { bar.style.width = "100%"; bar.style.boxShadow = "0 0 20px #fff"; title.innerText = "Güncelleme Hazır!"; status.innerText = "Yeniden başlatılıyor..."; status.style.color = "#4caf50"; } }); }
+export function createDynamicElements() { if (isElectron && !document.querySelector('.drag-region')) { const dragDiv = document.createElement('div'); dragDiv.className = 'drag-region'; document.body.appendChild(dragDiv); } if (isElectron) { ipcRenderer.send('get-app-version'); ipcRenderer.on('app-version', (event, version) => { const verDisplay = document.getElementById('app-version-display'); if(verDisplay) { verDisplay.innerText = `v${version}`; verDisplay.style.display = 'block'; } }); } if (!document.querySelector('.app-controls-container') && !document.querySelector('.web-controls-container')) { const container = document.createElement('div'); const ecoBtn = document.createElement('div'); ecoBtn.className = 'control-box-btn'; ecoBtn.id = 'ecoBtn'; ecoBtn.innerHTML = '<i class="fas fa-leaf"></i>'; ecoBtn.onclick = toggleLowPowerMode; ecoBtn.title = "Düşük Güç Modu"; if (isElectron) { container.className = 'app-controls-container'; const closeBtn = document.createElement('div'); closeBtn.className = 'control-box-btn close-app-btn'; closeBtn.innerHTML = '<i class="fas fa-times"></i>'; closeBtn.onclick = () => ipcRenderer.send('close-app'); closeBtn.title = "Gizle"; container.appendChild(closeBtn); const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn); const minBtn = document.createElement('div'); minBtn.className = 'control-box-btn'; minBtn.innerHTML = '<i class="fas fa-minus"></i>'; minBtn.onclick = () => ipcRenderer.send('minimize-app'); minBtn.title = "Küçült"; container.appendChild(minBtn); container.appendChild(ecoBtn); } else { container.className = 'web-controls-container'; const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn); container.appendChild(ecoBtn); const dlBtn = document.createElement('div'); dlBtn.className = 'control-box-btn'; dlBtn.innerHTML = '<i class="fas fa-download"></i>'; dlBtn.onclick = toggleDownloadModal; dlBtn.title = "İndir"; container.appendChild(dlBtn); } document.body.appendChild(container); } const wrapper = document.querySelector('.radio-wrapper'); if (wrapper && !document.querySelector('.song-popup')) { const popup = document.createElement('div'); popup.className = 'song-popup'; popup.id = 'songPopup'; popup.innerHTML = `<div class="popup-icon"><i class="fas fa-music"></i></div><div class="popup-content"><div class="popup-title" id="popupTitle">Dinleniyor...</div><div class="popup-song" id="popupSong">---</div></div>`; wrapper.appendChild(popup); } if (!document.getElementById('resultBubble')) { const bubble = document.createElement('div'); bubble.id = 'resultBubble'; bubble.className = 'result-bubble'; bubble.innerHTML = ``; document.body.appendChild(bubble); } }
+export function updateStatusUI(statusType, msg, customColor) { const nameEl = document.getElementById("stationName"); if(nameEl && CONFIG.stations[state.currentStation]) nameEl.innerText = CONFIG.stations[state.currentStation].name; const sText = document.getElementById("statusText"); if(!sText) return; sText.classList.remove("status-connecting", "status-live", "status-retrying"); if(statusType === "connecting") sText.classList.add("status-connecting"); else if(statusType === "live") sText.classList.add("status-live"); else if(statusType === "retrying") sText.classList.add("status-retrying"); let contentHTML = ""; if (statusType === 'live') { contentHTML = `<span class="status-live-text">${msg}</span>`; sText.style.color = ""; } else if (statusType === "connecting") { contentHTML = `<div class="connecting-dots"><span></span><span></span><span></span></div><span class="status-animate">${msg}</span>`; sText.style.color = customColor || ""; } else if (statusType === "error") { contentHTML = `<span class="status-error-anim">${msg}</span>`; sText.style.color = customColor || "red"; } else { contentHTML = `<span class="status-animate">${msg}</span>`; sText.style.color = customColor || ""; } sText.innerHTML = contentHTML; }
+export function updateBackground(mode) { if (lastBgMode === mode && (mode !== 'station' || lastBgStation === state.currentStation)) return; let newGradient; if (mode === 'default') newGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)"; else if (mode === 'error') newGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)"; else newGradient = CONFIG.stations[state.currentStation].gradient; const layer1 = document.getElementById("bg-layer-1"); const layer2 = document.getElementById("bg-layer-2"); const activeLayer = layer1.classList.contains('active') ? layer1 : layer2; const nextLayer = activeLayer === layer1 ? layer2 : layer1; activeLayer.style.animation = ''; nextLayer.style.animation = ''; activeLayer.style.backgroundPosition = ''; nextLayer.style.backgroundPosition = ''; nextLayer.style.backgroundImage = newGradient; activeLayer.classList.remove('active'); nextLayer.classList.add('active'); state.activeBgLayer = nextLayer.id === 'bg-layer-1' ? 1 : 2; lastBgMode = mode; lastBgStation = state.currentStation; }
+export function updateThemeColors(isError) { const color = isError ? "red" : CONFIG.stations[state.currentStation].accent; document.documentElement.style.setProperty('--theme-color', color); const playBtn = document.getElementById("playBtn"); if(playBtn) playBtn.style.color = ""; document.querySelectorAll('.equalizer .bar').forEach(b => b.style.backgroundColor = ""); const playerBox = document.getElementById("playerBox"); if(playerBox) playerBox.style.borderColor = ""; }
 
 export function initSnow() {
     if (state.lowPowerMode) return;
@@ -176,7 +75,12 @@ export function initSnow() {
         update(intensity) {
             this.dist += this.speed * (1 + intensity * 20); 
             this.length = 10 + (this.dist * 0.1) * (intensity * 5);
-            if (intensity > 0.1) { if(this.opacity < 0.8) this.opacity += 0.1; } else { this.opacity -= 0.05; }
+            // AGRESİF GÖRÜNÜM: Görünür olma hızını (0.1 -> 0.3) artırdık
+            if (intensity > 0.1) { 
+                if(this.opacity < 0.9) this.opacity += 0.3; 
+            } else { 
+                this.opacity -= 0.05; 
+            }
             const cx = canvas.width / 2; const cy = canvas.height / 2;
             const x = cx + Math.cos(this.angle) * this.dist; const y = cy + Math.sin(this.angle) * this.dist;
             if ((x < -100 || x > canvas.width + 100 || y < -100 || y > canvas.height + 100 || this.opacity <= 0) && intensity > 0.01) { this.reset(); }
@@ -194,60 +98,86 @@ export function initSnow() {
     for (let i = 0; i < 90; i++) snowflakes.push(new Snowflake());
     for (let i = 0; i < 50; i++) warpLines.push(new WarpLine()); 
     
+    // --- GÖRSEL EFEKT DÖNGÜSÜ (GÜNCELLENDİ) ---
     function animate() { 
         if (state.lowPowerMode) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
         
         ctx.clearRect(0, 0, canvas.width, canvas.height); 
         
-        // Müzik çalsa da çalmasa da karlar düşsün.
-        // Eğer müzik yoksa bassIntensity = 0 olacak, karlar yavaş yağacak.
-        
-        let bassIntensity = 0;
         let targetWarp = 0;
 
-        if (analyzer && state.isPlaying && state.lastVolume > 0) { 
+        if (analyzer && state.isPlaying) { 
             try { 
                 analyzer.getByteFrequencyData(dataArray); 
                 
-                // --- SUBWOOFER MODU & HASSASİYET AYARI ---
-                // Sadece 0. bant (En derin bass)
-                let rawBass = dataArray[0]; 
-                
-                // NOISE GATE: 150 (Bir tık düşürdük, daha kolay algılasın)
-                // Daha önce 200'dü, bu yüzden tepki vermiyordu.
-                bassIntensity = rawBass > 150 ? rawBass : 0;
-                
-                // THRESHOLD: 215 (Bir tık düşürdük)
-                if(bassIntensity > 215) {
-                    targetWarp = 1;     
-                    state.kickImpulse = 2.5; // Zıplama gücü
-                }
+                // 1. ANLIK BAS (0-150Hz arası gibi düşün)
+                let bassSum = 0;
+                for(let i=0; i<3; i++) bassSum += dataArray[i];
+                let instantBass = bassSum / 3;
 
-                // Warp Geçişi
-                let warpSmoothing = (targetWarp > warpFactor) ? 0.2 : 0.05;
+                // 2. ÖĞRENEN SİSTEM (Moving Average)
+                energyHistory[historyIndex] = instantBass;
+                historyIndex = (historyIndex + 1) % ENERGY_HISTORY_SIZE;
+                
+                let totalEnergy = 0;
+                for(let i=0; i < ENERGY_HISTORY_SIZE; i++) totalEnergy += energyHistory[i];
+                let averageEnergy = totalEnergy / ENERGY_HISTORY_SIZE;
+
+                // 3. DAHA HASSAS EŞİK DEĞERİ
+                // Sensitivity'i 1.25'ten 1.10'a indirdik -> Daha kolay tetiklenir
+                let sensitivity = 1.10; 
+                let dynamicThreshold = averageEnergy * sensitivity;
+                // Minimum gürültü eşiğini de 110'dan 80'e çektik -> Kısık şarkılarda da çalışsın
+                if (dynamicThreshold < 80) dynamicThreshold = 80; 
+
+                // 4. AGRESİF TEPKİ
+                let now = Date.now();
+                if (instantBass > dynamicThreshold && (now - lastKickTime > 200)) { 
+                    // Kick Algılandı!
+                    targetWarp = 1.0;  // Warp hedefi maksimum
+                    state.kickImpulse = 6.0; // Kar tanelerini havaya fırlat (Önceki 2.5 idi)
+                    lastKickTime = now;
+                }
+                
+                // Warp efekti: Giriş çok hızlı (0.4), çıkış çok yavaş (0.02)
+                // Böylece "daha görünmeden kaybolma" sorunu çözülür.
+                let warpSmoothing = (targetWarp > warpFactor) ? 0.4 : 0.02;
                 warpFactor += (targetWarp - warpFactor) * warpSmoothing;
 
-                // --- PLAYER GÖRSEL EFEKTLERİ ---
+                // Visualizer Bar Efekti
                 if (state.stage === 3) { 
                     const player = document.getElementById("playerBox"); 
-                    let visualVal = bassIntensity; 
+                    let visualVal = instantBass; 
                     const scaleAmount = 1 + (visualVal / 255) * 0.12; 
                     
                     if(player) {
                         player.style.transform = `scale(${scaleAmount})`; 
                         const targetHex = CONFIG.stations[state.currentStation].accent; const targetRGB = hexToRgb(targetHex);
-                        currentVisualizerColor.r += (targetRGB.r - currentVisualizerColor.r) * 0.05; currentVisualizerColor.g += (targetRGB.g - currentVisualizerColor.g) * 0.05; currentVisualizerColor.b += (targetRGB.b - currentVisualizerColor.b) * 0.05;
-                        const r = Math.round(currentVisualizerColor.r); const g = Math.round(currentVisualizerColor.g); const b = Math.round(currentVisualizerColor.b);
-                        const shadowOpacity = Math.floor((visualVal / 255) * 100) / 100; const shadowSize = 20 + (visualVal * 0.4); 
+                        currentVisualizerColor.r += (targetRGB.r - currentVisualizerColor.r) * 0.05; 
+                        currentVisualizerColor.g += (targetRGB.g - currentVisualizerColor.g) * 0.05; 
+                        currentVisualizerColor.b += (targetRGB.b - currentVisualizerColor.b) * 0.05;
+                        
+                        const r = Math.round(currentVisualizerColor.r); 
+                        const g = Math.round(currentVisualizerColor.g); 
+                        const b = Math.round(currentVisualizerColor.b);
+                        
+                        const shadowOpacity = Math.floor((visualVal / 255) * 100) / 100; 
+                        const shadowSize = 20 + (visualVal * 0.4); 
                         player.style.boxShadow = `0 10px ${shadowSize}px rgba(${r}, ${g}, ${b}, ${shadowOpacity})`; 
                     }
-                } else { const player = document.getElementById("playerBox"); if(player) { if(player.style.transform) player.style.transform = ""; if(player.style.boxShadow) player.style.boxShadow = ""; } } 
+                } else { 
+                    const player = document.getElementById("playerBox"); 
+                    if(player) { 
+                        if(player.style.transform) player.style.transform = ""; 
+                        if(player.style.boxShadow) player.style.boxShadow = ""; 
+                    } 
+                } 
             } catch(e) {} 
         } 
         
-        state.kickImpulse *= 0.85; 
+        // Kar tanesi zıplaması yavaşça azalsın (Gravity hissi)
+        state.kickImpulse *= 0.92; // 0.85'ten 0.92'ye çektik, havada daha çok asılı kalır.
         
-        // Karları ve Rüzgar Çizgilerini Her Zaman Çiz
         snowflakes.forEach(flake => { flake.update(); flake.draw(); });
         if (warpFactor > 0.01) { warpLines.forEach(line => { line.update(warpFactor); line.draw(); }); }
 
@@ -294,102 +224,46 @@ export function showLinuxOptions() { document.getElementById('main-platform-grid
 export function showMainOptions() { document.getElementById('linux-platform-grid').style.display = 'none'; document.getElementById('main-platform-grid').style.display = 'grid'; }
 export function toggleLowPowerMode() { state.lowPowerMode = !state.lowPowerMode; const btn = document.getElementById('ecoBtn'); const canvas = document.getElementById('snowCanvas'); if (state.lowPowerMode) { if(btn) { btn.style.color = "#4caf50"; btn.style.borderColor = "#4caf50"; } if(canvas) canvas.style.display = 'none'; } else { if(btn) { btn.style.color = "white"; btn.style.borderColor = ""; } if(canvas) canvas.style.display = 'block'; initSnow(); } }
 export function hideDownloadPrompt(clicked) { const prompt = document.getElementById('downloadPrompt'); if (prompt) { prompt.classList.remove('active'); prompt.setAttribute('aria-hidden', 'true'); } if (clicked) localStorage.setItem('yaliApp_promptShown', 'true'); }
-export function showScanningPopup() {
-    hideBubble();
-    const popup = document.getElementById('songPopup');
-    if(popup) {
-        popup.classList.add('active', 'scanning-mode');
-        const title = document.getElementById('popupTitle');
-        const song = document.getElementById('popupSong');
-        const icon = document.querySelector('.popup-icon');
-        title.innerText = "Ortam Dinleniyor...";
-        title.style.color = "#ffeb3b";
-        song.innerText = "Ses Analiz Ediliyor...";
-        icon.innerHTML = '<i class="fas fa-microphone-alt fa-pulse"></i>';
-    }
-}
-
-export function hideScanningPopup() {
-    const popup = document.getElementById('songPopup');
-    if(popup) {
-        popup.classList.remove('active', 'scanning-mode');
-    }
-}
+export function showScanningPopup() { hideBubble(); const popup = document.getElementById('songPopup'); if(popup) { popup.classList.add('active', 'scanning-mode'); const title = document.getElementById('popupTitle'); const song = document.getElementById('popupSong'); const icon = document.querySelector('.popup-icon'); title.innerText = "Ortam Dinleniyor..."; title.style.color = "#ffeb3b"; song.innerText = "Ses Analiz Ediliyor..."; icon.innerHTML = '<i class="fas fa-microphone-alt fa-pulse"></i>'; } }
+export function hideScanningPopup() { const popup = document.getElementById('songPopup'); if(popup) { popup.classList.remove('active', 'scanning-mode'); } }
 
 export function showBubble(artist, song, artUrl, links) {
     hideScanningPopup();
-
     const bubble = document.getElementById('resultBubble');
     
     bubble.innerHTML = `
         <div class="bubble-hub">
             <div class="hub-circle">
-                <a href="${links && links.spotify ? links.spotify : '#'}" 
-                   target="_blank" 
-                   class="hub-slice spotify ${!links || !links.spotify ? 'disabled' : ''}" 
-                   title="Spotify'da Aç">
-                   <i class="fab fa-spotify"></i>
-                </a>
-                
-                <a href="${links && links.youtube ? links.youtube : '#'}" 
-                   target="_blank" 
-                   class="hub-slice youtube ${!links || !links.youtube ? 'disabled' : ''}"
-                   title="YouTube'da Aç">
-                   <i class="fab fa-youtube"></i>
-                </a>
-                
-                <a href="${links && links.deezer ? links.deezer : '#'}" 
-                   target="_blank" 
-                   class="hub-slice deezer ${!links || !links.deezer ? 'disabled' : ''}"
-                   title="Deezer'da Aç">
-                   <i class="fab fa-deezer"></i>
-                </a>
-                
-                <a href="${links && links.google ? links.google : '#'}" 
-                   target="_blank" 
-                   class="hub-slice google"
-                   title="Google'da Ara">
-                   <i class="fab fa-google"></i>
-                </a>
+                <a href="${links && links.spotify ? links.spotify : '#'}" target="_blank" class="hub-slice spotify ${!links || !links.spotify ? 'disabled' : ''}" title="Spotify'da Aç"><i class="fab fa-spotify"></i></a>
+                <a href="${links && links.youtube ? links.youtube : '#'}" target="_blank" class="hub-slice youtube ${!links || !links.youtube ? 'disabled' : ''}" title="YouTube'da Aç"><i class="fab fa-youtube"></i></a>
+                <a href="${links && links.deezer ? links.deezer : '#'}" target="_blank" class="hub-slice deezer ${!links || !links.deezer ? 'disabled' : ''}" title="Deezer'da Aç"><i class="fab fa-deezer"></i></a>
+                <a href="${links && links.google ? links.google : '#'}" target="_blank" class="hub-slice google" title="Google'da Ara"><i class="fab fa-google"></i></a>
             </div>
         </div>
-        
-        <div class="bubble-info">
-            <span id="bubbleTitle" class="bubble-title">${song}</span>
-            <span id="bubbleArtist" class="bubble-artist">${artist}</span>
-        </div>
-        
-        <div class="bubble-close" id="bubbleClose">
-            <i class="fas fa-times"></i>
-        </div>
+        <div class="bubble-info"><span id="bubbleTitle" class="bubble-title">${song}</span><span id="bubbleArtist" class="bubble-artist">${artist}</span></div>
+        <div class="bubble-action-btn retry-btn" id="bubbleRetry" title="Yeniden Tara"><i class="fas fa-sync-alt"></i></div>
+        <div class="bubble-action-btn close-btn" id="bubbleClose" title="Kapat"><i class="fas fa-times"></i></div>
     `;
 
-    document.getElementById('bubbleClose').addEventListener('click', (e) => {
-        e.stopPropagation();
-        hideBubble();
+    const actionBtns = document.querySelectorAll('.bubble-action-btn');
+    actionBtns.forEach(btn => {
+        btn.style.width = "32px"; btn.style.height = "32px"; btn.style.borderRadius = "50%"; btn.style.background = "transparent"; btn.style.color = "rgba(255, 255, 255, 0.4)";
+        btn.style.display = "flex"; btn.style.justifyContent = "center"; btn.style.alignItems = "center"; btn.style.fontSize = "1rem"; btn.style.cursor = "pointer";
+        btn.style.transition = "all 0.2s ease"; btn.style.marginLeft = "5px"; 
+        btn.onmouseover = () => { btn.style.background = "rgba(255,255,255,0.1)"; btn.style.color = "white"; };
+        btn.onmouseout = () => { btn.style.background = "transparent"; btn.style.color = "rgba(255, 255, 255, 0.4)"; };
     });
 
-    bubble.classList.remove('surfaced');
-    void bubble.offsetWidth; 
-    bubble.classList.add('surfaced');
+    document.getElementById('bubbleClose').addEventListener('click', (e) => { e.stopPropagation(); hideBubble(); });
+    document.getElementById('bubbleRetry').addEventListener('click', (e) => { e.stopPropagation(); hideBubble(); triggerPopupSequence(); });
+
+    bubble.classList.remove('surfaced'); void bubble.offsetWidth; bubble.classList.add('surfaced');
 }
 
-export function hideBubble() {
-    const bubble = document.getElementById('resultBubble');
-    if(bubble) {
-        bubble.classList.remove('surfaced');
-    }
-}
+export function hideBubble() { const bubble = document.getElementById('resultBubble'); if(bubble) { bubble.classList.remove('surfaced'); } }
 
 document.addEventListener('click', (e) => {
-    if (!e.target.closest('.card') && 
-        !e.target.closest('.control-box-btn') && 
-        !e.target.closest('#overlay') && 
-        !e.target.closest('.song-popup') &&
-        !e.target.closest('.weather-widget') && 
-        !e.target.closest('.radio-wrapper') &&
-        !e.target.closest('#resultBubble')) {
-        
+    if (!e.target.closest('.card') && !e.target.closest('.control-box-btn') && !e.target.closest('#overlay') && !e.target.closest('.song-popup') && !e.target.closest('.weather-widget') && !e.target.closest('.radio-wrapper') && !e.target.closest('#resultBubble')) {
         triggerRadioCard();
     }
 });

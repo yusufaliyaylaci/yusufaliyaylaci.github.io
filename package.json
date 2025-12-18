@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
