@@ -7,7 +7,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 :: --- AYARLAR ---
-set GH_TOKEN=asd...
+set GH_TOKEN=dskgmdsg
 
 :: ==========================================
 :: [KONTROL] DOCKER DURUMU

@@ -17,3 +17,5 @@ build/
 .idea/
 .DS_Store
 Thumbs.db
+*.bat
+deploy.bat
