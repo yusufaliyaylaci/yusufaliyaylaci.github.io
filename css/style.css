@@ -1130,30 +1130,29 @@ body.view-mode-social .radio-player { cursor: default; }
 }
 
 /* =========================================
-   SONUÇ BALONCUĞU (DYNAMIC ISLAND V3 - FINAL)
+   SONUÇ BALONCUĞU (RE-DESIGNED GLASS PILL)
 ========================================= */
 
 .result-bubble {
     position: fixed;
-    /* DYNAMIC ISLAND: Ekranın tepesinde */
-    top: 30px; 
+    top: 30px;
     left: 50%;
-    transform: translateX(-50%) translateY(-150px); /* Başlangıçta yukarıda gizli */
+    transform: translateX(-50%) translateY(-150px); /* Gizli konum */
     
-    /* Premium Glassmorphism (Koyu) */
-    background: rgba(15, 15, 15, 0.95); 
-    backdrop-filter: blur(30px) saturate(180%);
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    /* Modern Glassmorphism - Daha Şeffaf ve Akıcı */
+    background: rgba(30, 30, 30, 0.4); 
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     
-    /* Modern Kenarlık ve Gölge */
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* İnce, zarif çerçeve ve derinlik hissi */
+    border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 
-        0 25px 50px -12px rgba(0, 0, 0, 0.8),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        0 10px 40px rgba(0, 0, 0, 0.4),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
     
-    border-radius: 100px; /* Hap Şekli */
+    border-radius: 50px; /* Tam oval */
+    padding: 8px 20px 8px 8px; /* Sol taraf ikon için dar, sağ taraf metin için geniş */
     
-    padding: 6px 15px 6px 6px; /* İç boşluklar: Sol taraf Hub için dar, sağ taraf geniş */
     display: flex;
     align-items: center;
     gap: 15px;
@@ -1164,77 +1163,76 @@ body.view-mode-social .radio-player { cursor: default; }
     
     transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     
-    min-width: 320px;
+    min-width: 280px;
     max-width: 90vw;
 }
 
 .result-bubble.surfaced {
     visibility: visible;
     opacity: 1;
-    transform: translateX(-50%) translateY(0); /* Sahneye iniş */
+    transform: translateX(-50%) translateY(0);
 }
 
-/* --- TAM YUVARLAK HUB (SOL KONTROL PANELİ) --- */
+.result-bubble:hover {
+    background: rgba(40, 40, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(-50%) translateY(2px) scale(1.02); /* Hover'da hafif büyüme */
+}
+
+/* --- SOL İKON ALANI (HUB) --- */
 .bubble-hub {
-    width: 80px; 
-    height: 80px;
+    width: 55px; 
+    height: 55px;
     flex-shrink: 0;
     position: relative;
-    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.05));
 }
 
 .hub-circle {
     width: 100%;
     height: 100%;
-    border-radius: 50%; /* TAM YUVARLAK */
-    
+    border-radius: 50%;
     overflow: hidden;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 2px;
-    background: rgba(255, 255, 255, 0.05); 
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    /* Giriş Animasyonu */
-    animation: spinEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards 0.1s;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.1); 
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    
+    /* Dönme Animasyonu - Yavaş ve Sürekli */
+    animation: spinHub 10s linear infinite;
 }
 
-@keyframes spinEntrance {
-    from { transform: rotate(-90deg) scale(0.5); opacity: 0; }
-    to { transform: rotate(0deg) scale(1); opacity: 1; }
+@keyframes spinHub {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
-/* --- DİLİMLER (BUTONLAR) --- */
+/* --- PLATFORM DİLİMLERİ --- */
 .hub-slice {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 1.3rem;
+    background: rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
     text-decoration: none;
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* İkonların dönmesini engellemek için ters animasyon (Opsiyonel, ikonlar sabit kalsın istersen) */
+.hub-slice i {
+    animation: spinHubReverse 10s linear infinite;
+}
+@keyframes spinHubReverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
 }
 
 .hub-slice:hover {
-    color: white;
-    filter: brightness(1.2);
-    font-size: 1.5rem; 
-    z-index: 2;
-}
-
-/* Marka Renkleri */
-.hub-slice.spotify:hover { background: #1db954; color: white; }
-.hub-slice.youtube:hover { background: #ff0000; color: white; }
-.hub-slice.deezer:hover { background: linear-gradient(45deg, #FF0092, #FFC200, #00C7F2); color: white; }
-.hub-slice.google:hover { background: #4285F4; color: white; }
-
-.hub-slice.disabled {
-    pointer-events: none;
-    opacity: 0.15;
-    background: rgba(0,0,0,0.4);
-    color: #444;
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
 }
 
 /* --- BİLGİ ALANI --- */
@@ -1244,64 +1242,64 @@ body.view-mode-social .radio-player { cursor: default; }
     justify-content: center;
     flex-grow: 1;
     overflow: hidden;
-    margin-right: 10px; /* Kapat butonu ile mesafe */
+    margin-right: 5px;
 }
 
 .bubble-title {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 600;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 2px;
-    letter-spacing: -0.3px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 
 .bubble-artist {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 500;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
     gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .bubble-artist::before {
-    content: '\f001'; 
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    font-size: 0.7rem;
-    color: var(--theme-color, #fff);
-    opacity: 0.7;
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: var(--theme-color, #fff);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--theme-color, #fff);
 }
 
-/* --- GÖMÜLÜ KAPAT BUTONU (EN SAĞDA) --- */
+/* --- KAPAT BUTONU --- */
 .bubble-close {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    /* Transparan arka plan (Gömülü hissi için) */
-    background: transparent; 
-    color: rgba(255, 255, 255, 0.4);
-    
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.2rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.2s ease;
-    
-    /* En sağa yasla */
+    transition: all 0.3s ease;
     margin-left: auto;
 }
 
 .bubble-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ff5252; /* Kırmızı uyarı rengi */
+    background: rgba(255, 59, 48, 0.2); /* Soft Kırmızı */
+    color: #ff3b30;
     transform: rotate(90deg);
 }
 
@@ -1309,50 +1307,12 @@ body.view-mode-social .radio-player { cursor: default; }
 @media (max-width: 480px) {
     .result-bubble {
         top: 20px;
-        min-width: 90vw;
-        padding: 5px 12px 5px 5px;
+        width: 90%;
+        padding: 6px 15px 6px 6px;
+        border-radius: 40px;
     }
-    .bubble-hub { width: 70px; height: 70px; }
-    .bubble-title { font-size: 1rem; }
-    .bubble-artist { font-size: 0.8rem; }
-}
-
-/* Mobil uyumluluk düzenlemeleri */
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-
-    .glass-panel {
-        padding: 1.5rem;
-    }
-
-    /* Sonuç Baloncuğu Mobil Düzenlemesi */
-    .result-bubble {
-        width: 90% !important;          /* Ekranın tamamını değil, %90'ını kaplasın */
-        max-width: 350px !important;    /* Çok genişlemesini engelle */
-        height: auto !important;        /* Yüksekliği içeriğe göre ayarla (tüm ekranı kaplamasın) */
-        
-        position: fixed !important;     /* Sabit pozisyon */
-        top: 20px !important;           /* Üstten biraz boşluk bırak */
-        left: 50% !important;           /* Yatayda ortala */
-        transform: translateX(-50%) !important; /* Tam ortalamak için */
-        
-        bottom: auto !important;        /* Alta yapışmasın */
-        border-radius: 16px !important; /* Köşeleri daha oval yap */
-        padding: 15px !important;       /* İçeriği sıkıştırma */
-        z-index: 10000;                 /* En üstte görünsün */
-        
-        /* Mobilde daha şık görünmesi için gölge */
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    }
-
-    /* Mobilde metinleri biraz küçültelim */
-    .result-content h3 {
-        font-size: 1rem;
-    }
-    
-    .result-content p {
-        font-size: 0.9rem;
-    }
+    .bubble-hub { width: 45px; height: 45px; }
+    .hub-slice { font-size: 0.8rem; }
+    .bubble-title { font-size: 0.9rem; }
+    .bubble-artist { font-size: 0.7rem; }
 }
