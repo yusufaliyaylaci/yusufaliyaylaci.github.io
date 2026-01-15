@@ -1,7 +1,7 @@
 # --- Kisisel ve Gizli Dosyalar ---
-secrets.bat
-deploy.bat
-.env
+# secrets.bat
+# deploy.bat
+# .env 
 
 # --- Bagimliliklar (Cok buyuk olduklari icin yuklenmez) ---
 node_modules/
