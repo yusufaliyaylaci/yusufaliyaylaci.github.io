@@ -1,5 +1,5 @@
 # --- Kisisel ve Gizli Dosyalar ---
-secrets.bat
+# secrets.bat
 deploy.bat
 .env 
 
