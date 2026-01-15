@@ -7,7 +7,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 :: --- AYARLAR ---
-set GH_TOKEN=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
+set GH_TOKEN=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
 
 :: ==========================================
 :: [KONTROL] DOCKER DURUMU
