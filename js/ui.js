@@ -1,6 +1,6 @@
 import { CONFIG } from './config.js';
 import { state, timers, analyzer, dataArray } from './state.js';
-import { isElectron, ipcRenderer } from './main.js';
+import { isElectron, ipcRenderer, isNative } from './main.js'; // isNative eklendi
 import { triggerPopupSequence } from './radio.js'; 
 
 let lastBgMode = null;
@@ -40,7 +40,47 @@ export function setControlsDisabled(isDisabled) {
 export function triggerRadioCard() { if (state.stage !== 3) { state.stage = 3; changeStage(); } }
 export function getOS() { if (typeof window === 'undefined') return 'Unknown'; const userAgent = window.navigator.userAgent; if (userAgent.indexOf("Win") !== -1) return "Windows"; if (userAgent.indexOf("Mac") !== -1) return "MacOS"; if (userAgent.indexOf("Linux") !== -1) return "Linux"; if (userAgent.indexOf("Android") !== -1) return "Android"; if (userAgent.indexOf("like Mac") !== -1) return "iOS"; return "Unknown"; }
 export function initUpdateHandler() { if (!isElectron) return; const overlay = document.getElementById('update-overlay'); const bar = document.getElementById('updateProgressBar'); const status = document.getElementById('updateStatusText'); const title = document.querySelector('.update-box h2'); ipcRenderer.on('update-available', () => { if(overlay) overlay.classList.add('active'); }); ipcRenderer.on('update-progress', (event, data) => { if(bar && status) { const percent = Math.round(data.percent); bar.style.width = percent + "%"; status.innerText = `%${percent} Tamamlandı`; } }); ipcRenderer.on('update-downloaded', () => { if(status && title) { bar.style.width = "100%"; bar.style.boxShadow = "0 0 20px #fff"; title.innerText = "Güncelleme Hazır!"; status.innerText = "Yeniden başlatılıyor..."; status.style.color = "#4caf50"; } }); }
-export function createDynamicElements() { if (isElectron && !document.querySelector('.drag-region')) { const dragDiv = document.createElement('div'); dragDiv.className = 'drag-region'; document.body.appendChild(dragDiv); } if (isElectron) { ipcRenderer.send('get-app-version'); ipcRenderer.on('app-version', (event, version) => { const verDisplay = document.getElementById('app-version-display'); if(verDisplay) { verDisplay.innerText = `v${version}`; verDisplay.style.display = 'block'; } }); } if (!document.querySelector('.app-controls-container') && !document.querySelector('.web-controls-container')) { const container = document.createElement('div'); const ecoBtn = document.createElement('div'); ecoBtn.className = 'control-box-btn'; ecoBtn.id = 'ecoBtn'; ecoBtn.innerHTML = '<i class="fas fa-leaf"></i>'; ecoBtn.onclick = toggleLowPowerMode; ecoBtn.title = "Düşük Güç Modu"; if (isElectron) { container.className = 'app-controls-container'; const closeBtn = document.createElement('div'); closeBtn.className = 'control-box-btn close-app-btn'; closeBtn.innerHTML = '<i class="fas fa-times"></i>'; closeBtn.onclick = () => ipcRenderer.send('close-app'); closeBtn.title = "Gizle"; container.appendChild(closeBtn); const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn); const minBtn = document.createElement('div'); minBtn.className = 'control-box-btn'; minBtn.innerHTML = '<i class="fas fa-minus"></i>'; minBtn.onclick = () => ipcRenderer.send('minimize-app'); minBtn.title = "Küçült"; container.appendChild(minBtn); container.appendChild(ecoBtn); } else { container.className = 'web-controls-container'; const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn); container.appendChild(ecoBtn); const dlBtn = document.createElement('div'); dlBtn.className = 'control-box-btn'; dlBtn.innerHTML = '<i class="fas fa-download"></i>'; dlBtn.onclick = toggleDownloadModal; dlBtn.title = "İndir"; container.appendChild(dlBtn); } document.body.appendChild(container); } const wrapper = document.querySelector('.radio-wrapper'); if (wrapper && !document.querySelector('.song-popup')) { const popup = document.createElement('div'); popup.className = 'song-popup'; popup.id = 'songPopup'; popup.innerHTML = `<div class="popup-icon"><i class="fas fa-music"></i></div><div class="popup-content"><div class="popup-title" id="popupTitle">Dinleniyor...</div><div class="popup-song" id="popupSong">---</div></div>`; wrapper.appendChild(popup); } if (!document.getElementById('resultBubble')) { const bubble = document.createElement('div'); bubble.id = 'resultBubble'; bubble.className = 'result-bubble'; bubble.innerHTML = ``; document.body.appendChild(bubble); } }
+
+export function createDynamicElements() { 
+    if (isElectron && !document.querySelector('.drag-region')) { const dragDiv = document.createElement('div'); dragDiv.className = 'drag-region'; document.body.appendChild(dragDiv); } 
+    if (isElectron) { ipcRenderer.send('get-app-version'); ipcRenderer.on('app-version', (event, version) => { const verDisplay = document.getElementById('app-version-display'); if(verDisplay) { verDisplay.innerText = `v${version}`; verDisplay.style.display = 'block'; } }); } 
+    
+    if (!document.querySelector('.app-controls-container') && !document.querySelector('.web-controls-container')) { 
+        const container = document.createElement('div'); 
+        const ecoBtn = document.createElement('div'); 
+        ecoBtn.className = 'control-box-btn'; 
+        ecoBtn.id = 'ecoBtn'; 
+        ecoBtn.innerHTML = '<i class="fas fa-leaf"></i>'; 
+        ecoBtn.onclick = toggleLowPowerMode; 
+        ecoBtn.title = "Düşük Güç Modu"; 
+        
+        if (isElectron) { 
+            // Windows Masaüstü Kontrolleri
+            container.className = 'app-controls-container'; 
+            const closeBtn = document.createElement('div'); closeBtn.className = 'control-box-btn close-app-btn'; closeBtn.innerHTML = '<i class="fas fa-times"></i>'; closeBtn.onclick = () => ipcRenderer.send('close-app'); closeBtn.title = "Gizle"; container.appendChild(closeBtn); 
+            const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn); 
+            const minBtn = document.createElement('div'); minBtn.className = 'control-box-btn'; minBtn.innerHTML = '<i class="fas fa-minus"></i>'; minBtn.onclick = () => ipcRenderer.send('minimize-app'); minBtn.title = "Küçült"; container.appendChild(minBtn); 
+            container.appendChild(ecoBtn); 
+        } else if (isNative) {
+            // Android/iOS Kontrolleri (Sadeleştirilmiş)
+            container.className = 'web-controls-container';
+            // Mobilde kapatma veya indirme butonu olmaz. Sadece Eco Mod yeterli.
+            container.appendChild(ecoBtn);
+            container.style.top = "40px"; // Status bar payı
+        } else { 
+            // Web Tarayıcı Kontrolleri
+            container.className = 'web-controls-container'; 
+            const fsBtn = document.createElement('div'); fsBtn.className = 'control-box-btn fullscreen-btn'; fsBtn.innerHTML = '<i class="fas fa-expand"></i>'; fsBtn.onclick = toggleFullScreen; fsBtn.title = "Tam Ekran"; container.appendChild(fsBtn); 
+            container.appendChild(ecoBtn); 
+            const dlBtn = document.createElement('div'); dlBtn.className = 'control-box-btn'; dlBtn.innerHTML = '<i class="fas fa-download"></i>'; dlBtn.onclick = toggleDownloadModal; dlBtn.title = "İndir"; container.appendChild(dlBtn); 
+        } 
+        document.body.appendChild(container); 
+    } 
+    
+    const wrapper = document.querySelector('.radio-wrapper'); if (wrapper && !document.querySelector('.song-popup')) { const popup = document.createElement('div'); popup.className = 'song-popup'; popup.id = 'songPopup'; popup.innerHTML = `<div class="popup-icon"><i class="fas fa-music"></i></div><div class="popup-content"><div class="popup-title" id="popupTitle">Dinleniyor...</div><div class="popup-song" id="popupSong">---</div></div>`; wrapper.appendChild(popup); } 
+    if (!document.getElementById('resultBubble')) { const bubble = document.createElement('div'); bubble.id = 'resultBubble'; bubble.className = 'result-bubble'; bubble.innerHTML = ``; document.body.appendChild(bubble); } 
+}
+
 export function updateStatusUI(statusType, msg, customColor) { const nameEl = document.getElementById("stationName"); if(nameEl && CONFIG.stations[state.currentStation]) nameEl.innerText = CONFIG.stations[state.currentStation].name; const sText = document.getElementById("statusText"); if(!sText) return; sText.classList.remove("status-connecting", "status-live", "status-retrying"); if(statusType === "connecting") sText.classList.add("status-connecting"); else if(statusType === "live") sText.classList.add("status-live"); else if(statusType === "retrying") sText.classList.add("status-retrying"); let contentHTML = ""; if (statusType === 'live') { contentHTML = `<span class="status-live-text">${msg}</span>`; sText.style.color = ""; } else if (statusType === "connecting") { contentHTML = `<div class="connecting-dots"><span></span><span></span><span></span></div><span class="status-animate">${msg}</span>`; sText.style.color = customColor || ""; } else if (statusType === "error") { contentHTML = `<span class="status-error-anim">${msg}</span>`; sText.style.color = customColor || "red"; } else { contentHTML = `<span class="status-animate">${msg}</span>`; sText.style.color = customColor || ""; } sText.innerHTML = contentHTML; }
 export function updateBackground(mode) { if (lastBgMode === mode && (mode !== 'station' || lastBgStation === state.currentStation)) return; let newGradient; if (mode === 'default') newGradient = "linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000)"; else if (mode === 'error') newGradient = "linear-gradient(45deg, #000000, #3a0000, #000000, #3a0000)"; else newGradient = CONFIG.stations[state.currentStation].gradient; const layer1 = document.getElementById("bg-layer-1"); const layer2 = document.getElementById("bg-layer-2"); const activeLayer = layer1.classList.contains('active') ? layer1 : layer2; const nextLayer = activeLayer === layer1 ? layer2 : layer1; activeLayer.style.animation = ''; nextLayer.style.animation = ''; activeLayer.style.backgroundPosition = ''; nextLayer.style.backgroundPosition = ''; nextLayer.style.backgroundImage = newGradient; activeLayer.classList.remove('active'); nextLayer.classList.add('active'); state.activeBgLayer = nextLayer.id === 'bg-layer-1' ? 1 : 2; lastBgMode = mode; lastBgStation = state.currentStation; }
 export function updateThemeColors(isError) { const color = isError ? "red" : CONFIG.stations[state.currentStation].accent; document.documentElement.style.setProperty('--theme-color', color); const playBtn = document.getElementById("playBtn"); if(playBtn) playBtn.style.color = ""; document.querySelectorAll('.equalizer .bar').forEach(b => b.style.backgroundColor = ""); const playerBox = document.getElementById("playerBox"); if(playerBox) playerBox.style.borderColor = ""; }
@@ -75,7 +115,6 @@ export function initSnow() {
         update(intensity) {
             this.dist += this.speed * (1 + intensity * 20); 
             this.length = 10 + (this.dist * 0.1) * (intensity * 5);
-            // AGRESİF GÖRÜNÜM: Görünür olma hızını (0.1 -> 0.3) artırdık
             if (intensity > 0.1) { 
                 if(this.opacity < 0.9) this.opacity += 0.3; 
             } else { 
@@ -98,7 +137,6 @@ export function initSnow() {
     for (let i = 0; i < 90; i++) snowflakes.push(new Snowflake());
     for (let i = 0; i < 50; i++) warpLines.push(new WarpLine()); 
     
-    // --- GÖRSEL EFEKT DÖNGÜSÜ (GÜNCELLENDİ) ---
     function animate() { 
         if (state.lowPowerMode) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
         
@@ -109,13 +147,10 @@ export function initSnow() {
         if (analyzer && state.isPlaying) { 
             try { 
                 analyzer.getByteFrequencyData(dataArray); 
-                
-                // 1. ANLIK BAS (0-150Hz arası gibi düşün)
                 let bassSum = 0;
                 for(let i=0; i<3; i++) bassSum += dataArray[i];
                 let instantBass = bassSum / 3;
 
-                // 2. ÖĞRENEN SİSTEM (Moving Average)
                 energyHistory[historyIndex] = instantBass;
                 historyIndex = (historyIndex + 1) % ENERGY_HISTORY_SIZE;
                 
@@ -123,28 +158,20 @@ export function initSnow() {
                 for(let i=0; i < ENERGY_HISTORY_SIZE; i++) totalEnergy += energyHistory[i];
                 let averageEnergy = totalEnergy / ENERGY_HISTORY_SIZE;
 
-                // 3. DAHA HASSAS EŞİK DEĞERİ
-                // Sensitivity'i 1.25'ten 1.10'a indirdik -> Daha kolay tetiklenir
                 let sensitivity = 1.10; 
                 let dynamicThreshold = averageEnergy * sensitivity;
-                // Minimum gürültü eşiğini de 110'dan 80'e çektik -> Kısık şarkılarda da çalışsın
                 if (dynamicThreshold < 80) dynamicThreshold = 80; 
 
-                // 4. AGRESİF TEPKİ
                 let now = Date.now();
                 if (instantBass > dynamicThreshold && (now - lastKickTime > 200)) { 
-                    // Kick Algılandı!
-                    targetWarp = 1.0;  // Warp hedefi maksimum
-                    state.kickImpulse = 6.0; // Kar tanelerini havaya fırlat (Önceki 2.5 idi)
+                    targetWarp = 1.0; 
+                    state.kickImpulse = 6.0; 
                     lastKickTime = now;
                 }
                 
-                // Warp efekti: Giriş çok hızlı (0.4), çıkış çok yavaş (0.02)
-                // Böylece "daha görünmeden kaybolma" sorunu çözülür.
                 let warpSmoothing = (targetWarp > warpFactor) ? 0.4 : 0.02;
                 warpFactor += (targetWarp - warpFactor) * warpSmoothing;
 
-                // Visualizer Bar Efekti
                 if (state.stage === 3) { 
                     const player = document.getElementById("playerBox"); 
                     let visualVal = instantBass; 
@@ -175,8 +202,7 @@ export function initSnow() {
             } catch(e) {} 
         } 
         
-        // Kar tanesi zıplaması yavaşça azalsın (Gravity hissi)
-        state.kickImpulse *= 0.92; // 0.85'ten 0.92'ye çektik, havada daha çok asılı kalır.
+        state.kickImpulse *= 0.92; 
         
         snowflakes.forEach(flake => { flake.update(); flake.draw(); });
         if (warpFactor > 0.01) { warpLines.forEach(line => { line.update(warpFactor); line.draw(); }); }
@@ -196,7 +222,12 @@ export function changeStage() {
     updatePageIndicators();
 }
 
-export function goDefaultPage() { state.stage = isElectron ? 3 : 1; changeStage(); }
+// Varsayılan sayfa ayarı: App modundaysa Radyo (3), değilse Ana Kart (1)
+export function goDefaultPage() { 
+    state.stage = (isElectron || isNative) ? 3 : 1; 
+    changeStage(); 
+}
+
 export function lockScroll(duration = 1200) { state.isScrolling = true; setTimeout(() => { state.isScrolling = false; }, duration); }
 export function triggerBump(className) { document.body.classList.add(className); setTimeout(() => document.body.classList.remove(className), 400); }
 export function shakePlayer() {
@@ -214,7 +245,29 @@ export function nextPhoto() { state.photoIndex = (state.photoIndex + 1) % CONFIG
 export function prevPhoto() { state.photoIndex = (state.photoIndex - 1 + CONFIG.photos.length) % CONFIG.photos.length; updatePhoto(); }
 export function updatePhoto() { const img = document.getElementById("profileImg"); img.classList.add("changing"); const newImg = new Image(); newImg.src = CONFIG.photos[state.photoIndex]; newImg.onload = () => { img.src = CONFIG.photos[state.photoIndex]; setTimeout(() => { img.classList.remove("changing"); }, 100); }; }
 export function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => console.log(err)); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
-export function initPageIndicators() { const container = document.getElementById("stageIndicators"); if(!container) return; container.innerHTML = ""; const stages = isElectron ? [1, 3, 4] : [0, 1, 2, 3, 4]; stages.forEach(i => { const dot = document.createElement("div"); dot.className = "indicator-dot"; dot.dataset.stage = i; if(i === state.stage) dot.classList.add("active"); dot.onclick = (e) => { e.stopPropagation(); state.stage = i; changeStage(); }; container.appendChild(dot); }); }
+
+export function initPageIndicators() { 
+    const container = document.getElementById("stageIndicators"); 
+    if(!container) return; 
+    container.innerHTML = ""; 
+    
+    // GÜNCELLEME: App modundaysa kısıtlı stage listesi, Web'de hepsi
+    const stages = (isElectron || isNative) ? [1, 3, 4] : [0, 1, 2, 3, 4]; 
+    
+    stages.forEach(i => { 
+        const dot = document.createElement("div"); 
+        dot.className = "indicator-dot"; 
+        dot.dataset.stage = i; 
+        if(i === state.stage) dot.classList.add("active"); 
+        dot.onclick = (e) => { 
+            e.stopPropagation(); 
+            state.stage = i; 
+            changeStage(); 
+        }; 
+        container.appendChild(dot); 
+    }); 
+}
+
 function updatePageIndicators() { document.querySelectorAll(".indicator-dot").forEach(dot => { if (parseInt(dot.dataset.stage) === state.stage) dot.classList.add("active"); else dot.classList.remove("active"); }); }
 export function initClock() { function update() { try { const now = new Date(); const timeString = new Intl.DateTimeFormat('tr-TR', { timeZone: state.timeZone, hour12: false, hour: '2-digit', minute: '2-digit' }).format(now); const [hour, minute] = timeString.split(':'); document.getElementById("clock-hour").innerText = hour; document.getElementById("clock-minute").innerText = minute; const dateString = new Intl.DateTimeFormat('tr-TR', { timeZone: state.timeZone, weekday: 'long', day: 'numeric', month: 'long' }).format(now); document.getElementById("date-display").innerText = dateString; } catch(e) {} } setInterval(update, 1000); update(); }
 export function initOnlineCounter() { const counterEl = document.getElementById("onlineCount"); function pseudoRandom(input) { let t = input += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; } function cosineInterpolate(y1, y2, mu) { const mu2 = (1 - Math.cos(mu * Math.PI)) / 2; return (y1 * (1 - mu2) + y2 * mu2); } function getNoise(time, scale) { const t = time / scale; const i = Math.floor(t); const f = t - i; const r1 = pseudoRandom(i); const r2 = pseudoRandom(i + 1); return cosineInterpolate(r1, r2, f); } function updateCount() { const now = Date.now(); const serverTime = now / 1000; const hour = new Date().getHours(); const hourlyBase = [ 45, 30, 20, 15, 10, 8, 12, 25, 60, 90, 110, 130, 140, 150, 145, 155, 160, 175, 190, 210, 230, 220, 180, 100 ]; const currentBase = hourlyBase[hour]; const nextBase = hourlyBase[(hour + 1) % 24]; const minuteProgress = new Date().getMinutes() / 60; const smoothedBase = currentBase + (nextBase - currentBase) * minuteProgress; const slowWave = getNoise(serverTime, 40) * 30; const fastWave = getNoise(serverTime, 7) * 5; let finalCount = Math.floor(smoothedBase + slowWave + fastWave); if (finalCount < 5) finalCount = 5; if(counterEl) { const prevText = counterEl.innerText; counterEl.innerText = finalCount; if (prevText != finalCount) { const dot = document.querySelector('.live-dot'); if(dot) { dot.style.animation = 'none'; dot.offsetHeight; dot.style.animation = 'pulseGreen 2s infinite'; } } } setTimeout(updateCount, 500); } updateCount(); }

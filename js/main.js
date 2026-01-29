@@ -5,13 +5,20 @@ import { initWeather, enableSearchMode, disableSearchMode } from './weather.js';
 import * as UI from './ui.js';
 
 export let isElectron = false;
+export let isNative = false; // Android/iOS tespiti
 export let ipcRenderer = null;
 
+// Platform Kontrolleri
 if (window.ipcRenderer) {
     ipcRenderer = window.ipcRenderer;
     isElectron = true;
 } else {
     isElectron = false;
+}
+
+// Capacitor Native Kontrolü (Web sitesini bozmadan)
+if (window.Capacitor && window.Capacitor.isNativePlatform) {
+    isNative = window.Capacitor.isNativePlatform();
 }
 
 function startExperience() {
@@ -26,12 +33,12 @@ function startExperience() {
         console.log("Apple cihazı için CORS modu kapatıldı.");
     }
 
-    // 2. EKSİK OLAN PARÇA: SES MOTORUNU BAŞLATMA (Visualizer İçin Şart!)
-    // iOS'ta ses motoru sadece dokunma ile başlar, diğerlerinde hemen başlar.
+    // 2. SES MOTORUNU BAŞLATMA
+    // iOS'ta ses motoru sadece dokunma ile başlar.
     if (UI.getOS() === 'iOS') { 
         document.body.addEventListener('touchstart', setupAudioContext, { once: true }); 
     } else { 
-        setupAudioContext(); // <-- BU SATIR EKSİKTİ!
+        setupAudioContext();
     }
 
     // 3. ARAYÜZ BAŞLATMA
@@ -52,7 +59,8 @@ function startExperience() {
     const urlParams = new URLSearchParams(window.location.search);
     const isJoinAction = urlParams.get('action') === 'join';
 
-    if (isElectron) {
+    if (isElectron || isNative) {
+        // App modunda hemen başla
         setTimeout(() => { playRadio(); }, 100);
         setTimeout(() => { UI.triggerRadioCard(); }, 2000);
     } else {
@@ -64,12 +72,19 @@ function startExperience() {
     setTimeout(() => {
         UI.initClock();
         initWeather();
+        // Mobilde kar efekti performansı düşürebilir, Native ise kapatabiliriz veya açık tutabiliriz.
+        // Şimdilik açık bırakıyoruz.
         UI.initSnow();
         setupVolumeControl();
         UI.initPageIndicators();
     }, 100);
     
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500);
+
+    // Native App ise güncelleme kontrolü yapmaya gerek yok (Store halleder) veya farklı bir yöntem gerekir.
+    if(isElectron) {
+        UI.initUpdateHandler();
+    }
 }
 
 function setupEventListeners() {
@@ -106,7 +121,7 @@ function setupInteractions() {
         profileImg.style.cursor = "pointer";
         profileImg.addEventListener('click', (e) => { 
             e.stopPropagation(); 
-            if(state.stage === 1 && !isElectron) { state.stage = 0; UI.changeStage(); } 
+            if(state.stage === 1 && !isElectron && !isNative) { state.stage = 0; UI.changeStage(); } 
         });
     }
 
@@ -132,7 +147,7 @@ function setupInteractions() {
         if(state.stage === 3 || state.stage === 4) {
             const insideRadio = e.target.closest('.radio-player');
             const insideWeather = e.target.closest('.weather-widget');
-            if(state.stage === 3 && !insideRadio && !isElectron) UI.goDefaultPage();
+            if(state.stage === 3 && !insideRadio && !isElectron && !isNative) UI.goDefaultPage();
             if(state.stage === 4 && !insideWeather) UI.goDefaultPage();
         }
         if(state.stage === 0) { 
@@ -141,9 +156,11 @@ function setupInteractions() {
         }
     });
 
+    // Masaüstü ve Web Scroll
     window.addEventListener('wheel', (e) => {
         if(state.isScrolling) return;
-        if (isElectron) {
+        if (isElectron || isNative) {
+            // App modunda sayfalar arası geçiş
             if(e.deltaY > 0) { 
                 if(state.stage === 1) { state.stage = 3; UI.changeStage(); UI.lockScroll(); } 
                 else if(state.stage === 3) { state.stage = 4; UI.changeStage(); UI.lockScroll(); } 
@@ -152,6 +169,7 @@ function setupInteractions() {
                 else if(state.stage === 3) { state.stage = 1; UI.changeStage(); UI.lockScroll(); } 
             }
         } else {
+            // Web modunda kart efektleri
             if(e.deltaY > 0) { 
                 if(state.stage < 4) { state.stage++; UI.changeStage(); UI.lockScroll(); } 
                 else { UI.triggerBump('bump-up'); UI.lockScroll(400); }
@@ -162,13 +180,15 @@ function setupInteractions() {
         }
     });
 
+    // Mobil Dokunmatik (Swipe)
     let touchStartY = 0;
     document.addEventListener('touchstart', (e) => { touchStartY = e.changedTouches[0].screenY; }, {passive: false});
     document.addEventListener('touchend', (e) => {
         if(state.isScrolling) return;
         const diff = touchStartY - e.changedTouches[0].screenY;
         if(Math.abs(diff) > 50) {
-            if(isElectron) {
+            if(isElectron || isNative) {
+                // App Modu Swipe
                 if(diff > 0) { 
                     if(state.stage === 1) { state.stage = 3; UI.changeStage(); UI.lockScroll(); } 
                     else if(state.stage === 3) { state.stage = 4; UI.changeStage(); UI.lockScroll(); } 
@@ -177,6 +197,7 @@ function setupInteractions() {
                     else if(state.stage === 3) { state.stage = 1; UI.changeStage(); UI.lockScroll(); } 
                 }
             } else {
+                // Web Modu Swipe
                 if(diff > 0) { 
                     if(state.stage < 4) { state.stage++; UI.changeStage(); UI.lockScroll(); } 
                     else { UI.triggerBump('bump-up'); UI.lockScroll(400); } 
@@ -209,7 +230,8 @@ window.addEventListener('offline', () => updateOnlineStatus(false));
 async function checkConnection(manual = false) {
     if (!navigator.onLine) { updateOnlineStatus(false); return; }
     try {
-        const checkUrl = isElectron 
+        // App içinde dosya sistemi farklı olabilir, direkt web'e ping atalım.
+        const checkUrl = (isElectron || isNative)
             ? 'https://yusufaliyaylaci.com/assets/icon.ico?' + new Date().getTime() 
             : 'assets/icon.ico?' + new Date().getTime();
 
@@ -233,13 +255,18 @@ async function checkConnection(manual = false) {
     }
 }
 
+// İndirme butonlarını güncelleme fonksiyonu (Windows EXE ve Android APK)
 async function updateDownloadButton() {
     const user = "yusufaliyaylaci"; 
     const repo = "yusufaliyaylaci.github.io"; 
+    
     const winBtn = document.getElementById('modal-win-btn');
     const winVerTag = document.getElementById('win-ver-tag');
+    
+    const androidBtn = document.getElementById('modal-android-btn');
+    const androidVerTag = document.getElementById('android-ver-tag');
 
-    if (!winBtn) return;
+    if (!winBtn && !androidBtn) return;
     const fallbackUrl = `https://github.com/${user}/${repo}/releases/latest`;
 
     try {
@@ -248,14 +275,24 @@ async function updateDownloadButton() {
         const data = await response.json();
         const versionLabel = data.tag_name.startsWith('v') ? data.tag_name : 'v' + data.tag_name;
 
+        // Windows EXE Bulma
         const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
         if (exeAsset && winBtn) {
             winBtn.href = exeAsset.browser_download_url;
             if(winVerTag) winVerTag.innerText = versionLabel;
         } else if(winBtn) { winBtn.href = fallbackUrl; }
 
+        // Android APK Bulma
+        const apkAsset = data.assets.find(asset => asset.name.endsWith('.apk'));
+        if (apkAsset && androidBtn) {
+            androidBtn.href = apkAsset.browser_download_url;
+            androidBtn.classList.remove('disabled'); // Butonu aktif et
+            if(androidVerTag) androidVerTag.innerText = versionLabel + " (APK)";
+        }
+
     } catch (error) {
         if(winBtn) winBtn.href = fallbackUrl;
+        if(androidBtn) androidBtn.href = fallbackUrl;
     }
 }
 
@@ -264,39 +301,28 @@ async function updateDownloadButton() {
 // -------------------------------------------------------------------------
 
 if (isElectron && ipcRenderer) {
-    // APP TARAFI: Electron main process'ten gelen sinyali dinle
-    ipcRenderer.on('app-mode-listener', () => {
-        activateListenerMode();
-    });
+    ipcRenderer.on('app-mode-listener', () => { activateListenerMode(); });
 }
 
 // WEB TARAFI: ?action=join parametresi varsa
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('action') === 'join') {
     
-    if (!isElectron) {
+    if (!isElectron && !isNative) {
         // Web'deyiz. Önce Masaüstü uygulamasını tetikle.
         console.log("Uygulama tetikleniyor: yaliapp://join");
-        
-        // Bu işlem tarayıcıda "Uygulamayı aç?" uyarısı çıkartır.
-        // Kullanıcı kabul ederse uygulama açılır, etmezse web'de kalır.
         window.location.href = "yaliapp://join"; 
-        
     } else {
-        // Electron içindeyiz ama URL parametresiyle gelmiş (Nadir durum ama önlem)
+        // App içindeyiz
         activateListenerMode();
     }
 }
 
 function activateListenerMode() {
     console.log("Dinleyici Modu Aktif.");
-    
-    // Tasarımı kilitle (CSS'teki opacity devreye girer)
     document.body.classList.add('listener-mode');
-    
     state.isListenerMode = true;
 
-    // Electron için Discord güncellemesi
     if(isElectron && ipcRenderer) {
         ipcRenderer.send('update-discord-activity', { 
             details: CONFIG.stations[state.currentStation].name, 
@@ -307,7 +333,6 @@ function activateListenerMode() {
     const statusText = document.getElementById('statusText');
     if(statusText) statusText.innerText = "Birlikte Dinleniyor";
     
-    // Eğer müzik çalmıyorsa başlat (Uygulama içinde olduğumuz için autoplay sorunu olmaz)
     if(state && !state.isPlaying) {
         setTimeout(() => {
             const playBtn = document.getElementById('playBtn');
@@ -323,7 +348,6 @@ function initApp() {
     setupEventListeners(); 
     checkConnection();
     updateDownloadButton();
-    UI.initUpdateHandler();
 }
 
 if (document.readyState === 'loading') {
