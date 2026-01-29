@@ -1,5 +1,5 @@
 import { state, timers, setAudioContext } from './state.js';
-import { CONFIG, APP_VERSION } from './config.js'; // APP_VERSION buraya eklendi
+import { CONFIG, APP_VERSION } from './config.js'; // APP_VERSION buraya, en tepeye eklendi
 import { initRadio, togglePlay, playRadio, triggerChangeStation, setupVolumeControl, toggleMute, setupAudioContext } from './radio.js';
 import { initWeather, enableSearchMode, disableSearchMode } from './weather.js';
 import * as UI from './ui.js';
@@ -16,25 +16,22 @@ if (window.ipcRenderer) {
     isElectron = false;
 }
 
-// Capacitor Native Kontrolü (Web sitesini bozmadan)
+// Capacitor Native Kontrolü
 if (window.Capacitor && window.Capacitor.isNativePlatform) {
     isNative = window.Capacitor.isNativePlatform();
 }
 
 function startExperience() {
-    // 1. APPLE CİHAZ DÜZELTMESİ (CORS Hatasını Önler)
+    // 1. APPLE CİHAZ DÜZELTMESİ
     if (UI.getOS() === 'iOS' || UI.getOS() === 'Mac OS') {
         const audio1 = document.getElementById("bgMusic1");
         const audio2 = document.getElementById("bgMusic2");
 
         if(audio1) audio1.removeAttribute("crossorigin");
         if(audio2) audio2.removeAttribute("crossorigin");
-
-        console.log("Apple cihazı için CORS modu kapatıldı.");
     }
 
     // 2. SES MOTORUNU BAŞLATMA
-    // iOS'ta ses motoru sadece dokunma ile başlar.
     if (UI.getOS() === 'iOS') { 
         document.body.addEventListener('touchstart', setupAudioContext, { once: true }); 
     } else { 
@@ -79,9 +76,15 @@ function startExperience() {
     
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500);
 
-    // Native App ise güncelleme kontrolü yapmaya gerek yok (Store halleder) veya farklı bir yöntem gerekir.
+    // 5. GÜNCELLEME SİSTEMLERİNİ TETİKLEME
+    // Windows/Linux (Electron) için otomatik güncelleme
     if(isElectron) {
         UI.initUpdateHandler();
+    }
+    
+    // Android (Native) için manuel kontrol
+    if(isNative) {
+        setTimeout(checkForUpdates, 3000);
     }
 }
 
@@ -154,11 +157,9 @@ function setupInteractions() {
         }
     });
 
-    // Masaüstü ve Web Scroll
     window.addEventListener('wheel', (e) => {
         if(state.isScrolling) return;
         if (isElectron || isNative) {
-            // App modunda sayfalar arası geçiş
             if(e.deltaY > 0) { 
                 if(state.stage === 1) { state.stage = 3; UI.changeStage(); UI.lockScroll(); } 
                 else if(state.stage === 3) { state.stage = 4; UI.changeStage(); UI.lockScroll(); } 
@@ -167,7 +168,6 @@ function setupInteractions() {
                 else if(state.stage === 3) { state.stage = 1; UI.changeStage(); UI.lockScroll(); } 
             }
         } else {
-            // Web modunda kart efektleri
             if(e.deltaY > 0) { 
                 if(state.stage < 4) { state.stage++; UI.changeStage(); UI.lockScroll(); } 
                 else { UI.triggerBump('bump-up'); UI.lockScroll(400); }
@@ -178,7 +178,6 @@ function setupInteractions() {
         }
     });
 
-    // Mobil Dokunmatik (Swipe)
     let touchStartY = 0;
     document.addEventListener('touchstart', (e) => { touchStartY = e.changedTouches[0].screenY; }, {passive: false});
     document.addEventListener('touchend', (e) => {
@@ -186,7 +185,6 @@ function setupInteractions() {
         const diff = touchStartY - e.changedTouches[0].screenY;
         if(Math.abs(diff) > 50) {
             if(isElectron || isNative) {
-                // App Modu Swipe
                 if(diff > 0) { 
                     if(state.stage === 1) { state.stage = 3; UI.changeStage(); UI.lockScroll(); } 
                     else if(state.stage === 3) { state.stage = 4; UI.changeStage(); UI.lockScroll(); } 
@@ -195,7 +193,6 @@ function setupInteractions() {
                     else if(state.stage === 3) { state.stage = 1; UI.changeStage(); UI.lockScroll(); } 
                 }
             } else {
-                // Web Modu Swipe
                 if(diff > 0) { 
                     if(state.stage < 4) { state.stage++; UI.changeStage(); UI.lockScroll(); } 
                     else { UI.triggerBump('bump-up'); UI.lockScroll(400); } 
@@ -214,11 +211,9 @@ function updateOnlineStatus(isOnline) {
     if (isOnline) {
         if(offlineOverlay && offlineOverlay.classList.contains('active')) {
             offlineOverlay.classList.remove('active');
-            console.log("İnternet bağlantısı sağlandı.");
         }
     } else {
         if(offlineOverlay) offlineOverlay.classList.add('active');
-        console.log("İnternet bağlantısı koptu.");
     }
 }
 
@@ -408,6 +403,3 @@ function showUpdateModal(version, notes, assets) {
         document.getElementById('new-update-modal').remove();
     });
 }
-
-// Uygulama açıldıktan 3 saniye sonra kontrol et
-setTimeout(checkForUpdates, 3000);
