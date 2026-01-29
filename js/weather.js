@@ -2,13 +2,67 @@ import { CONFIG } from './config.js';
 import { state, timers } from './state.js';
 
 export function initWeather() {
-    const defaultFail = () => fetchWeather(38.41, 27.13, "İzmir (Varsayılan)");
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude), defaultFail);
-    } else {
-        defaultFail();
-    }
+    // 1. IP ile tahmini konum bul (Otomatik, izin istemez)
+    fetchWeatherByIP();
+    
+    // 2. Şehir aramayı başlat
     setupCitySearch();
+
+    // 3. İkon tıklama olayını dinle (Hassas konum isteği için)
+    setupLocationClick();
+}
+
+// IP adresinden şehir bulma (İzin gerektirmez)
+function fetchWeatherByIP() {
+    const fallback = () => fetchWeather(38.41, 27.13, "İzmir (Varsayılan)");
+
+    fetch('https://ipwho.is/')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fetchWeather(data.latitude, data.longitude, data.city);
+            } else {
+                console.warn("IP konum servisi başarısız:", data.message);
+                fallback();
+            }
+        })
+        .catch(err => {
+            console.error("IP konum hatası:", err);
+            fallback();
+        });
+}
+
+// İkona tıklayınca gerçek GPS konumunu isteme
+function setupLocationClick() {
+    const iconEl = document.getElementById("w-icon");
+    if (!iconEl) return;
+
+    iconEl.style.cursor = "pointer";
+    iconEl.title = "Tam Konumumu Bul";
+
+    iconEl.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        
+        const cityEl = document.getElementById("w-city");
+        const originalText = cityEl ? cityEl.innerText : "Şehir...";
+
+        if (cityEl) cityEl.innerText = "Konum aranıyor...";
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    fetchWeather(pos.coords.latitude, pos.coords.longitude, "Konumunuz");
+                },
+                (err) => {
+                    console.warn("Konum izni hatası:", err);
+                    if (cityEl) cityEl.innerText = originalText;
+                }
+            );
+        } else {
+            console.error("Geolocation desteklenmiyor.");
+            if (cityEl) cityEl.innerText = originalText;
+        }
+    });
 }
 
 export function fetchWeather(lat, lon, cityName = "Konumunuz") {
@@ -108,12 +162,30 @@ function setupCitySearch() {
 
 export function enableSearchMode(e) {
     if(e) e.stopPropagation();
-    document.getElementById("weatherWidget").classList.add("search-mode");
-    document.getElementById("cityInput").focus();
+    
+    const widget = document.getElementById("weatherWidget");
+    const input = document.getElementById("cityInput");
+    
+    // Büyük moddaysa yeni animasyonu kullan
+    if (document.body.classList.contains('view-mode-weather')) {
+        widget.classList.add("anim-search-active");
+    } else {
+        widget.classList.add("search-mode");
+    }
+
+    setTimeout(() => {
+        input.focus();
+    }, 300);
 }
 
 export function disableSearchMode(e) {
     if(e) e.stopPropagation();
-    document.getElementById("weatherWidget").classList.remove("search-mode");
+    
+    const widget = document.getElementById("weatherWidget");
+    
+    widget.classList.remove("anim-search-active");
+    widget.classList.remove("search-mode");
+    
     document.getElementById("cityInput").value = "";
+    document.getElementById("suggestionsList").style.display = "none";
 }

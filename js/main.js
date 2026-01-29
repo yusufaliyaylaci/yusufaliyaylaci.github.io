@@ -97,6 +97,33 @@ function setupEventListeners() {
     document.getElementById('btnCityChange')?.addEventListener('click', enableSearchMode);
     document.getElementById('btnCityCancel')?.addEventListener('click', disableSearchMode);
     document.getElementById('btnRetryConnection')?.addEventListener('click', () => checkConnection(true));
+    document.getElementById('btnCityChangeLarge')?.addEventListener('click', enableSearchMode);
+// --- HAVA DURUMU KARTI İÇİN GARANTİ TIKLAMA YÖNETİMİ ---
+    const wWidget = document.getElementById('weatherWidget');
+    if (wWidget) {
+        wWidget.addEventListener('click', (e) => {
+            // Eğer tıklanan yer buton veya input değilse (kartın kendisiyse)
+            if (!e.target.closest('.city-change-large-btn') && 
+                !e.target.closest('.city-search-box') && 
+                !e.target.closest('.suggestion-item')) {
+                
+                // Widget'a 'active' sınıfını toggle yap (Varsa kaldır, yoksa ekle)
+                // Not: ui.js zaten bunu yapıyorsa çakışmaz, teyit etmiş oluruz.
+                wWidget.classList.add('active'); 
+                document.body.classList.add('view-mode-weather');
+            }
+        });
+    }
+
+    // Geri butonu veya boşluğa tıklama ile kapatma mantığı (Opsiyonel ama önerilir)
+    document.addEventListener('click', (e) => {
+        // Eğer widget dışında bir yere tıklandıysa kapat
+        if (!e.target.closest('#weatherWidget') && document.body.classList.contains('view-mode-weather')) {
+            wWidget.classList.remove('active');
+            wWidget.classList.remove('anim-search-active'); // Arama modu açıksa onu da kapat
+            document.body.classList.remove('view-mode-weather');
+        }
+    });    
 
     // --- İNDİRME MODALI VE LINUX GEÇİŞLERİ (DÜZELTİLMİŞ) ---
     

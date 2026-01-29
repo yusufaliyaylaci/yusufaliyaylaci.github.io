@@ -1506,3 +1506,98 @@ body.view-mode-social .radio-player { cursor: default; }
 .platform-item:not(.disabled):hover::before {
     left: 120%; /* Soldan sağa kaydır */
 }
+
+/* ==================================================================
+   GÜNCELLENMİŞ: BÜYÜK KART BUTONU VE ANİMASYONLAR
+================================================================== */
+
+.city-change-large-btn {
+    display: none; /* Normalde gizli */
+    position: absolute;
+    bottom: 25px; /* Sol alt köşe */
+    left: 25px;
+    z-index: 999; /* En üstte durması için yüksek değer */
+    
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 18px;
+    border-radius: 30px;
+    
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.city-change-large-btn i {
+    margin-right: 8px;
+}
+
+.city-change-large-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* KART AKTİF OLDUĞUNDA (.active class'ı varsa) GÖSTER */
+/* Hem body'de class varsa HEM DE widget active ise çalışsın diye iki ihtimali de yazıyoruz */
+.weather-widget.active .city-change-large-btn,
+body.view-mode-weather .city-change-large-btn {
+    display: flex;
+    align-items: center;
+    animation: fadeInBtn 0.5s ease 0.3s forwards; /* Hafif gecikmeli gelsin */
+    opacity: 0; /* Animasyonla gelecek */
+}
+
+@keyframes fadeInBtn {
+    to { opacity: 1; }
+}
+
+/* ARAMA MODUNDA GİZLEME VE ANİMASYON (Önceki kodların aynısı) */
+.weather-widget.anim-search-active .city-change-large-btn {
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%) scale(1.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ARAMA KUTUSU POZİSYONU */
+.weather-widget .city-search-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    width: 85%;
+    max-width: 400px;
+    background: rgba(20, 20, 20, 0.95);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 20px;
+    border-radius: 15px;
+    transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    display: block !important;
+    visibility: hidden;
+}
+
+.weather-widget.anim-search-active .city-search-box {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: all;
+}
+
+/* ARKA PLAN BULANIKLIĞI */
+.weather-widget.anim-search-active .weather-header,
+.weather-widget.anim-search-active .weather-details,
+.weather-widget.anim-search-active .extended-info {
+    filter: blur(8px) brightness(0.6);
+    pointer-events: none;
+    user-select: none;
+}

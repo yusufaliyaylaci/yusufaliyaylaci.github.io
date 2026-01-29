@@ -116,7 +116,7 @@ function startConnectionTimer() {
         const sText = document.getElementById("statusText");
         const isStillConnecting = sText && (sText.innerText.includes("Bağlanılıyor") || sText.innerText.includes("Değiştiriliyor"));
         if (!state.isPlaying && isStillConnecting) { console.warn("Bağlantı zaman aşımı."); handleConnectionError(); }
-    }, 4500);
+    }, 8000); // Crossfade için süreyi biraz uzattık
 }
 
 function resetErrorState() {
@@ -194,7 +194,9 @@ function onRadioStarted() {
     if('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
     updateMediaSessionMetadata();
     updateBackground('station'); updateThemeColors(false); updateStatusUI("live", "CANLI YAYIN");
-    startSongDetectionLoop(); setTimeout(preloadNextStation, 2000);
+    startSongDetectionLoop(); 
+    
+    // Crossfade modunda preload'a gerek yok, değişim anında yüklüyoruz.
 
     const pBox = document.getElementById("playerBox"); if(pBox) { pBox.classList.add("playing", "active-glow"); pBox.classList.remove("player-error"); }
     document.getElementById("playIcon").classList.replace("fa-play", "fa-pause"); document.body.classList.remove("shake-active");
@@ -214,35 +216,63 @@ function resetPlayerUI() {
     if (isElectron) { ipcRenderer.send('update-discord-activity', { details: "YaliApp", state: "Ana Sayfada" }); }
 }
 
+// RADYO DEĞİŞTİRME (CROSSFADE AKTİF)
 export function triggerChangeStation(direction) {
     if(state.isSwitching) return;
     setControlsDisabled(true);
-    state.lastDirection = direction; state.isSwitching = true; 
+    
+    state.lastDirection = direction; 
+    state.isSwitching = true; 
+
+    // Yeni istasyonu ayarla
     state.currentStation = (state.currentStation + (direction === 1 ? 1 : -1) + CONFIG.stations.length) % CONFIG.stations.length;
     if ('mediaSession' in navigator) updateMediaSessionMetadata();
+
     const targetUrl = CONFIG.stations[state.currentStation].url;
     updateStatusUI("connecting", "Değiştiriliyor...");
     
-    const currentPlayer = getActivePlayer(); const nextPlayer = getInactivePlayer();
-    const isPreloaded = (nextPlayer.src === targetUrl && !nextPlayer.paused);
+    const currentPlayer = getActivePlayer(); 
+    const nextPlayer = getInactivePlayer();
+    
+    // NOT: currentPlayer'ı BURADA DURDURMUYORUZ. Yeni radyo yüklenene kadar çalmaya devam edecek.
 
-    if (isPreloaded) { performCrossfade(currentPlayer, nextPlayer); } 
-    else {
-        startConnectionTimer(); nextPlayer.src = targetUrl; 
-        const nextId = state.activePlayerId === 1 ? 2 : 1;
-        if (state.gainNodes && state.gainNodes[nextId]) {
-            state.gainNodes[nextId].gain.value = 0; 
-            if(state.analyzerGains) state.analyzerGains[nextId].gain.value = 0;
-            nextPlayer.volume = 1;
-        } else { nextPlayer.volume = 0; }
-        const playPromise = nextPlayer.play();
-        if (playPromise !== undefined) { playPromise.then(() => { performCrossfade(currentPlayer, nextPlayer); }).catch(err => { console.warn("Hata:", err); handleConnectionError(); }); }
+    startConnectionTimer(); 
+    
+    // Yeni player'ı hazırla
+    nextPlayer.src = targetUrl; 
+    const nextId = state.activePlayerId === 1 ? 2 : 1;
+    
+    // Yeni player'ın sesini BAŞLANGIÇTA SIFIR yapıyoruz (Fade-in için)
+    if (state.gainNodes && state.gainNodes[nextId]) {
+        state.gainNodes[nextId].gain.value = 0; 
+        if(state.analyzerGains) state.analyzerGains[nextId].gain.value = 0;
+        nextPlayer.volume = 1;
+    } else { 
+        nextPlayer.volume = 0; 
     }
-    timers.connection = setTimeout(() => { if(state.isSwitching) { handleConnectionError(); } }, 6000); 
+
+    // Yeni radyoyu oynat (Sessizce)
+    const playPromise = nextPlayer.play();
+    if (playPromise !== undefined) { 
+        playPromise.then(() => { 
+            // Radyo çalmaya başladığı an Crossfade işlemini başlat
+            performCrossfade(currentPlayer, nextPlayer);
+        }).catch(err => { 
+            console.warn("Hata:", err); 
+            handleConnectionError(); 
+        }); 
+    }
+    
+    // Güvenlik zamanlayıcısı (Çok uzun sürerse hata ver)
+    timers.connection = setTimeout(() => { 
+        if(state.isSwitching) { handleConnectionError(); } 
+    }, 10000); 
 }
 
 function performCrossfade(oldPlayer, newPlayer) {
     if('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
+    
+    // iOS Crossfade desteklemez, direkt geçiş yap
     if(getOS() === 'iOS') { 
         oldPlayer.pause(); oldPlayer.currentTime = 0; 
         const nextId = state.activePlayerId === 1 ? 2 : 1;
@@ -255,49 +285,63 @@ function performCrossfade(oldPlayer, newPlayer) {
         swapActivePlayer(); finishSwitch(); return; 
     }
 
+    // Crossfade Ayarları
     const targetVol = Math.pow(state.lastVolume, 2); 
-    const activeId = state.activePlayerId; const nextId = activeId === 1 ? 2 : 1;           
-    const fadeDuration = 500; const intervalTime = 50; const totalSteps = fadeDuration / intervalTime; const stepAmount = targetVol / totalSteps;
-    let newVol = 0; let oldVol = (state.gainNodes && state.gainNodes[activeId]) ? state.gainNodes[activeId].gain.value : oldPlayer.volume;
+    const activeId = state.activePlayerId; 
+    const nextId = activeId === 1 ? 2 : 1;           
     
-    // Geçiş anında yeni şarkının visualizer'ını aç
+    const fadeDuration = 1000; // 1 saniye süren geçiş
+    const intervalTime = 50; 
+    const totalSteps = fadeDuration / intervalTime; 
+    const stepAmount = targetVol / totalSteps;
+
+    let newVol = 0; 
+    let oldVol = (state.gainNodes && state.gainNodes[activeId]) ? state.gainNodes[activeId].gain.value : oldPlayer.volume;
+    
+    // Görselleştiriciyi yeni radyoya geçir (Eski görseli kapat, yeniyi aç)
     if(state.analyzerGains) {
         state.analyzerGains[nextId].gain.value = (state.lastVolume > 0) ? 1.0 : 0;
         state.analyzerGains[activeId].gain.value = 0; 
     }
 
     const fadeInterval = setInterval(() => {
+        // Yeni radyoyu aç
         if(newVol < targetVol) {
             newVol = Math.min(newVol + stepAmount, targetVol);
-            if(state.gainNodes && state.gainNodes[nextId]) { state.gainNodes[nextId].gain.value = newVol; } else newPlayer.volume = newVol;
+            if(state.gainNodes && state.gainNodes[nextId]) { state.gainNodes[nextId].gain.value = newVol; } 
+            else newPlayer.volume = newVol;
         }
+        
+        // Eski radyoyu kıs
         if(oldVol > 0) {
             oldVol = Math.max(oldVol - stepAmount, 0);
-            if(state.gainNodes && state.gainNodes[activeId]) { state.gainNodes[activeId].gain.value = oldVol; } else oldPlayer.volume = oldVol;
+            if(state.gainNodes && state.gainNodes[activeId]) { state.gainNodes[activeId].gain.value = oldVol; } 
+            else oldPlayer.volume = oldVol;
         }
-        const isNewReady = newVol >= (targetVol - stepAmount); const isOldDone = oldVol <= stepAmount;
+
+        // Bitiş Kontrolü
+        const isNewReady = newVol >= (targetVol - stepAmount); 
+        const isOldDone = oldVol <= stepAmount;
+        
         if(isNewReady && isOldDone) { 
-            clearInterval(fadeInterval); oldPlayer.pause(); oldPlayer.currentTime = 0; oldPlayer.src = ""; 
-            if(state.gainNodes && state.gainNodes[nextId]) { state.gainNodes[nextId].gain.value = targetVol; } else newPlayer.volume = targetVol;
-            swapActivePlayer(); finishSwitch(); 
+            clearInterval(fadeInterval); 
+            
+            // Eski player'ı tamamen durdur ve sıfırla
+            oldPlayer.pause(); 
+            oldPlayer.currentTime = 0; 
+            oldPlayer.src = ""; // Kaynağı boşalt (Bug önleyici)
+
+            // Yeni player'ın sesini tam ayarla (Garanti olsun)
+            if(state.gainNodes && state.gainNodes[nextId]) { state.gainNodes[nextId].gain.value = targetVol; } 
+            else newPlayer.volume = targetVol;
+            
+            swapActivePlayer(); 
+            finishSwitch(); 
         }
     }, intervalTime); 
 }
 
 function finishSwitch() { state.isSwitching = false; clearTimeout(timers.connection); onRadioStarted(); }
-function preloadNextStation() {
-    if (!state.isPlaying || state.isSwitching) return;
-    const nextIndex = (state.currentStation + 1) % CONFIG.stations.length; const nextUrl = CONFIG.stations[nextIndex].url;
-    const inactive = getInactivePlayer(); const inactiveId = state.activePlayerId === 1 ? 2 : 1;
-    if (inactive.src === nextUrl && !inactive.paused) return;
-    if (state.gainNodes && state.gainNodes[inactiveId]) {
-        state.gainNodes[inactiveId].gain.value = 0;
-        if(state.analyzerGains && state.analyzerGains[inactiveId]) { state.analyzerGains[inactiveId].gain.value = 0; }
-        inactive.volume = 1;
-    } else { inactive.volume = 0; }
-    inactive.src = nextUrl;
-    const playPromise = inactive.play(); if (playPromise !== undefined) { playPromise.catch(e => console.log("Ön yükleme hatası (önemsiz):", e)); }
-}
 
 export function setupVolumeControl() {
     const slider = document.getElementById("volRange"); slider.value = state.lastVolume; updateVolFill(state.lastVolume);
