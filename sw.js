@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yali-app-v2.2.6';
+const CACHE_NAME = 'yali-app-v2.2.7'; // Otomasyon burayi gunceller
 const URLS_TO_CACHE = [
     './',
     './index.html',
@@ -17,11 +17,11 @@ const URLS_TO_CACHE = [
 
 // 1. KURULUM (INSTALL)
 self.addEventListener('install', (event) => {
-    self.skipWaiting(); // Bekleme yapma, hemen geç
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Önbellek açıldı');
+                // Kritik dosyalari onbellekle
                 return cache.addAll(URLS_TO_CACHE);
             })
     );
@@ -29,9 +29,9 @@ self.addEventListener('install', (event) => {
 
 // 2. AKTİFLEŞTİRME (ACTIVATE)
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim()); // Sayfayı hemen ele geçir
+    event.waitUntil(self.clients.claim());
     
-    // Eski cache'leri temizle
+    // Eski surumleri temizle
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -50,15 +50,21 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = event.request.url;
 
-    // STRATEJİ 1: NETWORK FIRST (Önce İnternet, Yoksa Cache)
-    // HTML, JSON (API), CSS ve JS dosyaları için bunu kullanıyoruz.
-    // Böylece kodda yaptığın değişiklik anında yansır.
+    // --- KRİTİK DÜZELTME: İNDİRME DOSYALARINI GÖRMEZDEN GEL ---
+    // APK, EXE, DEB vb. dosyalari Service Worker yakalamamali.
+    // Birakin tarayici (Browser) bu dosyalari direkt indirsin.
+    if (url.match(/\.(apk|exe|deb|rpm|pacman|zip|tar\.gz|dmg|iso)$/i)) {
+        return; // SW hiçbir şey yapmaz, topu tarayıcıya atar.
+    }
+
+    // STRATEJİ 1: NETWORK FIRST (Önce İnternet)
+    // HTML, API, CSS ve JS dosyalari icin
     if (
         event.request.mode === 'navigate' || 
         url.endsWith('.json') || 
         url.includes('api.github.com') ||
-        url.includes('.css') ||  // CSS dosyalarını ekledik
-        url.includes('.js')      // JS dosyalarını ekledik
+        url.includes('.css') ||
+        url.includes('.js')
     ) {
         event.respondWith(
             fetch(event.request)
@@ -69,15 +75,14 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // STRATEJİ 2: CACHE FIRST (Önce Cache, Yoksa İnternet)
-    // Resimler, fontlar vb. nadir değişenler için.
+    // STRATEJİ 2: CACHE FIRST (Önce Cache)
+    // Resimler, fontlar vb.
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
                 return cachedResponse;
             }
             return fetch(event.request).then((networkResponse) => {
-                // Cache'e at (Dinamik caching)
                 if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
                     return networkResponse;
                 }

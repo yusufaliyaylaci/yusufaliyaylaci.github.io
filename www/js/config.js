@@ -1,5 +1,5 @@
 // VERSİYON KONTROLÜ İÇİN (Bu satırı deploy.bat otomatik güncelleyecek)
-export const APP_VERSION = 'v2.2.5'; 
+export const APP_VERSION = 'v2.2.6'; 
 export const CONFIG = {
 stations: [
         { name: "Lofi Hip Hop", url: "https://stream.zeno.fm/0r0xa792kwzuv", gradient: "linear-gradient(45deg, #240b36, #c31432, #240b36, #c31432)", accent: "#c31432" },
