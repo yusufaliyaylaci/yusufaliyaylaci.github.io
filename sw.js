@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yali-app-';
+const CACHE_NAME = 'yali-app-v2.2.9';
 
 // Önbelleğe alınacak temel dosyalar
 const urlsToCache = [
