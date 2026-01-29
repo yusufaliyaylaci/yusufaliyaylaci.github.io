@@ -86,6 +86,7 @@ function startExperience() {
 }
 
 function setupEventListeners() {
+    // Temel Eventler
     document.getElementById('overlay')?.addEventListener('click', startExperience);
     document.getElementById('playBtn')?.addEventListener('click', togglePlay);
     document.getElementById('btnPrevStation')?.addEventListener('click', () => triggerChangeStation(-1));
@@ -95,44 +96,82 @@ function setupEventListeners() {
     document.getElementById('navRight')?.addEventListener('click', UI.nextPhoto);
     document.getElementById('btnCityChange')?.addEventListener('click', enableSearchMode);
     document.getElementById('btnCityCancel')?.addEventListener('click', disableSearchMode);
-    
-    // İndirme Modalı İşlemleri
-    const downloadBtn = document.querySelector('.download-btn-container'); // Ana ekrandaki indirme butonu
-    const closeBtn = document.getElementById('btnModalClose');
-    const modalOverlay = document.querySelector('.modal-overlay');
+    document.getElementById('btnRetryConnection')?.addEventListener('click', () => checkConnection(true));
 
+    // --- İNDİRME MODALI VE LINUX GEÇİŞLERİ (DÜZELTİLMİŞ) ---
+    
+    // Element Tanımları
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const closeBtn = document.getElementById('btnModalClose');
+    const downloadBtn = document.querySelector('.download-btn-container'); // Varsa ana sayfadaki buton
+    
+    // Panel Elementleri
+    const btnLinux = document.getElementById('linux-main-btn');
+    const btnLinuxBack = document.getElementById('btnLinuxBack');
+    const gridMain = document.getElementById('main-platform-grid');
+    const gridLinux = document.getElementById('linux-platform-grid');
+
+    // 1. Modalı Açma (Ana Sayfadan)
     if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => {
-            UI.toggleDownloadModal();
-            // Modal açıldığında Android butonunu parlat
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            if(UI.toggleDownloadModal) UI.toggleDownloadModal();
+            else if(modalOverlay) modalOverlay.classList.add('open'); // Fallback
+            
+            // Her açılışta ana menüyü göster, Linux'u gizle
+            if(gridMain) gridMain.style.display = 'grid';
+            if(gridLinux) gridLinux.style.display = 'none';
+            
             triggerAndroidShine();
         });
     }
 
+    // 2. Modalı Kapatma (X Butonu)
     if (closeBtn) {
         closeBtn.addEventListener('click', (e) => {
             e.preventDefault(); e.stopPropagation();
-            UI.toggleDownloadModal();
+            // Doğrudan sınıfı kaldırarak kapatmayı garantiye alalım
+            if(modalOverlay) modalOverlay.classList.remove('open'); 
         });
     }
+
+    // 3. Modalı Kapatma (Boşluğa Tıklama)
     if (modalOverlay) {
-        modalOverlay.addEventListener('click', UI.closeDownloadModal);
-    }
-
-    // Linux Toggle Butonu
-    const btnToggleLinux = document.getElementById('btn-toggle-linux');
-    const linuxOptionsPanel = document.getElementById('linux-options-panel');
-    if(btnToggleLinux && linuxOptionsPanel) {
-        btnToggleLinux.addEventListener('click', () => {
-            const isHidden = linuxOptionsPanel.style.display === 'none';
-            linuxOptionsPanel.style.display = isHidden ? 'flex' : 'none';
-            btnToggleLinux.innerHTML = isHidden 
-                ? '<i class="fas fa-chevron-up"></i> Linux Seçeneklerini Gizle' 
-                : '<i class="fas fa-linux"></i> Diğer Linux Seçenekleri';
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('open');
+            }
         });
     }
 
-    document.getElementById('btnRetryConnection')?.addEventListener('click', () => checkConnection(true));
+    // 4. Linux Menüsüne Geçiş (İleri)
+    if (btnLinux && gridMain && gridLinux) {
+        btnLinux.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            // Efektli geçiş
+            gridMain.style.display = 'none';
+            gridLinux.style.display = 'grid'; // Grid yapısını koru
+            
+            // Animasyon tetiklemek için ufak bir hack
+            gridLinux.classList.remove('fade-in');
+            void gridLinux.offsetWidth; // Reflow
+            gridLinux.classList.add('fade-in');
+        });
+    }
+
+    // 5. Ana Menüye Dönüş (Geri)
+    if (btnLinuxBack && gridMain && gridLinux) {
+        btnLinuxBack.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            // Efektli geçiş
+            gridLinux.style.display = 'none';
+            gridMain.style.display = 'grid';
+            
+            gridMain.classList.remove('fade-in');
+            void gridMain.offsetWidth; // Reflow
+            gridMain.classList.add('fade-in');
+        });
+    }
 }
 
 // Android Butonu Parlatma Efekti
@@ -157,7 +196,6 @@ function triggerAndroidShine() {
 
 
 function setupInteractions() {
-    // ... (Bu kısım aynı kalacak, önceki koddan kopyalayabilirsiniz veya bu tam kodu kullanın) ...
     const profileImg = document.getElementById("profileImg");
     if(profileImg) {
         profileImg.style.cursor = "pointer";
@@ -289,66 +327,90 @@ async function checkConnection(manual = false) {
 }
 
 // ----------------------------------------------------
-// DİNAMİK İNDİRME BUTONLARI (TÜM PLATFORMLAR)
+// DİNAMİK İNDİRME BUTONLARI VE VERSİYON KONTROLÜ
 // ----------------------------------------------------
 async function updateDownloadButtons() {
-    const user = "yusufaliyaylaci"; 
-    const repo = "yusufaliyaylaci.github.io";
-    const fallbackUrl = `https://github.com/${user}/${repo}/releases/latest`;
+    // Repo Ayarları
+    const GITHUB_USER = "yusufaliyaylaci";
+    const GITHUB_REPO = "yusufaliyaylaci.github.io";
+    const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest`;
+    const FALLBACK_URL = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/releases/latest`;
 
-    // Buton Elementleri
-    const winBtn = document.getElementById('btn-download-win');
-    const winVerTag = document.getElementById('win-ver-tag');
-    const androidBtn = document.getElementById('btn-download-android');
-    const androidVerTag = document.getElementById('android-ver-tag');
-    const debBtn = document.getElementById('btn-download-deb');
-    const rpmBtn = document.getElementById('btn-download-rpm');
-    const pacmanBtn = document.getElementById('btn-download-pacman');
+    // UI Elementleri (ID'ler index.html ile eşleşmeli)
+    const ui = {
+        win: { btn: document.getElementById('modal-win-btn'), tag: document.getElementById('win-ver-tag') },
+        android: { btn: document.getElementById('modal-android-btn'), tag: document.getElementById('android-ver-tag'), mainBtn: document.getElementById('btn-download-android') },
+        deb: { btn: document.getElementById('modal-deb-btn'), tag: document.getElementById('deb-ver-tag') },
+        rpm: { btn: document.getElementById('modal-rpm-btn'), tag: document.getElementById('rpm-ver-tag') },
+        arch: { btn: document.getElementById('modal-arch-btn'), tag: document.getElementById('arch-ver-tag') }
+    };
 
     try {
-        const response = await fetch(`https://api.github.com/repos/${user}/${repo}/releases/latest`);
-        if (!response.ok) throw new Error("API Hatası");
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error(`API Hatası: ${response.status}`);
+        
         const data = await response.json();
-        const versionLabel = data.tag_name.startsWith('v') ? data.tag_name : 'v' + data.tag_name;
+        const version = data.tag_name; // Örn: "v2.2.2"
+        const assets = data.assets || [];
 
-        // Helper: Varlık (Asset) bulma fonksiyonu
-        const findAsset = (ext) => data.assets.find(asset => asset.name.endsWith(ext));
+        // Yardımcı: Uzantıya göre asset URL bul (Case-insensitive)
+        const findLink = (ext) => {
+            const asset = assets.find(a => a.name.toLowerCase().endsWith(ext.toLowerCase()));
+            return asset ? asset.browser_download_url : null;
+        };
 
-        // Windows EXE
-        const exeAsset = findAsset('.exe');
-        if (exeAsset && winBtn) {
-            winBtn.href = exeAsset.browser_download_url;
-            if(winVerTag) winVerTag.innerText = versionLabel;
-        } else if(winBtn) { winBtn.href = fallbackUrl; }
+        // Yardımcı: Buton güncelleme
+        const updateBtn = (target, url, verText, enable = true) => {
+            if (!target.btn) return;
+            target.btn.href = url;
+            if (target.tag) target.tag.innerText = verText;
+            
+            if (enable) {
+                target.btn.classList.remove('disabled');
+                target.btn.classList.add('active');
+            } else {
+                target.btn.href = FALLBACK_URL; 
+                if (target.tag) target.tag.innerText = "Manuel İndir";
+            }
+        };
 
-        // Android APK
-        const apkAsset = findAsset('.apk');
-        if (apkAsset && androidBtn) {
-            androidBtn.href = apkAsset.browser_download_url;
-            androidBtn.classList.remove('disabled');
-            if(androidVerTag) androidVerTag.innerText = versionLabel;
-            // APK bulunduğunda parlama efekti için hazır hale getir
-            androidBtn.classList.add('shiny-btn');
-        } else if(androidBtn) {
-            androidBtn.href = fallbackUrl;
+        // 1. Windows (.exe)
+        const winUrl = findLink('.exe');
+        updateBtn(ui.win, winUrl || FALLBACK_URL, winUrl ? version : "Github'a Git", !!winUrl);
+
+        // 2. Android (.apk)
+        const apkUrl = findLink('.apk');
+        updateBtn(ui.android, apkUrl || FALLBACK_URL, apkUrl ? version : "Yakında", !!apkUrl);
+        
+        if (ui.android.mainBtn) {
+            ui.android.mainBtn.href = apkUrl || FALLBACK_URL;
+            if (apkUrl) {
+                ui.android.mainBtn.classList.remove('disabled');
+                ui.android.mainBtn.classList.add('shiny-btn');
+            }
         }
 
-        // Linux Distroları
-        const debAsset = findAsset('.deb');
-        if(debAsset && debBtn) debBtn.href = debAsset.browser_download_url;
+        // 3. Linux (.deb, .rpm, .pacman)
+        updateBtn(ui.deb, findLink('.deb'), version);
+        updateBtn(ui.rpm, findLink('.rpm'), version);
+        
+        // Arch bazen .zst kullanır
+        const archUrl = findLink('.pacman') || findLink('.zst'); 
+        updateBtn(ui.arch, archUrl, version);
 
-        const rpmAsset = findAsset('.rpm');
-        if(rpmAsset && rpmBtn) rpmBtn.href = rpmAsset.browser_download_url;
-
-        const pacmanAsset = findAsset('.pacman');
-        if(pacmanAsset && pacmanBtn) pacmanBtn.href = pacmanAsset.browser_download_url;
+        console.log(`[Update] İndirme linkleri güncellendi: ${version}`);
 
     } catch (error) {
-        console.error("İndirme linkleri alınamadı:", error);
-        // Hata durumunda hepsi releases sayfasına gitsin
-        [winBtn, androidBtn, debBtn, rpmBtn, pacmanBtn].forEach(btn => {
-            if(btn) btn.href = fallbackUrl;
+        console.warn("Versiyon bilgisi alınamadı, varsayılan linkler kullanılıyor.", error);
+        
+        Object.values(ui).forEach(item => {
+            if (item.btn) {
+                item.btn.href = FALLBACK_URL;
+                if (item.tag) item.tag.innerText = "Manuel Kontrol";
+            }
         });
+        
+        if (ui.android.mainBtn) ui.android.mainBtn.href = FALLBACK_URL;
     }
 }
 
@@ -405,7 +467,6 @@ if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navi
 // ----------------------------------------------------
 // ANDROID GÜNCELLEME KONTROLÜ
 // ----------------------------------------------------
-// ... (Bu kısım aynı kalacak) ...
 function compareVersions(v1, v2) {
     const clean = v => v.replace('v', '').split('.').map(Number);
     const [a, b] = [clean(v1), clean(v2)];
@@ -418,10 +479,7 @@ function compareVersions(v1, v2) {
 
 async function checkForUpdates() {
     if (!isNative) return;
-    // ... (Aynı kodlar) ...
-    // Kodu kısaltmak için burayı tekrarlamıyorum, önceki cevaptaki checkForUpdates ve showUpdateModal fonksiyonları burada olacak.
-    // Eğer elinizde yoksa söyleyin tekrar atayım.
-    console.log(`Android Sürüm Kontrolü: ${APP_VERSION}`);
+
     const user = "yusufaliyaylaci"; 
     const repo = "yusufaliyaylaci.github.io"; 
     
@@ -440,6 +498,7 @@ async function checkForUpdates() {
         console.log("Güncelleme kontrolü yapılamadı:", e);
     }
 }
+
 function showUpdateModal(version, notes, assets) {
     if (document.getElementById('new-update-modal')) return;
 

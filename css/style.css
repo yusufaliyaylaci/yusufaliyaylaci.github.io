@@ -945,14 +945,6 @@ body.view-mode-social .radio-player { cursor: default; }
 }
 #modal-rpm-btn:hover i { color: #51A2DA; transform: scale(1.1) translateY(-3px); transition: 0.3s; }
 
-/* Arch Linux (Turkuaz Glow) */
-#modal-arch-btn:hover {
-    background: rgba(23, 147, 209, 0.15) !important;
-    border-color: #1793D1 !important;
-    box-shadow: 0 10px 30px rgba(23, 147, 209, 0.25) !important;
-}
-#modal-arch-btn:hover i { color: #1793D1; transform: scale(1.1) rotate(-360deg); transition: 0.6s ease-in-out; }
-
 /* --- STATUS METİN ANİMASYONU --- */
 @keyframes statusSlideIn {
     0% { opacity: 0; transform: translateY(10px) scale(0.95); filter: blur(2px); }
@@ -1417,4 +1409,100 @@ body.view-mode-social .radio-player { cursor: default; }
 @keyframes fadeInDown {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   GÜNCELLENMİŞ İNDİRME BUTONLARI (NO-FILL STYLE)
+   ========================================= */
+
+/* --- 1. Renk Temaları (GÜNCELLENDİ) --- */
+#modal-win-btn     { --theme-color: #0078d7; --shine-color: rgba(0, 120, 215, 0.5); }
+#modal-android-btn { --theme-color: #3ddc84; --shine-color: rgba(61, 220, 132, 0.5); }
+#linux-main-btn    { --theme-color: #fbae00; --shine-color: rgba(251, 174, 0, 0.5); }
+
+/* Linux Dağıtımları */
+#modal-deb-btn     { --theme-color: #e95420; --shine-color: rgba(233, 84, 32, 0.5); } /* Ubuntu (Turuncu) */
+#modal-rpm-btn     { --theme-color: #00e5ff; --shine-color: rgba(0, 229, 255, 0.5); } /* Fedora (Turkuaz) */
+#modal-arch-btn    { --theme-color: #1a237e; --shine-color: rgba(26, 35, 126, 0.5); } /* Arch (Lacivert) */
+
+#btnLinuxBack      { --theme-color: #ff3b30; --shine-color: rgba(255, 59, 48, 0.5); }
+
+/* --- 2. İkon Rengi Düzeltmesi --- */
+/* .active sınıfı gelse bile bizim rengimizi zorla uygula (Android Mavi Sorunu Çözümü) */
+.platform-item i {
+    color: var(--theme-color, #fff) !important;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+}
+
+/* --- 3. Hover Efektleri (İÇİNİ DOLDURMAZ) --- */
+.platform-item:not(.disabled):hover {
+    /* Arka plan KOYU kalır (hafif açılır) */
+    background: linear-gradient(145deg, #3a3a3a, #2f2f2f) !important;
+    
+    /* Sadece Çerçeve ve Gölge Renklenir */
+    border-color: var(--theme-color) !important;
+    box-shadow: 0 0 25px -5px var(--shine-color) !important;
+    
+    transform: translateY(-5px) !important;
+}
+
+/* Hover'da İkon Parlasın */
+.platform-item:not(.disabled):hover i {
+    color: var(--theme-color) !important;
+    text-shadow: 0 0 15px var(--theme-color); /* Neon Glow */
+    transform: scale(1.1);
+}
+
+/* Hover'da Yazılar Beyazlaşsın */
+.platform-item:not(.disabled):hover span,
+.platform-item:not(.disabled):hover small {
+    color: #fff !important;
+}
+
+/* Ayna Yansıması (Shine) Hareketi - Aynen Korundu */
+.platform-item::before {
+    background: linear-gradient(
+        120deg,
+        transparent,
+        var(--shine-color),
+        rgba(255, 255, 255, 0.6),
+        var(--shine-color),
+        transparent
+    );
+}
+
+/* --- 4. HOVER (Mouse Üzerine Gelince) Efektleri --- */
+
+/* Aktif olmayan (disabled) butonlarda efekti engelle */
+.platform-item.disabled:hover {
+    background: #222 !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+    transform: none !important;
+}
+.platform-item.disabled:hover::before {
+    left: -120% !important; 
+}
+
+/* 4a. Arka Plan ve Gölge Değişimi */
+.platform-item:not(.disabled):hover {
+    /* Arka planı tema rengine boya */
+    background: var(--theme-color, #444) !important; 
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    /* Parlama (Glow) ekle */
+    box-shadow: 0 8px 20px -5px var(--theme-color, #000) !important;
+    transform: translateY(-5px) !important; /* Yukarı kalkma */
+}
+
+/* 4b. Yazı ve İkon Rengi Değişimi (Beyaz olsunlar) */
+.platform-item:not(.disabled):hover i,
+.platform-item:not(.disabled):hover span,
+.platform-item:not(.disabled):hover small {
+    color: white !important; 
+}
+
+/* 4c. Ayna Yansıması Hareketi */
+.platform-item:not(.disabled):hover::before {
+    left: 120%; /* Soldan sağa kaydır */
 }
