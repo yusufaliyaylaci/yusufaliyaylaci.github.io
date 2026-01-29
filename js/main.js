@@ -1,5 +1,5 @@
 import { state, timers, setAudioContext } from './state.js';
-import { CONFIG } from './config.js';
+import { CONFIG, APP_VERSION } from './config.js'; // APP_VERSION buraya eklendi
 import { initRadio, togglePlay, playRadio, triggerChangeStation, setupVolumeControl, toggleMute, setupAudioContext } from './radio.js';
 import { initWeather, enableSearchMode, disableSearchMode } from './weather.js';
 import * as UI from './ui.js';
@@ -72,8 +72,6 @@ function startExperience() {
     setTimeout(() => {
         UI.initClock();
         initWeather();
-        // Mobilde kar efekti performansı düşürebilir, Native ise kapatabiliriz veya açık tutabiliriz.
-        // Şimdilik açık bırakıyoruz.
         UI.initSnow();
         setupVolumeControl();
         UI.initPageIndicators();
@@ -230,7 +228,6 @@ window.addEventListener('offline', () => updateOnlineStatus(false));
 async function checkConnection(manual = false) {
     if (!navigator.onLine) { updateOnlineStatus(false); return; }
     try {
-        // App içinde dosya sistemi farklı olabilir, direkt web'e ping atalım.
         const checkUrl = (isElectron || isNative)
             ? 'https://yusufaliyaylaci.com/assets/icon.ico?' + new Date().getTime() 
             : 'assets/icon.ico?' + new Date().getTime();
@@ -255,14 +252,11 @@ async function checkConnection(manual = false) {
     }
 }
 
-// İndirme butonlarını güncelleme fonksiyonu (Windows EXE ve Android APK)
 async function updateDownloadButton() {
     const user = "yusufaliyaylaci"; 
     const repo = "yusufaliyaylaci.github.io"; 
-    
     const winBtn = document.getElementById('modal-win-btn');
     const winVerTag = document.getElementById('win-ver-tag');
-    
     const androidBtn = document.getElementById('modal-android-btn');
     const androidVerTag = document.getElementById('android-ver-tag');
 
@@ -275,18 +269,16 @@ async function updateDownloadButton() {
         const data = await response.json();
         const versionLabel = data.tag_name.startsWith('v') ? data.tag_name : 'v' + data.tag_name;
 
-        // Windows EXE Bulma
         const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
         if (exeAsset && winBtn) {
             winBtn.href = exeAsset.browser_download_url;
             if(winVerTag) winVerTag.innerText = versionLabel;
         } else if(winBtn) { winBtn.href = fallbackUrl; }
 
-        // Android APK Bulma
         const apkAsset = data.assets.find(asset => asset.name.endsWith('.apk'));
         if (apkAsset && androidBtn) {
             androidBtn.href = apkAsset.browser_download_url;
-            androidBtn.classList.remove('disabled'); // Butonu aktif et
+            androidBtn.classList.remove('disabled'); 
             if(androidVerTag) androidVerTag.innerText = versionLabel + " (APK)";
         }
 
@@ -296,43 +288,30 @@ async function updateDownloadButton() {
     }
 }
 
-// -------------------------------------------------------------------------
-// DİNLEYİCİ MODU (LISTENER MODE)
-// -------------------------------------------------------------------------
-
 if (isElectron && ipcRenderer) {
     ipcRenderer.on('app-mode-listener', () => { activateListenerMode(); });
 }
 
-// WEB TARAFI: ?action=join parametresi varsa
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('action') === 'join') {
-    
     if (!isElectron && !isNative) {
-        // Web'deyiz. Önce Masaüstü uygulamasını tetikle.
-        console.log("Uygulama tetikleniyor: yaliapp://join");
         window.location.href = "yaliapp://join"; 
     } else {
-        // App içindeyiz
         activateListenerMode();
     }
 }
 
 function activateListenerMode() {
-    console.log("Dinleyici Modu Aktif.");
     document.body.classList.add('listener-mode');
     state.isListenerMode = true;
-
     if(isElectron && ipcRenderer) {
         ipcRenderer.send('update-discord-activity', { 
             details: CONFIG.stations[state.currentStation].name, 
             state: "Yusuf Ali ile Birlikte 🎧" 
         });
     }
-
     const statusText = document.getElementById('statusText');
     if(statusText) statusText.innerText = "Birlikte Dinleniyor";
-    
     if(state && !state.isPlaying) {
         setTimeout(() => {
             const playBtn = document.getElementById('playBtn');
@@ -341,9 +320,6 @@ function activateListenerMode() {
     }
 }
 
-// -------------------------------------------------------------------------
-// BAŞLATMA
-// -------------------------------------------------------------------------
 function initApp() {
     setupEventListeners(); 
     checkConnection();
@@ -356,12 +332,82 @@ if (document.readyState === 'loading') {
     initApp();
 }
 
-setInterval(() => { 
-    if (offlineOverlay && !offlineOverlay.classList.contains('active')) { 
-        checkConnection(); 
-    } 
-}, 30000);
+setInterval(() => { if (offlineOverlay && !offlineOverlay.classList.contains('active')) { checkConnection(); } }, 30000);
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+
+// ----------------------------------------------------
+// ANDROID GÜNCELLEME KONTROLÜ
+// ----------------------------------------------------
+
+function compareVersions(v1, v2) {
+    const clean = v => v.replace('v', '').split('.').map(Number);
+    const [a, b] = [clean(v1), clean(v2)];
+    for (let i = 0; i < 3; i++) {
+        if (a[i] > b[i]) return 1;
+        if (a[i] < b[i]) return -1;
+    }
+    return 0;
 }
+
+async function checkForUpdates() {
+    // 1. KONTROL: Eğer Native (Android/iOS) değilse DUR.
+    if (!isNative) return;
+
+    console.log(`Android Sürüm Kontrolü: ${APP_VERSION}`);
+    const user = "yusufaliyaylaci"; 
+    const repo = "yusufaliyaylaci.github.io"; 
+    
+    try {
+        const response = await fetch(`https://api.github.com/repos/${user}/${repo}/releases/latest`);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const latestVer = data.tag_name; 
+        
+        if (compareVersions(latestVer, APP_VERSION) > 0) {
+            console.log(`Yeni güncelleme bulundu: ${latestVer}`);
+            showUpdateModal(latestVer, data.body, data.assets);
+        }
+    } catch (e) {
+        console.log("Güncelleme kontrolü yapılamadı:", e);
+    }
+}
+
+function showUpdateModal(version, notes, assets) {
+    if (document.getElementById('new-update-modal')) return;
+
+    const apkAsset = assets.find(a => a.name.endsWith('.apk'));
+    const downloadUrl = apkAsset ? apkAsset.browser_download_url : `https://github.com/yusufaliyaylaci/yusufaliyaylaci.github.io/releases/latest`;
+
+    const modalHTML = `
+    <div id="new-update-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+        <div style="background:#1e1e1e; padding:25px; border-radius:15px; width:90%; max-width:400px; border:1px solid #333; box-shadow:0 10px 40px rgba(0,0,0,0.5); text-align:center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="font-size:3rem; margin-bottom:15px;">🚀</div>
+            <h2 style="color:#fff; margin:0 0 10px 0; font-family:'Poppins',sans-serif;">Yeni Sürüm Mevcut!</h2>
+            <p style="color:#aaa; margin-bottom:20px; font-size:0.9rem;">YaliApp <strong>${version}</strong> sürümü yayınlandı.</p>
+            
+            <div style="background:#252525; padding:10px; border-radius:8px; margin-bottom:20px; text-align:left; max-height:100px; overflow-y:auto; font-size:0.8rem; color:#ccc;">
+                ${notes || 'Hata düzeltmeleri ve performans iyileştirmeleri.'}
+            </div>
+
+            <a href="${downloadUrl}" target="_blank" style="display:block; width:100%; padding:12px; background:#4caf50; color:white; text-decoration:none; border-radius:8px; font-weight:bold; margin-bottom:10px; transition:0.2s;">
+                <i class="fas fa-download"></i> Güncellemeyi İndir
+            </a>
+            <div id="btnSkipUpdate" style="cursor:pointer; color:#666; font-size:0.8rem; margin-top:10px;">Daha Sonra Hatırlat</div>
+        </div>
+    </div>
+    <style>@keyframes popIn { from{transform:scale(0.8);opacity:0;} to{transform:scale(1);opacity:1;} }</style>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = modalHTML;
+    document.body.appendChild(div);
+
+    document.getElementById('btnSkipUpdate').addEventListener('click', () => {
+        document.getElementById('new-update-modal').remove();
+    });
+}
+
+// Uygulama açıldıktan 3 saniye sonra kontrol et
+setTimeout(checkForUpdates, 3000);
