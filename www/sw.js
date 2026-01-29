@@ -1,78 +1,92 @@
-const CACHE_NAME = 'yali-blog-v2.2.2';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'yali-app-v2.2.5';
+const URLS_TO_CACHE = [
     './',
     './index.html',
     './css/style.css',
     './js/main.js',
-    './js/config.js',
-    './js/state.js',
     './js/ui.js',
     './js/radio.js',
     './js/weather.js',
+    './js/state.js',
+    './js/config.js',
+    './js/ui_helper.js',
     './assets/icon.ico',
     './assets/profil.webp',
-    './assets/photo1.webp',
-    './assets/photo2.webp',
-    './assets/photo3.webp',
-    './assets/photo4.webp',
-    './assets/photo5.webp',
-    './assets/photo6.webp',
-    './assets/photo7.webp',
-    './assets/photo8.webp',
-    './assets/photo9.webp',
-    './assets/yaliapp.png'
+    './manifest.json'
 ];
 
-// 1. KURULUM: Hemen aktif ol (skipWaiting)
-self.addEventListener('install', (e) => {
-    // Yeni SW yüklendiği an bekleme yapmadan "activate" aşamasına geç
-    self.skipWaiting(); 
+// 1. KURULUM (INSTALL)
+self.addEventListener('install', (event) => {
+    self.skipWaiting(); // Bekleme yapma, hemen geç
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('Önbellek açıldı');
+                return cache.addAll(URLS_TO_CACHE);
+            })
+    );
+});
+
+// 2. AKTİFLEŞTİRME (ACTIVATE)
+self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim()); // Sayfayı hemen ele geçir
     
-    e.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
+    // Eski cache'leri temizle
+    const cacheWhitelist = [CACHE_NAME];
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
         })
     );
 });
 
-// 2. AKTİVASYON: Eski cache'leri sil ve sayfayı hemen kontrol altına al
-self.addEventListener('activate', (e) => {
-    e.waitUntil(
-        caches.keys().then((keyList) => {
-            return Promise.all(keyList.map((key) => {
-                if (key !== CACHE_NAME) {
-                    console.log('[SW] Eski cache siliniyor:', key);
-                    return caches.delete(key);
-                }
-            }));
-        }).then(() => {
-            // Sayfayı yenilemeye gerek kalmadan yeni SW'nin kontrolü devralmasını sağla
-            return self.clients.claim();
-        })
-    );
-});
+// 3. İSTEK YAKALAMA (FETCH)
+self.addEventListener('fetch', (event) => {
+    const url = event.request.url;
 
-// 3. FETCH STRATEJİSİ (Network First for HTML, Cache First for Assets)
-self.addEventListener('fetch', (e) => {
-    const req = e.request;
-    const url = new URL(req.url);
-
-    // Eğer istek ana sayfa (HTML) ise -> Önce İNTERNETTEN çek, yoksa cache'den ver.
-    // Bu sayede kullanıcı her zaman en güncel versiyon numarasını (v=...) alır.
-    if (req.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
-        e.respondWith(
-            fetch(req).catch(() => {
-                return caches.match(req);
-            })
+    // STRATEJİ 1: NETWORK FIRST (Önce İnternet, Yoksa Cache)
+    // HTML, JSON (API), CSS ve JS dosyaları için bunu kullanıyoruz.
+    // Böylece kodda yaptığın değişiklik anında yansır.
+    if (
+        event.request.mode === 'navigate' || 
+        url.endsWith('.json') || 
+        url.includes('api.github.com') ||
+        url.includes('.css') ||  // CSS dosyalarını ekledik
+        url.includes('.js')      // JS dosyalarını ekledik
+    ) {
+        event.respondWith(
+            fetch(event.request)
+                .catch(() => {
+                    return caches.match(event.request);
+                })
         );
-    } 
-    // Diğer dosyalar (CSS, JS, Resim) -> Önce CACHE, yoksa internet.
-    // Zaten index.html güncel olacağı için, CSS/JS dosyalarını yeni versiyon parametresiyle isteyecektir.
-    else {
-        e.respondWith(
-            caches.match(req).then((response) => {
-                return response || fetch(req);
-            })
-        );
+        return;
     }
+
+    // STRATEJİ 2: CACHE FIRST (Önce Cache, Yoksa İnternet)
+    // Resimler, fontlar vb. nadir değişenler için.
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            return fetch(event.request).then((networkResponse) => {
+                // Cache'e at (Dinamik caching)
+                if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                    return networkResponse;
+                }
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
+                });
+                return networkResponse;
+            });
+        })
+    );
 });

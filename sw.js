@@ -1,4 +1,4 @@
-const CACHE_NAME = 'yali-app-v2.2.5';
+const CACHE_NAME = 'yali-app-v2.2.6';
 const URLS_TO_CACHE = [
     './',
     './index.html',

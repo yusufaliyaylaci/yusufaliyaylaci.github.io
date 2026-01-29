@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -72,6 +72,7 @@
     ]
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.2",
     "discord-rpc": "^4.0.1",
     "electron-updater": "^6.1.1"
   },
