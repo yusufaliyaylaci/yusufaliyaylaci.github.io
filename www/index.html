@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Yusuf Ali - Kişisel Blog, Web Tasarım ve Radyo Deneyimi. Teknoloji ve müziğin harmanlandığı interaktif portfolyo.">
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="manifest" href="manifest.json">
+    
+    <meta property="og:title" content="Yusuf Ali - Kişisel Blog & Radyo">
+    <meta property="og:description" content="Dokuz Eylül Üni. & Musician. Teknolojinin teknik dünyasını müziğin ritmiyle harmanlayan interaktif portfolyo.">
+    <meta property="og:image" content="https://yusufaliyaylaci.com/assets/profil.webp">
+    <meta property="og:url" content="https://yusufaliyaylaci.com">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <title>Yusuf Ali - Kişisel Blog</title>
+    <meta name="theme-color" content="#1a1a1a">
+    
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css?v=v2.0.7">
+
+    <style>
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .back-btn {
+            grid-column: span 2;
+            background: rgba(255, 255, 255, 0.1) !important;
+            padding: 10px !important;
+            font-size: 0.9rem !important;
+            cursor: pointer;
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2) !important; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-layer active" id="bg-layer-1"></div>
+    <div class="bg-layer" id="bg-layer-2"></div>
+    <div id="error-overlay"></div>
+    <div id="shockwave"></div>
+    <canvas id="snowCanvas"></canvas>
+    
+    <div id="clock-hour" class="big-clock-num">00</div>
+    <div id="clock-minute" class="big-clock-num">00</div>
+    <div id="date-display">Yükleniyor...</div>
+
+    <audio id="bgMusic1" crossorigin="anonymous" preload="none"></audio>
+    <audio id="bgMusic2" crossorigin="anonymous" preload="none"></audio>
+
+    <div id="overlay" id="welcome-screen">
+        <div class="overlay-content">
+            <h1>Hoş Geldiniz</h1>
+            <p>Giriş yapmak için dokunun</p>
+            <i class="fas fa-chevron-down click-icon" id="enter-btn"></i>
+        </div>
+    </div>
+
+    <div class="weather-widget" id="weatherWidget" role="region" aria-label="Hava Durumu Bilgisi">
+        <div class="weather-header" id="weatherHeader">
+            <div class="weather-main-info">
+                <span class="weather-temp" id="w-temp">--°</span>
+                <span class="weather-city" id="w-city">Konum...</span>
+                <span class="weather-desc" id="w-desc">Açık</span>
+            </div>
+            <i class="fas fa-location-arrow weather-icon" id="w-icon"></i>
+        </div>
+        
+        <div class="weather-details" id="weatherDetails">
+            <div class="detail-item"><span>Rüzgar:</span><span id="w-wind">-- km/s</span></div>
+            <div class="detail-item"><span>Nem:</span><span id="w-hum">--%</span></div>
+            <div class="change-city-text" id="btnCityChange" role="button" tabindex="0">Şehir değiştir</div>
+        </div>
+
+        <div class="extended-info" id="extendedInfo">
+            <div class="graph-container">
+                <h3>Saatlik Tahmin & Yağış</h3>
+                <div class="hourly-graph" id="hourlyGraph"></div>
+            </div>
+            <div class="extra-grid">
+                <div class="extra-card"><i class="fas fa-tint"></i><div><span id="ex-hum">--%</span><small>Nem</small></div></div>
+                <div class="extra-card"><i class="fas fa-wind"></i><div><span id="ex-wind">--</span><small>Rüzgar</small></div></div>
+                <div class="extra-card"><i class="fas fa-sun"></i><div><span id="ex-uv">--</span><small>UV İndeksi</small></div></div>
+            </div>
+        </div>
+
+        <div class="city-search-box" id="citySearchBox">
+            <div style="font-size: 0.8rem; margin-bottom: 2px; color:#ccc;">Şehir Ara:</div>
+            <input type="text" class="search-input" id="cityInput" placeholder="Örn: İzm..." autocomplete="off" aria-label="Şehir Ara">
+            <div class="suggestions-list" id="suggestionsList"></div>
+            <div id="btnCityCancel" style="font-size: 0.65rem; text-align: center; color: #aaa; cursor: pointer; margin-top: 8px;" role="button" tabindex="0">İptal</div>
+        </div>
+    </div>
+
+    <div class="card" id="mainCard" data-state="1">
+        <div class="album-nav nav-left" id="navLeft" role="button" aria-label="Önceki Fotoğraf" tabindex="0"><i class="fas fa-chevron-left"></i></div>
+        <div class="album-nav nav-right" id="navRight" role="button" aria-label="Sonraki Fotoğraf" tabindex="0"><i class="fas fa-chevron-right"></i></div>
+        
+        <img src="assets/profil.webp" alt="Yusuf Ali Portre" class="profile-img" id="profileImg">
+        
+        <div class="info-box">
+            <h2>Yusuf Ali</h2>
+            <div class="subtitle">Dokuz Eylül Üni. & Musician</div>
+        </div>
+        <div class="bio-box">
+            <p class="bio">Dokuz Eylül Üniversitesi'nde <strong>Elektrik ve Elektronik Teknolojisi</strong> üzerine kariyerimi inşa ediyorum. Teknolojinin teknik dünyasını müziğin ritmiyle harmanlıyor; devrelerin arasında sanat, notaların arasında mühendislik arıyorum.</p>
+        </div>
+        <div class="social-box">
+            <a href="https://instagram.com/yusufaliyaylaci" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i><span class="social-text">Instagram</span></a>
+            <a href="https://x.com/yusufaliyaylaci" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="Twitter X"><i class="fab fa-twitter"></i><span class="social-text">Twitter / X</span></a>
+            <a href="https://wa.me/+905382291219" class="social-btn" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i><span class="social-text">WhatsApp</span></a>
+        </div>
+    </div>
+
+    <div class="radio-wrapper">
+        <div class="radio-player" id="playerBox">
+            <div class="radio-info">
+                <div class="station-name" id="stationName">Yükleniyor...</div>
+                <div class="status-container">
+                    <div class="equalizer" id="equalizerAnim"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+                    <div class="status-text" id="statusText">Hazır</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="main-buttons">
+                    <button class="control-btn" id="btnPrevStation" aria-label="Önceki İstasyon"><i class="fas fa-step-backward"></i></button>
+                    <button class="control-btn play-btn" id="playBtn" aria-label="Oynat / Durdur"><i class="fas fa-play" id="playIcon"></i></button>
+                    <button class="control-btn" id="btnNextStation" aria-label="Sonraki İstasyon"><i class="fas fa-step-forward"></i></button>
+                </div>
+                
+                <div class="volume-group" id="volGroup">
+                    <button class="control-btn vol-btn" id="btnVolMute" aria-label="Sesi Kapat/Aç">
+                        <i class="fas fa-volume-up" id="volIcon"></i>
+                    </button>
+                    <div class="vol-slider-wrapper">
+                        <input type="range" class="vol-range" id="volRange" min="0" max="1" step="0.01" aria-label="Ses Seviyesi">
+                        <div class="vol-fill" id="volFill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-indicators" id="stageIndicators"></div>
+
+    <div class="footer-copyright" id="footerText">&copy; 2025 Yusuf Ali. Tüm Hakları Saklıdır.<br><span style="font-size: 0.6rem;">Design & Code by Yusuf Ali</span></div>
+
+    <div class="online-counter" aria-live="polite">
+        <div class="live-dot"></div>
+        <span id="onlineCount">18</span> Kişi Burada
+    </div>
+
+    <div id="app-version-display"></div>
+
+    <div id="offline-overlay">
+        <div class="offline-content">
+            <div class="wifi-loader">
+                <span style="--i:1"></span>
+                <span style="--i:2"></span>
+                <span style="--i:3"></span>
+                <span style="--i:4"></span>
+            </div>
+            <h2>Bağlantı Koptu</h2>
+            <p>İnternet bağlantınız kontrol ediliyor...</p>
+            <button id="btnRetryConnection" class="retry-btn">Tekrar Dene</button>
+        </div>
+    </div>
+
+    <div id="update-overlay" class="update-overlay">
+        <div class="update-box">
+            <div class="update-icon">
+                <i class="fas fa-cloud-download-alt fa-bounce"></i>
+            </div>
+            <h2>Yeni Sürüm İndiriliyor</h2>
+            <p>YaliApp güncelleniyor, lütfen bekleyin...</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="updateProgressBar"></div>
+            </div>
+            <div class="update-status" id="updateStatusText">Hazırlanıyor...</div>
+        </div>
+    </div>
+
+<div id="download-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Uygulamayı İndir</h3>
+                <i class="fas fa-times close-modal" id="btnModalClose"></i>
+            </div>
+            
+            <div class="platforms-grid fade-in" id="main-platform-grid">
+                <a id="modal-win-btn" href="#" class="platform-item active" target="_blank">
+                    <i class="fab fa-windows"></i>
+                    <span>Windows</span>
+                    <small id="win-ver-tag">Sürüm Aranıyor...</small>
+                </a>
+                <div id="linux-main-btn" class="platform-item" style="cursor: pointer;">
+                    <i class="fab fa-linux"></i>
+                    <span>Linux</span>
+                    <small id="linux-main-tag">Dağıtım Seçin</small>
+                </div>    
+
+                <a id="modal-android-btn" href="#" class="platform-item disabled" target="_blank">
+                    <i class="fab fa-android"></i>
+                    <span>Android</span>
+                    <small id="android-ver-tag">Yakında</small>
+                </a>
+
+                <div class="platform-item disabled">
+                    <i class="fab fa-apple"></i>
+                    <span>macOS</span>
+                    <small>Yakında</small>
+                </div>
+            </div>
+
+            <div class="platforms-grid fade-in" id="linux-platform-grid" style="display: none;">
+                <div class="platform-item back-btn" id="btnLinuxBack">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Geri Dön</span>
+                </div>
+
+                <a id="modal-deb-btn" href="#" class="platform-item" target="_blank">
+                    <i class="fab fa-ubuntu"></i>
+                    <span>Debian / Ubuntu</span>
+                    <small id="deb-ver-tag">.deb İndir</small>
+                </a>
+
+                <a id="modal-rpm-btn" href="#" class="platform-item" target="_blank">
+                    <i class="fab fa-fedora"></i>
+                    <span>Fedora</span>
+                    <small id="rpm-ver-tag">.rpm İndir</small>
+                </a>
+
+                <a id="modal-arch-btn" href="#" class="platform-item" target="_blank">
+                    <i class="fas fa-box-open"></i>
+                    <span>Arch Linux</span>
+                    <small id="arch-ver-tag">.pacman İndir</small>
+                </a>
+            </div>
+
+        </div>
+    </div>
+    <script src="js/ui_helper.js?v=v2.0.7"></script>
+    <script type="module" src="js/main.js?v=v2.0.7"></script>
+</body>
+</html>

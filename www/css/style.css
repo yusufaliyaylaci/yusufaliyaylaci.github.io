@@ -1,0 +1,1318 @@
+/* =========================================
+   1. DEĞİŞKENLER VE TEMEL AYARLAR
+========================================= */
+:root {
+    --font-main: 'Poppins', sans-serif;
+    --bg-dark: #1a1a1a;
+    --text-color: white;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --theme-color: #fff;
+    --spin-speed: 30s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden; color: var(--text-color); position: relative;
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+    touch-action: none; 
+}
+
+/* =========================================
+   YENİ EKLENEN KOD: İNDİRME PROMOSYON POP-UP STİLİ
+========================================= */
+#downloadPrompt {
+    position: fixed;
+    top: -100px; /* Başlangıçta ekranın dışında */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    
+    /* Modern Glassmorphism görünüm */
+    background: rgba(40, 40, 40, 0.85); 
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    
+    padding: 15px 25px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    
+    font-size: 0.95rem;
+    color: white;
+    /* Yaylanma efekti için CSS geçişi */
+    transition: top 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#downloadPrompt.active {
+    top: 20px; /* Ekranda görüneceği yer */
+}
+
+#downloadPrompt p {
+    font-weight: 400;
+    margin: 0;
+    white-space: nowrap;
+}
+
+#downloadPrompt a {
+    text-decoration: none;
+    background-color: var(--theme-color);
+    color: #1a1a1a;
+    font-weight: 600;
+    padding: 8px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#downloadPrompt a:hover {
+    background-color: #eee;
+    transform: translateY(-1px);
+}
+/* YENİ EKLENEN KOD SONU */
+
+
+/* =========================================
+   2. ARKA PLAN VE EFEKTLER
+========================================= */
+.bg-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-size: 400% 400%;
+
+    animation: gradientBG var(--bg-speed, 15s) ease infinite;
+    transition: opacity 3s ease-in-out; opacity: 0; z-index: -5;
+}
+.bg-layer.active { opacity: 1; z-index: -4; }
+#bg-layer-1, #bg-layer-2 { background-image: linear-gradient(45deg, #000000, #434343, #1a1a1a, #000000); }
+
+.big-clock-num {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 30vw; font-weight: 800; color: rgba(255, 255, 255, 0.06);
+    z-index: -2; pointer-events: none; line-height: 1; transition: color 1s ease;
+    font-variant-numeric: tabular-nums;
+}
+#clock-hour { left: 2%; text-align: left; }
+#clock-minute { right: 2%; text-align: right; }
+
+#date-display {
+    position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+    font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.7; z-index: 5; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    font-weight: 300; pointer-events: none;
+}
+
+#snowCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+#error-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(200, 0, 0, 0.4) 100%);
+    opacity: 0; pointer-events: none; z-index: 49; transition: opacity 0.5s ease;
+}
+#error-overlay.active-error { opacity: 1; animation: pulseRed 1s infinite alternate; }
+
+#shockwave {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 0, 0, 0.5) 50%, transparent 100%);
+    transform: translateX(100%); z-index: 50; pointer-events: none;
+}
+#shockwave.active-swipe { animation: swipeLeft 1.2s cubic-bezier(0.19, 1, 0.22, 1); }
+
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes swipeLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+@keyframes pulseRed { from { opacity: 0.3; } to { opacity: 0.8; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(10px); } 60% { transform: translateY(5px); } }
+
+/* DİKEY ZIPLAMA EFEKTLERİ */
+@keyframes bumpUpCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(-30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
+@keyframes bumpDownCard { 0% { transform: translateY(0) scale(1.12); } 50% { transform: translateY(30px) scale(1.12); } 100% { transform: translateY(0) scale(1.12); } }
+@keyframes bumpUpRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% - 30px)); } 100% { transform: translate(-50%, -50%); } }
+@keyframes bumpDownRadio { 0% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, calc(-50% + 30px)); } 100% { transform: translate(-50%, -50%); } }
+@keyframes equalize { 0% { height: 3px; } 100% { height: 12px; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+body.bump-up:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpUpCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+body.bump-down:not(.view-mode-social):not(.view-mode-weather) .card { animation: bumpDownCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+body.bump-up.view-mode-social .radio-wrapper { animation: bumpUpRadio 0.4s; }
+body.bump-down.view-mode-social .radio-wrapper { animation: bumpDownRadio 0.4s; }
+body.bump-up.view-mode-weather .weather-widget { animation: bumpUpWeather 0.4s; }
+body.bump-down.view-mode-weather .weather-widget { animation: bumpDownWeather 0.4s; }
+
+#overlay {
+    position: fixed; top: -15vh; left: 0; width: 100%; height: 115vh; padding-top: 15vh;
+    background: linear-gradient(to bottom, rgba(10, 10, 10, 0.98), rgba(30, 30, 30, 0.98));
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); /* Safari Fix */
+    z-index: 100;
+    display: flex; justify-content: center; align-items: center; cursor: pointer;
+    transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.5s ease;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
+}
+.slide-down-active { transform: translateY(115%); opacity: 0; pointer-events: none; }
+.overlay-content { text-align: center; animation: fadeUp 1s ease forwards; padding: 20px; }
+#overlay h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 15px; letter-spacing: 1px; }
+.click-icon { font-size: 2rem; opacity: 0.7; animation: bounce 2s infinite; }
+
+.stage-indicators { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+.indicator-dot { width: 10px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 50%; transition: all 0.3s ease; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+.indicator-dot:hover { background: rgba(255,255,255,0.5); }
+.indicator-dot.active { background: var(--theme-color, white); transform: scale(1.4); box-shadow: 0 0 10px rgba(255,255,255,0.3); border-color: transparent; }
+
+/* =========================================
+   KART YAPISI
+========================================= */
+.card {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); /* Safari Fix */
+    border: 1px solid var(--glass-border);
+    padding: 40px; border-radius: 30px;
+    text-align: center; 
+    width: 340px; height: 340px;
+    opacity: 0; transform: translateY(30px) scale(1.12);
+    transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 10; position: relative; overflow: hidden;
+}
+
+.profile-img {
+    position: absolute; top: 35px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.2); 
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+    z-index: 2;
+}
+
+.card[data-state="1"] .profile-img:hover {
+    transform: translateX(-50%) scale(1.08); 
+    border-color: var(--theme-color);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+}
+
+.info-box { position: absolute; top: 170px; left: 0; width: 100%; transition: all 0.8s ease; opacity: 1; z-index: 2; }
+.info-box h2 { margin-bottom: 5px; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; transition: all 0.5s ease; }
+.info-box .subtitle { font-size: 0.75rem; color: #ccc; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; }
+
+.bio-box {
+    position: absolute; top: 250px; left: 0; width: 100%; padding: 0 40px;
+    opacity: 0; transform: translateY(30px); 
+    transition: all 0.8s ease; pointer-events: none; text-align: center;
+}
+.bio-box p { font-size: 1rem; opacity: 0.9; line-height: 1.7; color: #eee; font-weight: 300; }
+
+.album-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 2rem; color: white; cursor: pointer; opacity: 0; pointer-events: none; transition: 0.5s; z-index: 20;
+}
+.nav-left { left: 20px; } .nav-right { right: 20px; }
+
+.social-box {
+    position: absolute; bottom: 50px; left: 0; width: 100%;
+    display: flex; justify-content: center; gap: 12px; 
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    opacity: 0; pointer-events: none; transform: translateY(20px);
+}
+.social-btn {
+    text-decoration: none; color: white; width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center;
+    font-size: 1.1rem; transition: all 0.4s ease; border: 1px solid rgba(255,255,255,0.1);
+    position: relative; overflow: hidden;
+}
+.social-text { max-width: 0; overflow: hidden; opacity: 0; transition: all 0.4s; font-size: 0.9rem; margin-left: 0; white-space: nowrap; }
+.social-btn::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(45deg, #f093fb, #f5576c); opacity: 0; transition: opacity 0.3s; z-index: -1;
+}
+.social-btn:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4); border-color: transparent;}
+.social-btn:hover::before { opacity: 1; }
+
+.card.state-album { width: 550px; height: 550px; transform: scale(1); }
+.card.state-album .profile-img { width: 100%; height: 100%; top: 0; left: 0; transform: none; border-radius: 30px; border: none; }
+.card.state-album .info-box, .card.state-album .bio-box { opacity: 0; pointer-events: none; transform: translateY(30px); }
+.card.state-album .social-box { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.card.state-album .album-nav { opacity: 1; pointer-events: auto; }
+.card[data-state="1"] .social-box { opacity: 1; pointer-events: auto; transform: translateY(0); bottom: 40px; }
+.card.state-bio { height: 420px; transform: scale(1); }
+.card.state-bio .profile-img { opacity: 0; pointer-events: none; transform: translateY(-120px) scale(0.5); }
+.card.state-bio .info-box { top: 50px; transform: scale(1); }
+.card.state-bio .info-box h2 { font-size: 2.5rem; letter-spacing: -1px; } 
+.card.state-bio .bio-box { top: 150px; opacity: 1; transform: translateY(0); pointer-events: auto; }
+body.view-mode-social #mainCard, body.view-mode-weather #mainCard {
+    opacity: 0 !important; transform: scale(0.9) translateY(-120vh) rotate(-5deg) !important; 
+    pointer-events: none; filter: blur(10px); 
+}
+
+/* =========================================
+   6. RADYO PLAYER
+========================================= */
+.radio-wrapper { 
+    position: fixed; bottom: 30px; right: 30px; z-index: 50; 
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px; 
+    transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.radio-player {
+    position: relative; padding: 12px 25px; border-radius: 50px; 
+    display: flex; align-items: center; gap: 20px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    width: fit-content; min-width: 280px; max-width: 400px; 
+    transition: transform 0.1s ease-out, width 0.5s, height 0.5s; 
+    overflow: hidden; z-index: 1;
+}
+
+.radio-player::before {
+    content: ''; position: absolute; width: 200%; height: 200%; 
+    background: conic-gradient(transparent 45%, var(--theme-color) 50%, transparent 55%);
+    top: -50%; left: -50%; z-index: -2; animation: spin var(--spin-speed, 30s) linear infinite;
+    opacity: 0; transition: opacity 0.5s;
+}
+
+.radio-player::after {
+    content: ''; position: absolute; inset: 2px; 
+    background: rgba(30, 30, 30, 0.6); 
+    backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); /* Safari Fix */
+    border-radius: 48px; z-index: -1;
+}
+
+body:not(.view-mode-social) .radio-player {
+    border: 1px solid rgba(255,255,255,0.15); 
+    background: rgba(20, 20, 20, 0.4); 
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); /* Safari Fix */
+}
+body:not(.view-mode-social) .radio-player:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.radio-info { flex-grow: 1; text-align: right; display: flex; flex-direction: column; overflow: hidden; z-index: 2; }
+.station-name { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+.status-container { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.status-text { font-size: 0.7rem; color: #aaa; }
+
+.equalizer { display: flex; gap: 3px; height: 12px; align-items: flex-end; opacity: 0.3; }
+.bar { width: 3px; background-color: #777; height: 2px; transition: all 0.3s; }
+.radio-player.playing .equalizer { opacity: 1; }
+.radio-player.playing .equalizer .bar { animation: equalize 0.5s infinite alternate; }
+.radio-player.playing .equalizer .bar:nth-child(1) { animation-delay: 0.1s; }
+.radio-player.playing .equalizer .bar:nth-child(2) { animation-delay: 0.2s; }
+.radio-player.playing .equalizer .bar:nth-child(3) { animation-delay: 0.3s; }
+
+.controls { display: flex; align-items: center; gap: 15px; z-index: 2; }
+.main-buttons { display: flex; align-items: center; gap: 15px; }
+
+.control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; }
+.control-btn:hover { opacity: 1; transform: scale(1.15); }
+.play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; opacity: 1; display: flex; align-items: center; justify-content: center; }
+.play-btn:hover { background: rgba(255,255,255,0.2); }
+.radio-player.active-glow { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 25px rgba(255, 255, 255, 0.1); }
+.radio-player.player-error { border-color: #ff0000; box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); animation: shakeError 0.5s ease-in-out; }
+
+.volume-group { display: flex; align-items: center; z-index: 2; }
+.vol-slider-wrapper { width: 0; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-left: 8px; position: relative; transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; display: flex; align-items: center; opacity: 0; pointer-events: none; }
+.volume-group:hover .vol-slider-wrapper { width: 80px; opacity: 1; pointer-events: auto; }
+.vol-range { -webkit-appearance: none; width: 100%; height: 100%; background: transparent; position: absolute; z-index: 2; cursor: pointer; top: 0; left: 0; margin: 0; }
+.vol-range::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
+.vol-fill { height: 100%; background: var(--theme-color, #fff); border-radius: 10px; width: 50%; position: absolute; top: 0; left: 0; z-index: 1; pointer-events: none; transition: background-color 0.5s ease; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+body.view-mode-social .radio-wrapper {
+    top: 50%; left: 50%; bottom: auto; right: auto;
+    transform: translate(-50%, -50%); width: 380px; align-items: center; z-index: 60;
+}
+body.view-mode-social .radio-player {
+    width: 100%; height: 420px; flex-direction: column; justify-content: center; gap: 30px;
+    background: transparent; border: none; box-shadow: none; padding: 40px; border-radius: 30px;
+}
+body.view-mode-social .radio-player::before, body.view-mode-social .radio-player::after { display: block; opacity: 1; border-radius: 30px; }
+body.view-mode-social .radio-info { text-align: center; align-items: center; width: 100%; flex-grow: 0; }
+body.view-mode-social .station-name { font-size: 2rem; margin-bottom: 15px; text-shadow: 0 5px 15px rgba(0,0,0,0.3); white-space: normal; }
+body.view-mode-social .status-container { justify-content: center; width: 100%; flex-direction: column; gap: 15px; }
+body.view-mode-social .status-text { font-size: 1rem; }
+body.view-mode-social .equalizer { height: 40px; gap: 6px; opacity: 1; }
+body.view-mode-social .equalizer .bar { width: 6px; background-color: #fff !important; }
+body.view-mode-social .controls { flex-direction: column; gap: 25px; margin-top: 20px; justify-content: center; width: 100%; }
+body.view-mode-social .main-buttons { gap: 40px; }
+body.view-mode-social .control-btn { font-size: 1.8rem; }
+body.view-mode-social .play-btn { width: 80px; height: 80px; font-size: 2rem; background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+body.view-mode-social .play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
+body.view-mode-social .volume-group { justify-content: center; width: 100%; }
+body.view-mode-social .vol-slider-wrapper { width: 150px; opacity: 1; pointer-events: auto; }
+body.view-mode-social .volume-group:hover .vol-slider-wrapper { width: 150px !important; }
+
+/* =========================================
+   7. HAVA DURUMU WIDGET
+========================================= */
+.weather-widget {
+    position: fixed; top: 30px; right: 30px;
+    background: rgba(20, 20, 20, 0.4); 
+    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); /* Safari Fix */
+    padding: 15px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
+    display: flex; flex-direction: column; align-items: flex-end; z-index: 20;
+    opacity: 0; transform: translateY(-20px); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    overflow: visible; transition: all 1s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease 1s;
+    max-height: 100px; min-width: 160px;
+}
+.weather-widget.visible { opacity: 1; transform: translateY(0); }
+.weather-widget:hover, .weather-widget.search-mode { max-height: 400px; background: rgba(20, 20, 20, 0.5); border-color: rgba(255,255,255,0.3); }
+
+body:not(.view-mode-weather):not(.view-mode-social) .weather-widget:not(.search-mode):hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.weather-header { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: flex-end; cursor: pointer; }
+.weather-icon { font-size: 2rem; color: #ffd700; transition: transform 0.4s; }
+.weather-widget:hover .weather-icon { transform: scale(1.1) rotate(15deg); }
+.weather-main-info { display: flex; flex-direction: column; text-align: right; }
+.weather-temp { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+.weather-city { font-size: 0.8rem; opacity: 0.7; margin-top: 3px; }
+.weather-desc { font-size: 0.75rem; margin-top: 2px; font-weight: 500; }
+.weather-details { margin-top: 15px; width: 100%; opacity: 0; transform: translateY(-10px); transition: all 0.4s ease 0.1s; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+.weather-widget:hover .weather-details, .weather-widget.search-mode .weather-details { opacity: 1; transform: translateY(0); }
+.detail-item { display: flex; justify-content: space-between; font-size: 0.8rem; color: #ddd; margin-bottom: 6px; }
+.change-city-text { text-align: center; margin-top: 10px; font-size: 0.7rem; color: #00bfff; cursor: pointer; text-decoration: underline; }
+.city-search-box { display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 5px; animation: fadeIn 0.3s ease; position: relative; }
+.weather-widget.search-mode .city-search-box { display: flex; }
+.weather-widget.search-mode .weather-details { display: none; }
+.search-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 10px; border-radius: 8px; color: white; width: 100%; }
+.search-input:focus { outline: none; border-color: #00bfff; }
+.suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: rgba(30,30,30,0.9); border-radius: 8px; max-height: 150px; overflow-y: auto; z-index: 30; display: none; margin-top: 5px; touch-action: pan-y; }
+.suggestion-item { padding: 10px; font-size: 0.8rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.suggestion-item:hover { background: rgba(255,255,255,0.1); }
+
+body.view-mode-weather .weather-widget {
+    top: 50%; left: 50%; right: auto; bottom: auto;
+    transform: translate(-50%, -50%); width: 800px; height: 500px; max-height: none;
+    background: rgba(20, 20, 20, 0.6); 
+    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); /* Safari Fix */
+    border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 40px; padding: 40px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.7); display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: 1fr;
+    gap: 30px; align-items: center; justify-content: start; z-index: 60;
+}
+body.view-mode-weather .weather-header {
+    flex-direction: column; align-items: flex-start; justify-content: center;
+    gap: 20px; height: 100%; margin: 0; padding: 0;
+    border-right: 1px solid rgba(255,255,255,0.1); padding-right: 30px;
+}
+body.view-mode-weather .weather-icon { font-size: 6rem; transform: none; margin-bottom: 10px; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4)); }
+body.view-mode-weather .weather-main-info { text-align: left; }
+body.view-mode-weather .weather-temp { font-size: 5rem; font-weight: 700; letter-spacing: -2px; }
+body.view-mode-weather .weather-city { font-size: 2rem; font-weight: 300; opacity: 0.8; }
+body.view-mode-weather .weather-desc { font-size: 1.2rem; color: #00bfff; margin-top: 5px; text-transform: capitalize; }
+body.view-mode-weather .weather-details { display: none; }
+body.view-mode-weather .change-city-text { display: none; }
+.extended-info { display: none; width: 100%; height: 100%; flex-direction: column; justify-content: space-between; opacity: 0; transition: opacity 0.5s ease 0.3s; }
+body.view-mode-weather .extended-info { display: flex; opacity: 1; }
+
+.graph-container { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; flex-grow: 1; margin-bottom: 20px; display: flex; flex-direction: column; }
+.graph-container h3 { font-size: 0.9rem; margin-bottom: 15px; opacity: 0.7; font-weight: 400; letter-spacing: 1px; }
+.hourly-graph { display: flex; justify-content: space-between; align-items: flex-end; height: 100%; width: 100%; gap: 10px; }
+.graph-bar-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; position: relative; }
+.graph-temp { font-size: 0.8rem; font-weight: 600; }
+.graph-bar { width: 60%; background: linear-gradient(to top, rgba(0, 191, 255, 0.3), rgba(0, 191, 255, 0.8)); border-radius: 10px 10px 0 0; transition: height 1s ease; min-height: 5px; position: relative; }
+.rain-indicator { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.2); height: 4px; }
+.rain-fill { background-color: #4facfe; height: 100%; }
+.graph-time { font-size: 0.7rem; opacity: 0.6; margin-top: 5px; }
+
+.extra-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.extra-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
+.extra-card i { font-size: 1.5rem; opacity: 0.8; }
+.extra-card div { display: flex; flex-direction: column; }
+.extra-card span { font-size: 1.1rem; font-weight: 600; }
+.extra-card small { font-size: 0.7rem; opacity: 0.5; }
+
+.weather-widget { cursor: pointer; } .radio-player { cursor: pointer; }
+body.view-mode-weather .weather-widget, .weather-widget.search-mode { cursor: default; }
+body.view-mode-social .radio-player { cursor: default; }
+.control-btn, .weather-header, .change-city-text, .suggestion-item, .vol-range { cursor: pointer; }
+
+.footer-copyright { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; opacity: 0.4; z-index: 5; text-align: center; width: 100%; pointer-events: none; transition: opacity 1s; }
+.copyright-visible { opacity: 0.7; }
+
+@media (max-width: 480px) {
+    .radio-wrapper { bottom: 20px; right: 50%; transform: translateX(50%); align-items: center; }
+    .weather-widget { top: 20px; right: 50%; transform: translateX(50%) translateY(-20px); }
+    .weather-widget.visible { transform: translateX(50%) translateY(0); }
+    .radio-player { padding: 10px 20px; width: 90%; justify-content: space-between;}
+    .radio-info { min-width: auto; }
+    .big-clock-num { font-size: 35vw; opacity: 0.03; }
+    #date-display { bottom: 100px; }
+    
+    .card { width: 85vw; height: auto; aspect-ratio: 1/1; min-height: 320px; }
+    .card.state-album { width: 100vw; height: 50vh; }
+    body.view-mode-social .radio-wrapper { width: 90vw; }
+    body.view-mode-social .radio-player { height: auto; padding: 20px; gap: 20px; }
+    body.view-mode-social .station-name { font-size: 1.5rem; }
+    body.view-mode-social .play-btn { width: 60px; height: 60px; font-size: 1.5rem; }
+    body.view-mode-weather .weather-widget { width: 90vw; height: auto; padding: 30px; grid-template-columns: 1fr; }
+    body.view-mode-weather .weather-header { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 20px; align-items: center; text-align: center; }
+    body.view-mode-weather .weather-main-info { text-align: center; }
+    body.view-mode-weather .weather-icon { font-size: 4rem; }
+    body.view-mode-weather .weather-temp { font-size: 3.5rem; }
+    .extra-grid { grid-template-columns: 1fr 1fr; }
+    .stage-indicators { right: 10px; gap: 10px; }
+    .fullscreen-btn { display: none !important; }
+}
+
+.profile-img.changing { opacity: 0 !important; transform: translateX(-50%) scale(0.9) !important; transition: all 0.3s ease-in-out; }
+
+.fullscreen-btn {
+    position: fixed; top: 30px; left: 30px;
+    width: 45px; height: 45px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); /* Safari Fix */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; justify-content: center; align-items: center;
+    color: white; font-size: 1.2rem; cursor: pointer;
+    z-index: 100; transition: all 0.3s ease; opacity: 0.7;
+}
+.fullscreen-btn:hover { background: rgba(255, 255, 255, 0.15); opacity: 1; transform: scale(1.1); }
+
+.connecting-dots { display: inline-flex; align-items: center; height: 12px; gap: 3px; margin-right: 6px; }
+.connecting-dots span { width: 3px; height: 100%; background-color: #ffcc00; border-radius: 2px; animation: soundWave 1s infinite ease-in-out; }
+.connecting-dots span:nth-child(1) { animation-delay: 0.0s; }
+.connecting-dots span:nth-child(2) { animation-delay: 0.2s; height: 60%; }
+.connecting-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+.song-popup {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%) scale(0.9);
+    width: 90%; padding: 12px 15px; z-index: -1; 
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); /* Safari Fix */
+    border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 15px;
+    box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
+    opacity: 0; transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex; align-items: center; gap: 12px; pointer-events: none; 
+}
+.song-popup.active { top: -85px; opacity: 1; transform: translateX(-50%) scale(1); }
+
+@media (max-width: 480px) {
+    .song-popup.active { top: -75px; width: 85%; }
+}
+
+.popup-icon {
+    width: 35px; height: 35px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex; justify-content: center; align-items: center;
+    font-size: 1rem; color: var(--theme-color); flex-shrink: 0;
+}
+
+.popup-content { text-align: left; overflow: hidden; }
+.popup-title { font-size: 0.65rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; white-space: nowrap; }
+.popup-song { font-size: 0.85rem; font-weight: 600; color: white; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+@keyframes soundWave { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+@keyframes shakeHard {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+.shake-active { animation: shakeHard 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+.status-text { font-size: 0.75rem; font-weight: 500; transition: color 0.3s ease; display: flex; align-items: center; gap: 6px; }
+.status-connecting { color: #ffcc00 !important; }
+.status-live { color: var(--theme-color) !important; text-shadow: 0 0 10px var(--theme-color); }
+.status-live::before { content: ''; display: inline-block; width: 8px; height: 8px; background-color: currentColor; border-radius: 50%; animation: blinkLive 2s infinite; }
+.status-retrying { color: #ff9800 !important; font-style: italic; }
+.status-retrying::after { content: '...'; animation: loadingDots 1.5s infinite; }
+
+@keyframes blinkLive { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes loadingDots { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+
+/* =========================================
+   8. EKSİK ANIMASYONLAR (Hava Durumu İçin)
+========================================= */
+/* Hava Durumu widget'ı ekranın ortasında (-50%, -50%) durduğu için,
+   zıplama animasyonunu buna göre ayarlamamız gerekiyor. */
+
+@keyframes bumpUpWeather {
+    0% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, calc(-50% - 30px)); } /* Yukarı iter */
+    100% { transform: translate(-50%, -50%); }
+}
+
+@keyframes bumpDownWeather {
+    0% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, calc(-50% + 30px)); } /* Aşağı çeker */
+    100% { transform: translate(-50%, -50%); }
+}
+
+/* =========================================
+   9. CANLI KULLANICI SAYACI (Sol Alt)
+========================================= */
+.online-counter {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    z-index: 90;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.online-counter:hover {
+    background: rgba(20, 20, 20, 0.6);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #4caf50; /* Canlı yeşil */
+    border-radius: 50%;
+    box-shadow: 0 0 10px #4caf50;
+    animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 15px #4caf50; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@media (max-width: 480px) {
+    .online-counter {
+        bottom: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 0.7rem;
+    }
+}
+
+/* =========================================
+   10. DESKTOP APP KONTROLLERİ
+========================================= */
+
+/* Tüm butonları kapsayan kutu (Sol Üst) */
+.app-controls-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+    /* Bu kutunun kendisi sürüklenemez olsun ki butonlara basabilelim */
+    -webkit-app-region: no-drag; 
+}
+
+/* Pencerenin üst kısmını sürüklenebilir yapıyoruz */
+.drag-region {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px; /* Üstten 40px'lik alan tutulabilir */
+    z-index: 900;
+    -webkit-app-region: drag; /* İŞTE BU KOD SÜRÜKLEMEYİ SAĞLAR */
+    pointer-events: none; /* Tıklamaları engellemesin */
+}
+
+/* Ortak Buton Stili */
+.control-box-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-box-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1);
+}
+
+/* Kapat Butonu Özel Rengi */
+.close-app-btn:hover {
+    background: rgba(255, 59, 48, 0.8); /* Kırmızı */
+    border-color: transparent;
+    box-shadow: 0 0 15px rgba(255, 59, 48, 0.4);
+}
+
+/* Tam Ekran Butonu için eski stili eziyoruz (Artık grup içinde olacak) */
+.fullscreen-btn {
+    position: static !important; /* Fixed olmasın, flex içinde dursun */
+    margin: 0 !important;
+}
+
+/* =========================================
+   11. OFFLINE (İNTERNET YOK) EKRANI
+========================================= */
+#offline-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 10, 0.6); /* Hafif karartma */
+    backdrop-filter: blur(20px); /* GÜÇLÜ BLUR EFEKTİ */
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9999; /* En üstte */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+#offline-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.offline-content {
+    text-align: center;
+    color: white;
+    transform: translateY(20px);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#offline-overlay.active .offline-content {
+    transform: translateY(0);
+}
+
+.offline-content h2 {
+    font-size: 2rem;
+    margin: 20px 0 10px;
+    font-weight: 600;
+}
+
+.offline-content p {
+    color: #ccc;
+    font-weight: 300;
+    margin-bottom: 25px;
+}
+
+.retry-btn {
+    padding: 10px 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.retry-btn:hover {
+    background: white;
+    color: black;
+    transform: scale(1.05);
+}
+
+/* Wi-Fi Animasyonu */
+.wifi-loader {
+    display: inline-flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 5px;
+    height: 40px;
+}
+
+.wifi-loader span {
+    width: 6px;
+    background-color: var(--theme-color, white);
+    border-radius: 10px;
+    animation: wifiWave 1.5s infinite ease-in-out;
+}
+
+.wifi-loader span:nth-child(1) { height: 10px; animation-delay: 0.0s; }
+.wifi-loader span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+.wifi-loader span:nth-child(3) { height: 30px; animation-delay: 0.2s; }
+.wifi-loader span:nth-child(4) { height: 40px; animation-delay: 0.3s; }
+
+@keyframes wifiWave {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.2); box-shadow: 0 0 15px var(--theme-color, white); }
+}
+
+/* =========================================
+   12. İNDİRME MODALI VE WEB KONTROLLERİ
+========================================= */
+
+/* Web sürümü için sol üst buton grubu */
+.web-controls-container {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+/* Modal Arka Planı (Perde) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none;
+    transition: all 0.4s ease;
+}
+
+.modal-overlay.open {
+    opacity: 1; pointer-events: auto;
+}
+
+/* Modal Kartı */
+.modal-card {
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 30px;
+    width: 90%; max-width: 500px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    transform: translateY(30px) scale(0.9);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.open .modal-card {
+    transform: translateY(0) scale(1);
+}
+
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 15px;
+}
+
+.modal-header h3 { font-weight: 600; font-size: 1.2rem; }
+.close-modal { cursor: pointer; font-size: 1.2rem; opacity: 0.7; transition: 0.3s; }
+.close-modal:hover { opacity: 1; transform: rotate(90deg); color: var(--theme-color); }
+
+/* Platform Izgarası */
+.platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.platform-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    text-decoration: none; color: white;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.platform-item i { font-size: 2rem; margin-bottom: 5px; }
+.platform-item span { font-weight: 600; font-size: 1rem; }
+.platform-item small { font-size: 0.7rem; opacity: 0.5; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 10px; }
+
+/* Aktif (Windows) Buton */
+.platform-item.active:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--theme-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+.platform-item.active i { color: #00a4ef; }
+
+/* Pasif (Yakında) Butonlar */
+.platform-item.disabled {
+    opacity: 0.5; cursor: not-allowed; filter: grayscale(1);
+}
+
+/* =========================================
+   13. SÜRÜM BİLGİSİ (SADECE APP)
+========================================= */
+#app-version-display {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    z-index: 9999;
+    pointer-events: none;
+    display: none; /* JS ile görünür yapılacak */
+}
+
+/* =========================================
+   LINUX VE İNDİRME MENÜSÜ EFEKTLERİ
+========================================= */
+
+/* --- 1. Ana Linux Butonu (Windows ile Aynı Stil) --- */
+/* Windows butonu gibi sadece yukarı zıplar ve parlar */
+#linux-main-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--theme-color) !important;
+    transform: translateY(-5px) !important; /* Windows butonuyla aynı hareket */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+}
+
+/* --- 2. Linux Menüsü Izgara Yapısı (2x2 Grid) --- */
+#linux-platform-grid {
+    display: none; /* JS ile açılacak */
+    grid-template-columns: repeat(2, 1fr); /* 2 Sütun */
+    gap: 15px;
+}
+
+/* --- 3. Geri Dön Butonu (Diğerleriyle Eşitleme) --- */
+/* Artık ince şerit değil, tam bir kutu */
+#linux-platform-grid .back-btn {
+    grid-column: auto !important; /* Tek sütun kaplasın */
+    background: rgba(255, 255, 255, 0.05) !important;
+    padding: 20px !important;
+    font-size: 1rem !important;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+#linux-platform-grid .back-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-5px); /* Hafif zıplama */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Geri dön ikonuna küçük bir hareket */
+#linux-platform-grid .back-btn:hover i {
+    transform: translateX(-5px);
+    transition: 0.3s;
+}
+
+/* --- 4. Dağıtım Butonları Animasyonları (Farklı ve Renkli) --- */
+
+/* Giriş Animasyonu: Butonlar sırayla belirir */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.8) translateY(20px); filter: blur(5px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+#linux-platform-grid .platform-item {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+/* Sıralı Geliş (Stagger) */
+#linux-platform-grid .platform-item:nth-child(1) { animation-delay: 0.05s; } /* Geri */
+#linux-platform-grid .platform-item:nth-child(2) { animation-delay: 0.15s; } /* Ubuntu */
+#linux-platform-grid .platform-item:nth-child(3) { animation-delay: 0.25s; } /* Fedora */
+#linux-platform-grid .platform-item:nth-child(4) { animation-delay: 0.35s; } /* Arch */
+
+/* Ubuntu / Debian (Turuncu Glow) */
+#modal-deb-btn:hover {
+    background: rgba(233, 84, 32, 0.15) !important;
+    border-color: #E95420 !important;
+    box-shadow: 0 10px 30px rgba(233, 84, 32, 0.25) !important;
+}
+#modal-deb-btn:hover i { color: #E95420; transform: scale(1.1) rotate(15deg); transition: 0.3s; }
+
+/* Fedora (Mavi Glow) */
+#modal-rpm-btn:hover {
+    background: rgba(41, 65, 114, 0.2) !important;
+    border-color: #51A2DA !important;
+    box-shadow: 0 10px 30px rgba(81, 162, 218, 0.25) !important;
+}
+#modal-rpm-btn:hover i { color: #51A2DA; transform: scale(1.1) translateY(-3px); transition: 0.3s; }
+
+/* Arch Linux (Turkuaz Glow) */
+#modal-arch-btn:hover {
+    background: rgba(23, 147, 209, 0.15) !important;
+    border-color: #1793D1 !important;
+    box-shadow: 0 10px 30px rgba(23, 147, 209, 0.25) !important;
+}
+#modal-arch-btn:hover i { color: #1793D1; transform: scale(1.1) rotate(-360deg); transition: 0.6s ease-in-out; }
+
+/* --- STATUS METİN ANİMASYONU --- */
+@keyframes statusSlideIn {
+    0% { opacity: 0; transform: translateY(10px) scale(0.95); filter: blur(2px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.status-animate {
+    display: inline-block;
+    animation: statusSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Hata durumunda titreme efekti */
+@keyframes statusShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); color: #ff4d4d; }
+    75% { transform: translateX(3px); color: #ff4d4d; }
+}
+
+.status-error-anim {
+    display: inline-block;
+    animation: statusSlideIn 0.4s ease, statusShake 0.5s ease 0.2s;
+}
+
+/* =========================================
+   14. RENK GEÇİŞLERİNİ YUMUŞATMA (SOFT COLORS)
+========================================= */
+
+/* --- TEMEL RENK TANIMLAMALARI --- */
+/* Artık renkleri JS ile direkt basmak yerine bu değişkene bağlıyoruz */
+
+#playBtn {
+    color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: color 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, transform 0.2s !important;
+}
+
+.control-btn:hover {
+    color: var(--theme-color) !important; /* Hover olunca tema rengini al */
+}
+
+/* Radyo Kutusu (Kenarlık) */
+.radio-player {
+    border-color: rgba(255, 255, 255, 0.15); /* Varsayılan */
+    transition: 
+        transform 0.1s ease-out, 
+        width 0.5s, 
+        height 0.5s, 
+        border-color 1s ease,
+        box-shadow 0.1s linear !important; /* Box-shadow JS ile yönetiliyor, CSS transition'ı kapattık */
+}
+
+/* Hata durumunda border rengi */
+.radio-player.player-error {
+    border-color: #ff0000 !important;
+}
+
+/* Equalizer Çubukları */
+.equalizer .bar {
+    background-color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: height 0.3s ease, background-color 1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Durum Yazısı */
+.status-live {
+    color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: color 1s ease !important;
+}
+
+/* Ses Çubuğu Doluluk */
+.vol-fill {
+    background-color: var(--theme-color) !important; /* Değişkene bağlandı */
+    transition: width 0.1s linear, background-color 1s ease !important;
+}
+
+/* --- CANLI YAYIN DİNAMİK ANİMASYONU --- */
+@keyframes liveEntrance {
+    0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes livePulse {
+    0% { text-shadow: 0 0 5px rgba(255,255,255,0.1); }
+    50% { text-shadow: 0 0 15px var(--theme-color); } /* Parlama efekti */
+    100% { text-shadow: 0 0 5px rgba(255,255,255,0.1); }
+}
+
+.status-live-text {
+    display: inline-block;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    /* Giriş Animasyonu (0.6s) + Sürekli Nefes Alma (3s) */
+    animation: liveEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards, 
+               livePulse 3s infinite ease-in-out 0.6s;
+}
+
+/* Durum kutusunun kendisi de renk geçişine sahip olsun */
+#statusText {
+    transition: color 1s ease-in-out !important;
+}
+
+/* --- GÜNCELLEME EKRANI --- */
+.update-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.update-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.update-box {
+    text-align: center;
+    color: white;
+    width: 300px;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.update-overlay.active .update-box {
+    transform: scale(1);
+}
+
+.update-icon {
+    font-size: 3em;
+    color: var(--theme-color, #4caf50);
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+}
+
+.progress-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--theme-color, #4caf50);
+    box-shadow: 0 0 10px var(--theme-color, #4caf50);
+    transition: width 0.2s ease;
+}
+
+.update-status {
+    font-size: 0.8em;
+    color: #aaa;
+    margin-top: 10px;
+}
+
+@keyframes shakePlayerKeyframes {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px) rotate(-5deg); }
+    50% { transform: translateX(10px) rotate(5deg); }
+    75% { transform: translateX(-10px) rotate(-5deg); }
+    100% { transform: translateX(0); }
+}
+
+.shake-player-anim {
+    animation: shakePlayerKeyframes 0.4s ease-in-out;
+    border-color: #ff4444 !important; /* Hata anında kenarlık kırmızı olsun */
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.5) !important;
+}
+
+/* =========================================
+   SONUÇ BALONCUĞU (RE-DESIGNED GLASS PILL)
+========================================= */
+
+.result-bubble {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150px); /* Gizli konum */
+    
+    /* Modern Glassmorphism - Daha Şeffaf ve Akıcı */
+    background: rgba(30, 30, 30, 0.4); 
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    
+    /* İnce, zarif çerçeve ve derinlik hissi */
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.4),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+    
+    border-radius: 50px; /* Tam oval */
+    padding: 8px 20px 8px 8px; /* Sol taraf ikon için dar, sağ taraf metin için geniş */
+    
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    
+    opacity: 0;
+    visibility: hidden;
+    z-index: 99999;
+    
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    min-width: 280px;
+    max-width: 90vw;
+}
+
+.result-bubble.surfaced {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.result-bubble:hover {
+    background: rgba(40, 40, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(-50%) translateY(2px) scale(1.02); /* Hover'da hafif büyüme */
+}
+
+/* --- SOL İKON ALANI (HUB) --- */
+.bubble-hub {
+    width: 55px; 
+    height: 55px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.hub-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.1); 
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    
+    /* Dönme Animasyonu - Yavaş ve Sürekli */
+    animation: spinHub 10s linear infinite;
+}
+
+@keyframes spinHub {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* --- PLATFORM DİLİMLERİ --- */
+.hub-slice {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+/* İkonların dönmesini engellemek için ters animasyon (Opsiyonel, ikonlar sabit kalsın istersen) */
+.hub-slice i {
+    animation: spinHubReverse 10s linear infinite;
+}
+@keyframes spinHubReverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+.hub-slice:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+}
+
+/* --- BİLGİ ALANI --- */
+.bubble-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+    margin-right: 5px;
+}
+
+.bubble-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.bubble-artist {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.bubble-artist::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: var(--theme-color, #fff);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--theme-color, #fff);
+}
+
+/* --- KAPAT BUTONU --- */
+.bubble-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: auto;
+}
+
+.bubble-close:hover {
+    background: rgba(255, 59, 48, 0.2); /* Soft Kırmızı */
+    color: #ff3b30;
+    transform: rotate(90deg);
+}
+
+/* --- MOBİL --- */
+@media (max-width: 480px) {
+    .result-bubble {
+        top: 20px;
+        width: 90%;
+        padding: 6px 15px 6px 6px;
+        border-radius: 40px;
+    }
+    .bubble-hub { width: 45px; height: 45px; }
+    .hub-slice { font-size: 0.8rem; }
+    .bubble-title { font-size: 0.9rem; }
+    .bubble-artist { font-size: 0.7rem; }
+}
