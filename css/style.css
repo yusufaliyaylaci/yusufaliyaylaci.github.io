@@ -1316,3 +1316,105 @@ body.view-mode-social .radio-player { cursor: default; }
     .bubble-title { font-size: 0.9rem; }
     .bubble-artist { font-size: 0.7rem; }
 }
+
+/* Android Butonu Parlama Efekti */
+.shiny-btn {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(76, 175, 80, 0.3) !important; /* Hafif yeşil çerçeve */
+    transition: all 0.3s ease;
+}
+
+/* Parlama Katmanı */
+.shine-effect {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0.4) 50%, /* Parlaklık rengi */
+        rgba(255, 255, 255, 0) 60%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* JS ile tetiklenecek animasyon sınıfı */
+.shiny-btn.animate-shine .shine-effect {
+    animation: shineMove 1.5s ease-in-out infinite;
+    opacity: 1;
+}
+
+.shiny-btn.animate-shine {
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.6); /* Dış parlama */
+    border-color: #4caf50 !important;
+}
+
+@keyframes shineMove {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(30deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(30deg); }
+}
+
+/* Linux Bölümü Stilleri */
+.linux-section {
+    margin-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 15px;
+}
+
+.linux-toggle-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #aaa;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.linux-toggle-btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+}
+
+.linux-options-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    animation: fadeInDown 0.3s ease;
+}
+
+.linux-sub-btn {
+    flex: 1 1 30%; /* Yan yana sığsınlar */
+    background: rgba(255,255,255,0.08);
+    padding: 12px 5px;
+    text-align: center;
+    border-radius: 8px;
+    color: #ccc;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: 0.2s;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+.linux-sub-btn i { font-size: 1.2rem; margin-bottom: 5px; }
+.linux-sub-btn:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+.linux-sub-btn.deb:hover { color: #d70a53; border-color: #d70a53; } /* Debian kırmızısı */
+.linux-sub-btn.rpm:hover { color: #294172; border-color: #294172; } /* Fedora mavisi */
+.linux-sub-btn.pacman:hover { color: #1793d1; border-color: #1793d1; } /* Arch mavisi */
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

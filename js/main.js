@@ -1,5 +1,5 @@
 import { state, timers, setAudioContext } from './state.js';
-import { CONFIG, APP_VERSION } from './config.js'; // APP_VERSION buraya, en tepeye eklendi
+import { CONFIG, APP_VERSION } from './config.js';
 import { initRadio, togglePlay, playRadio, triggerChangeStation, setupVolumeControl, toggleMute, setupAudioContext } from './radio.js';
 import { initWeather, enableSearchMode, disableSearchMode } from './weather.js';
 import * as UI from './ui.js';
@@ -77,12 +77,9 @@ function startExperience() {
     setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 1500);
 
     // 5. GÜNCELLEME SİSTEMLERİNİ TETİKLEME
-    // Windows/Linux (Electron) için otomatik güncelleme
     if(isElectron) {
         UI.initUpdateHandler();
     }
-    
-    // Android (Native) için manuel kontrol
     if(isNative) {
         setTimeout(checkForUpdates, 3000);
     }
@@ -99,24 +96,68 @@ function setupEventListeners() {
     document.getElementById('btnCityChange')?.addEventListener('click', enableSearchMode);
     document.getElementById('btnCityCancel')?.addEventListener('click', disableSearchMode);
     
+    // İndirme Modalı İşlemleri
+    const downloadBtn = document.querySelector('.download-btn-container'); // Ana ekrandaki indirme butonu
     const closeBtn = document.getElementById('btnModalClose');
-    if (closeBtn) {
-        const newCloseBtn = closeBtn.cloneNode(true);
-        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-        newCloseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+    const modalOverlay = document.querySelector('.modal-overlay');
+
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
             UI.toggleDownloadModal();
+            // Modal açıldığında Android butonunu parlat
+            triggerAndroidShine();
         });
     }
 
-    document.querySelector('.modal-overlay')?.addEventListener('click', UI.closeDownloadModal);
-    document.getElementById('linux-main-btn')?.addEventListener('click', UI.showLinuxOptions);
-    document.getElementById('btnLinuxBack')?.addEventListener('click', UI.showMainOptions);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            UI.toggleDownloadModal();
+        });
+    }
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', UI.closeDownloadModal);
+    }
+
+    // Linux Toggle Butonu
+    const btnToggleLinux = document.getElementById('btn-toggle-linux');
+    const linuxOptionsPanel = document.getElementById('linux-options-panel');
+    if(btnToggleLinux && linuxOptionsPanel) {
+        btnToggleLinux.addEventListener('click', () => {
+            const isHidden = linuxOptionsPanel.style.display === 'none';
+            linuxOptionsPanel.style.display = isHidden ? 'flex' : 'none';
+            btnToggleLinux.innerHTML = isHidden 
+                ? '<i class="fas fa-chevron-up"></i> Linux Seçeneklerini Gizle' 
+                : '<i class="fas fa-linux"></i> Diğer Linux Seçenekleri';
+        });
+    }
+
     document.getElementById('btnRetryConnection')?.addEventListener('click', () => checkConnection(true));
 }
 
+// Android Butonu Parlatma Efekti
+let shineTimeout;
+function triggerAndroidShine() {
+    const androidBtn = document.getElementById('btn-download-android');
+    if (!androidBtn || androidBtn.classList.contains('disabled')) return;
+
+    // Varsa eski animasyonu durdur
+    clearTimeout(shineTimeout);
+    androidBtn.classList.remove('animate-shine');
+
+    // Biraz bekleyip başlat (modal açılış efektiyle karışmasın)
+    setTimeout(() => {
+        androidBtn.classList.add('animate-shine');
+        // 3 saniye sonra durdur
+        shineTimeout = setTimeout(() => {
+            androidBtn.classList.remove('animate-shine');
+        }, 3500);
+    }, 300);
+}
+
+
 function setupInteractions() {
+    // ... (Bu kısım aynı kalacak, önceki koddan kopyalayabilirsiniz veya bu tam kodu kullanın) ...
     const profileImg = document.getElementById("profileImg");
     if(profileImg) {
         profileImg.style.cursor = "pointer";
@@ -247,16 +288,22 @@ async function checkConnection(manual = false) {
     }
 }
 
-async function updateDownloadButton() {
+// ----------------------------------------------------
+// DİNAMİK İNDİRME BUTONLARI (TÜM PLATFORMLAR)
+// ----------------------------------------------------
+async function updateDownloadButtons() {
     const user = "yusufaliyaylaci"; 
-    const repo = "yusufaliyaylaci.github.io"; 
-    const winBtn = document.getElementById('modal-win-btn');
-    const winVerTag = document.getElementById('win-ver-tag');
-    const androidBtn = document.getElementById('modal-android-btn');
-    const androidVerTag = document.getElementById('android-ver-tag');
-
-    if (!winBtn && !androidBtn) return;
+    const repo = "yusufaliyaylaci.github.io";
     const fallbackUrl = `https://github.com/${user}/${repo}/releases/latest`;
+
+    // Buton Elementleri
+    const winBtn = document.getElementById('btn-download-win');
+    const winVerTag = document.getElementById('win-ver-tag');
+    const androidBtn = document.getElementById('btn-download-android');
+    const androidVerTag = document.getElementById('android-ver-tag');
+    const debBtn = document.getElementById('btn-download-deb');
+    const rpmBtn = document.getElementById('btn-download-rpm');
+    const pacmanBtn = document.getElementById('btn-download-pacman');
 
     try {
         const response = await fetch(`https://api.github.com/repos/${user}/${repo}/releases/latest`);
@@ -264,22 +311,44 @@ async function updateDownloadButton() {
         const data = await response.json();
         const versionLabel = data.tag_name.startsWith('v') ? data.tag_name : 'v' + data.tag_name;
 
-        const exeAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
+        // Helper: Varlık (Asset) bulma fonksiyonu
+        const findAsset = (ext) => data.assets.find(asset => asset.name.endsWith(ext));
+
+        // Windows EXE
+        const exeAsset = findAsset('.exe');
         if (exeAsset && winBtn) {
             winBtn.href = exeAsset.browser_download_url;
             if(winVerTag) winVerTag.innerText = versionLabel;
         } else if(winBtn) { winBtn.href = fallbackUrl; }
 
-        const apkAsset = data.assets.find(asset => asset.name.endsWith('.apk'));
+        // Android APK
+        const apkAsset = findAsset('.apk');
         if (apkAsset && androidBtn) {
             androidBtn.href = apkAsset.browser_download_url;
-            androidBtn.classList.remove('disabled'); 
-            if(androidVerTag) androidVerTag.innerText = versionLabel + " (APK)";
+            androidBtn.classList.remove('disabled');
+            if(androidVerTag) androidVerTag.innerText = versionLabel;
+            // APK bulunduğunda parlama efekti için hazır hale getir
+            androidBtn.classList.add('shiny-btn');
+        } else if(androidBtn) {
+            androidBtn.href = fallbackUrl;
         }
 
+        // Linux Distroları
+        const debAsset = findAsset('.deb');
+        if(debAsset && debBtn) debBtn.href = debAsset.browser_download_url;
+
+        const rpmAsset = findAsset('.rpm');
+        if(rpmAsset && rpmBtn) rpmBtn.href = rpmAsset.browser_download_url;
+
+        const pacmanAsset = findAsset('.pacman');
+        if(pacmanAsset && pacmanBtn) pacmanBtn.href = pacmanAsset.browser_download_url;
+
     } catch (error) {
-        if(winBtn) winBtn.href = fallbackUrl;
-        if(androidBtn) androidBtn.href = fallbackUrl;
+        console.error("İndirme linkleri alınamadı:", error);
+        // Hata durumunda hepsi releases sayfasına gitsin
+        [winBtn, androidBtn, debBtn, rpmBtn, pacmanBtn].forEach(btn => {
+            if(btn) btn.href = fallbackUrl;
+        });
     }
 }
 
@@ -318,7 +387,10 @@ function activateListenerMode() {
 function initApp() {
     setupEventListeners(); 
     checkConnection();
-    updateDownloadButton();
+    // İndirme butonlarını güncelle (Sadece web ve native'de)
+    if(!isElectron) {
+        updateDownloadButtons();
+    }
 }
 
 if (document.readyState === 'loading') {
@@ -330,11 +402,10 @@ if (document.readyState === 'loading') {
 setInterval(() => { if (offlineOverlay && !offlineOverlay.classList.contains('active')) { checkConnection(); } }, 30000);
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
 
-
 // ----------------------------------------------------
 // ANDROID GÜNCELLEME KONTROLÜ
 // ----------------------------------------------------
-
+// ... (Bu kısım aynı kalacak) ...
 function compareVersions(v1, v2) {
     const clean = v => v.replace('v', '').split('.').map(Number);
     const [a, b] = [clean(v1), clean(v2)];
@@ -346,9 +417,10 @@ function compareVersions(v1, v2) {
 }
 
 async function checkForUpdates() {
-    // 1. KONTROL: Eğer Native (Android/iOS) değilse DUR.
     if (!isNative) return;
-
+    // ... (Aynı kodlar) ...
+    // Kodu kısaltmak için burayı tekrarlamıyorum, önceki cevaptaki checkForUpdates ve showUpdateModal fonksiyonları burada olacak.
+    // Eğer elinizde yoksa söyleyin tekrar atayım.
     console.log(`Android Sürüm Kontrolü: ${APP_VERSION}`);
     const user = "yusufaliyaylaci"; 
     const repo = "yusufaliyaylaci.github.io"; 
@@ -368,7 +440,6 @@ async function checkForUpdates() {
         console.log("Güncelleme kontrolü yapılamadı:", e);
     }
 }
-
 function showUpdateModal(version, notes, assets) {
     if (document.getElementById('new-update-modal')) return;
 
@@ -403,3 +474,32 @@ function showUpdateModal(version, notes, assets) {
         document.getElementById('new-update-modal').remove();
     });
 }
+
+// ----------------------------------------------------
+// WEB SİTESİ OTO-YENİLEME SİSTEMİ
+// ----------------------------------------------------
+async function checkWebVersion() {
+    if (isNative || isElectron) return;
+    const checkUrl = 'version.json?t=' + new Date().getTime();
+    try {
+        const response = await fetch(checkUrl);
+        if (!response.ok) return;
+        const data = await response.json();
+        const remoteVersion = data.version;
+        if (remoteVersion !== APP_VERSION) {
+            console.log("Sayfa yenileniyor...");
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) { registration.unregister(); }
+                    window.location.reload(true);
+                });
+            } else {
+                window.location.reload(true);
+            }
+        }
+    } catch (e) { console.log("Versiyon kontrolü yapılamadı (Web):", e); }
+}
+setTimeout(checkWebVersion, 1000);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkWebVersion();
+});
