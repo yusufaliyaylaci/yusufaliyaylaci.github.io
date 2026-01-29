@@ -1,6 +1,6 @@
 {
   "name": "yali-app",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "YaliApp - Yusuf Ali Blog Desktop",
   "main": "main.js",
   "scripts": {
@@ -46,9 +46,6 @@
       "shortcutName": "YaliApp",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
-      "installerHeader": "build/installerHeader.bmp",
-      "installerSidebar": "build/installerSidebar.bmp",
-      "license": "build/license.txt",
       "deleteAppDataOnUninstall": true,
       "displayLanguageSelector": false,
       "language": "1033",
@@ -75,9 +72,6 @@
     ]
   },
   "dependencies": {
-    "@capacitor/android": "^8.0.2",
-    "@capacitor/cli": "^8.0.2",
-    "@capacitor/core": "^8.0.2",
     "discord-rpc": "^4.0.1",
     "electron-updater": "^6.1.1"
   },
